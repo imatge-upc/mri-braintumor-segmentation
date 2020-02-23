@@ -1,0 +1,21 @@
+# Repository
+data/
+.DS_Store
+# Caches
+__pycache__/
+.pytest_cache/
+
+# Pycharm
+.idea/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
