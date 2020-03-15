@@ -2,7 +2,7 @@ import torch
 from tqdm import tqdm
 from dataset import visualization_utils as visualization
 from losses import losses
-import logger
+from logging_conf import logger
 
 def training_step(model, train_loader, optimizer, cuda_device, plot=False):
     model.train()

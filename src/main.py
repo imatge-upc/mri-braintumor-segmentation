@@ -8,7 +8,7 @@ from dataset.dataset_generator import BratsDataset
 from dataset import io
 import train, test
 from model.vnet import vnet
-import logger
+from logging_conf import logger
 
 ######## PARAMS
 logger.info('Processing Parameters...')
