@@ -2,8 +2,8 @@ import logging
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-import src.dataset.io as nifi_io
-import src.dataset.nifi_volume_utils as nifi_utils
+import dataset.io as nifi_io
+import dataset.nifi_volume_utils as nifi_utils
 
 class BratsDataset(Dataset):
 
