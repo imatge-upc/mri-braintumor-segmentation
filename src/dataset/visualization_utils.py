@@ -5,7 +5,7 @@ import numpy as np
 from nilearn.plotting import plot_anat
 
 
-def plot_3_view(volume_type: np.ndarray, s: int=100):
+def plot_3_view(modal, volume_type: np.ndarray, s: int=100, save: bool=True):
     ''' Plot slice of volume seen from each view (x, y, z)'''
     views = [volume_type[s, :, :], volume_type[:, s, :], volume_type[:, :, s]]
     fig, axes = plt.subplots(1, len(views))
@@ -14,6 +14,8 @@ def plot_3_view(volume_type: np.ndarray, s: int=100):
         dst = slice.numpy()
         dst = cv2.resize(dst, (200, 200), interpolation=cv2.INTER_CUBIC)
         axes[i].imshow(dst.T, origin="lower")
+    if save:
+        fig.savefig(f'plot_{modal}.png')
 
 def plot_axis_overlayed(modalities: list, segmentation_mask: str, subject: int, axis: str='x', save: bool=False):
     '''Save or show figure of provided axis'''
@@ -39,8 +41,11 @@ def plot_batch(images, gt, paths=None):
             patient_seg = paths[4][element_index]
             plot_axis_overlayed(patient_modalities, patient_seg, element_index, axis='x', save=True)
         else:
-            patient_t1_ce = images[3][element_index]
+            for i, mod_id in enumerate(images):
+                patient_mod = images[i][element_index]
+                slice = int(patient_mod.shape[0] / 2)
+                plot_3_view(str(i), patient_mod, slice, save=True)
+
             patient_seg = gt[element_index]
-            plot_3_view(patient_seg, 100)
-            plot_3_view(patient_t1_ce, 100)
-            plt.show()
+            slice = int(patient_seg.shape[0] / 2)
+            plot_3_view('seg', patient_seg, slice)

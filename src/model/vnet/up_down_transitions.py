@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-from src.model.vnet.LU_conv import LUConv
-from src.model.vnet.cont_batch_norm_3d import ContBatchNorm3d
-from src.model.vnet.activation_functions import add_elu
+from model.vnet.LU_conv import LUConv
+from model.vnet.cont_batch_norm_3d import ContBatchNorm3d
+from model.vnet.activation_functions import add_elu
 
 def passthrough(x, **kwargs):
     return x
@@ -38,7 +38,7 @@ class DownTransition(nn.Module):
 class UpTransition(nn.Module):
     def __init__(self, inChans, outChans, nConvs, elu, dropout=False):
         super(UpTransition, self).__init__()
-        self.up_conv = nn.ConvTranspose3d(inChans, outChans // 2, kernel_size=2, stride=2)
+        self.up_conv = nn.ConvTranspose3d(inChans, outChans//2, kernel_size=2, stride=2)
         self.bn1 = ContBatchNorm3d(outChans // 2)
         self.do1 = passthrough
         self.do2 = nn.Dropout3d()
