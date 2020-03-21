@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 import matplotlib
-import cv2
+import time
 import numpy as np
 from nilearn.plotting import plot_anat
 
@@ -12,10 +12,12 @@ def plot_3_view(modal, volume_type: np.ndarray, s: int=100, save: bool=True):
 
     for i, slice in enumerate(views):
         dst = slice.numpy()
-        dst = cv2.resize(dst, (200, 200), interpolation=cv2.INTER_CUBIC)
-        axes[i].imshow(dst.T, origin="lower")
+        # dst = cv2.resize(dst, (200, 200), interpolation=cv2.INTER_CUBIC)
+        axes[i].imshow(dst.T, cmap='viridis', origin="lower")
     if save:
-        fig.savefig(f'plot_{modal}.png')
+        fig.savefig(f'plot_{modal}_{time.time()}.png')
+    else:
+        plt.show()
 
 def plot_axis_overlayed(modalities: list, segmentation_mask: str, subject: int, axis: str='x', save: bool=False):
     '''Save or show figure of provided axis'''
@@ -30,22 +32,22 @@ def plot_axis_overlayed(modalities: list, segmentation_mask: str, subject: int, 
         matplotlib.use('TkAgg')
         plt.show()
 
-def plot_batch(images, gt, paths=None):
+def plot_batch(images, gt, paths=None, save=True):
     '''Plot, for a given batch, different types of visualizations.
     If paths: plot overlayed axis plot
     If paths=None: plot slice of volume
     '''
     for element_index in range(0, len(images)):
         if paths:
-            patient_modalities = [paths[0][element_index], paths[1][element_index] ,paths[2][element_index], paths[3][element_index]]
+            patient_modalities = [paths[0][element_index], paths[1][element_index] , paths[2][element_index], paths[3][element_index]]
             patient_seg = paths[4][element_index]
             plot_axis_overlayed(patient_modalities, patient_seg, element_index, axis='x', save=True)
         else:
             for i, mod_id in enumerate(images):
                 patient_mod = images[i][element_index]
-                slice = int(patient_mod.shape[0] / 2)
-                plot_3_view(str(i), patient_mod, slice, save=True)
+                slice = 100 #int(patient_mod.shape[0] / 2)
+                plot_3_view(str(i), patient_mod, slice, save=save)
 
             patient_seg = gt[element_index]
-            slice = int(patient_seg.shape[0] / 2)
-            plot_3_view('seg', patient_seg, slice)
+            slice = 100 # int(patient_seg.shape[0] / 2)
+            plot_3_view('seg', patient_seg, slice, save=save)

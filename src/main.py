@@ -1,8 +1,9 @@
 import os
 import torch
-from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
+from sklearn.model_selection import train_test_split
+from dataset import visualization_utils as visualization
 
 from dataset.dataset_generator import BratsDataset
 from dataset import io
@@ -29,30 +30,27 @@ path_val = os.path.join(root_path, 'MICCAI_BraTS_2019_Data_Validation/') # TEST 
 batch_size= 1
 train_flag = True
 test_flag = False
-use_elu=True
+use_elu = True
 network = 'vnet'
-use_nll=True
+use_nll = True
 n_epochs = 1
 
-cuda_flag = torch.cuda.is_available()
-device = torch.device("cuda:0" if cuda_flag else "cpu")
-
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 ######## DATASET
 logger.info('Creating Dataset...')
-data_train, labels_train = io.get_dataset(path_train) # TODO: SEPARATE INTO TRAIN/VAL
-
-transform = transforms.Compose([transforms.ToTensor()])
+data, labels = io.get_dataset(path_train)
+x_train, x_val, y_train, y_val = train_test_split(data, labels, test_size=0.25, random_state=42)
 
 modalities_to_use = { BratsDataset.flair_idx: True,
                       BratsDataset.t1_idx: False,
                       BratsDataset.t2_idx: False,
                       BratsDataset.t1_ce_idx: False}
 
-train_set = BratsDataset(data_train, labels_train, modalities_to_use, transform)
-
+train_set = BratsDataset(x_train, y_train, modalities_to_use, transforms.Compose([transforms.ToTensor()]), 4)
+val_set = BratsDataset(x_val, y_val, modalities_to_use, transforms.Compose([transforms.ToTensor()]), 4)
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False)
-val_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False) # TODO: Change set to validation
+val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
 
 ######## MODEL
 logger.info('Initiating Model...')
@@ -63,10 +61,8 @@ if network == 'vnet':
 else:
     raise ValueError('Bad parameter for network {}'.format(network))
 
-if cuda_flag:
-    model = model.cuda()
-    model.to(device)
-    model = nn.parallel.DataParallel(model, device_ids=range(torch.cuda.device_count()))
+model.to(device)
+# model = nn.parallel.DataParallel(model, device_ids=range(torch.cuda.device_count()))
 
 logger.info('Start Training')
 if train_flag:

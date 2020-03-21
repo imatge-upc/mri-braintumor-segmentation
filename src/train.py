@@ -4,7 +4,8 @@ from dataset import visualization_utils as visualization
 from losses import losses
 from logging_conf import logger
 
-def training_step(model, train_loader, optimizer, cuda_device, plot=False):
+
+def training_step(model, train_loader, optimizer, device, plot=False):
     model.train()
     for data_batch, labels_batch, paths in tqdm(train_loader):
         if plot:
@@ -12,14 +13,16 @@ def training_step(model, train_loader, optimizer, cuda_device, plot=False):
             visualization.plot_batch(data_batch, labels_batch)
 
         data_batch = data_batch.requires_grad_()
-        data_batch = data_batch.float().to(cuda_device)
+        data_batch = data_batch.float().to(device)
         logger.debug('Model called')
         outputs = model(data_batch)
 
         target = labels_batch.view(labels_batch.numel())
-        target = target.long()
+        target = target.long().to(device)
+        target = target.view(target.numel())
+
         logger.debug('Loss called')
-        loss = losses.nll_loss(outputs, target) # Labels batch es una mascara
+        loss = losses.nll_loss(outputs, target)
 
         optimizer.zero_grad()
         loss.backward()

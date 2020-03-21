@@ -5,7 +5,7 @@ import nibabel as nib
 
 
 
-def load_nifi_volume(filepath: str):
+def load_nifi_volume(filepath: str) -> np.ndarray:
     proxy = nib.load(filepath)
     img = proxy.get_fdata()
     proxy.uncache()
@@ -22,7 +22,6 @@ def get_dataset(rootdir: str) -> Tuple[np.ndarray, np.ndarray]:
         for _, dirs, _ in os.walk(tumor_type_path):
             for person in dirs:
                 base_person_file = os.path.join(tumor_type_path, person, person)
-                # base_person_file = f"{rootdir}{tumor_type}/{person}/{person}"
                 data = np.vstack((data, [
                     "{}_flair.nii.gz".format(base_person_file),
                     "{}_t1.nii.gz".format(base_person_file),
