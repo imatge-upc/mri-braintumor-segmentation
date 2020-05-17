@@ -3,11 +3,12 @@ import torch
 from torch.utils.data import Dataset
 import dataset.io as nifi_io
 import dataset.nifi_volume_utils as nifi_utils
+from dataset.augmentations.brats_augmentations import zero_mean_unit_variance_normalization
 from logging_conf import logger
 
 class BratsDataset(Dataset):
 
-    flair_idx, t1_idx, t2_idx, t1_ce_idx = 0, 1, 2, 3
+    flair_idx, t1_idx, t2_idx, t1ce_idx = 0, 1, 2, 3
 
     def __init__(self, data: np.ndarray, ground_truth: np.ndarray, modalities_to_use: dict, transform,  label:int=None):
         super(BratsDataset, self).__init__()
@@ -27,7 +28,7 @@ class BratsDataset(Dataset):
 
         flair = self._load_volume_modality(idx, BratsDataset.flair_idx)
         t1 = self._load_volume_modality(idx, BratsDataset.t1_idx)
-        t2= self._load_volume_modality(idx, BratsDataset.t2_idx)
+        t2 = self._load_volume_modality(idx, BratsDataset.t2_idx)
         t1_ce = self._load_volume_modality(idx, BratsDataset.t1_idx)
         segmentation_mask = self._load_volume_gt(idx)
 
@@ -36,7 +37,7 @@ class BratsDataset(Dataset):
         paths = [self.data[idx, BratsDataset.flair_idx],
                  self.data[idx, BratsDataset.t1_idx],
                  self.data[idx, BratsDataset.t2_idx],
-                 self.data[idx, BratsDataset.t1_ce_idx],
+                 self.data[idx, BratsDataset.t1ce_idx],
                  self.gt[idx]]
 
         modalities = np.asarray(modalities)
@@ -44,16 +45,19 @@ class BratsDataset(Dataset):
 
         if self.label:
             segmentation_mask = nifi_utils.get_one_label_volume(segmentation_mask, self.label)
-        segmentation_mask = segmentation_mask[np.newaxis]
+
+        segmentation_mask = segmentation_mask[np.newaxis] # add axis
 
         return modalities, segmentation_mask, paths
 
     def _load_volume_gt(self, idx: int) -> np.ndarray:
         return self._load_volume(nii_data=self.gt[idx])
 
-    def _load_volume_modality(self, idx: int, modality: int):
+    def _load_volume_modality(self, idx: int, modality: int, normalize: bool=True):
         if modality in self.modalities_to_use.keys() and self.modalities_to_use[modality]:
-            volume =  self._load_volume(nii_data=self.data[idx, modality])
+            volume = self._load_volume(nii_data=self.data[idx, modality])
+            if normalize:
+                volume = zero_mean_unit_variance_normalization(volume)
             return volume
         else:
             return None
