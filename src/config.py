@@ -1,5 +1,8 @@
 import configparser
 import os
+import time
+from logging_conf import logger
+
 
 def get_dataset_path(local_path, server_path):
 
@@ -14,6 +17,14 @@ def get_dataset_path(local_path, server_path):
     path_test = os.path.join(root_path, 'MICCAI_BraTS_2019_Data_Validation/')
 
     return path_train, path_test
+
+
+def create_log_directory(logs_dir):
+    logs = f"{logs_dir}_{round(time.time())}"
+    logger.debug(logs)
+    if not os.path.exists(logs):
+        os.makedirs(logs)
+    return logs
 
 
 def get_configuration(path):
