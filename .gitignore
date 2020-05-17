@@ -1,6 +1,7 @@
 # Repository
-data/
+results/
 .DS_Store
+
 # Caches
 __pycache__/
 .pytest_cache/

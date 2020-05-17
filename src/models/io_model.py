@@ -8,6 +8,7 @@ def create_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
+
 def save_checkpoint(state, is_best, output_path):
     """Save checkpoint if a new best is achieved"""
     if is_best:

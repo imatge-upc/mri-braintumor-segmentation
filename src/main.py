@@ -11,7 +11,7 @@ from config import get_configuration, get_dataset_path
 from dataset.dataset_generator import BratsDataset
 from dataset import io
 import train, test
-from model.vnet import vnet
+from models.vnet import vnet
 from logging_conf import logger
 
 ######## PARAMS

@@ -1,15 +1,12 @@
 import torch
 from torch.optim import lr_scheduler
 from tqdm import tqdm
-import os
-
 from losses.losses import SoftDiceLoss
 from metrics.training_metrics import AverageMeter, dice_coefficient
 from dataset import visualization_utils as visualization
 from logging_conf import logger
-from model.io_model import save_checkpoint
+from models.io_model import save_checkpoint
 
-os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 
 def _epoch_summary(epoch, train_loss, train_acc, val_loss, val_acc):

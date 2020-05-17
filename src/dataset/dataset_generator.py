@@ -17,7 +17,6 @@ class BratsDataset(Dataset):
         self.modalities_to_use = modalities_to_use
         self.label = label
 
-
     def __len__(self):
         return len(self.data)
 
@@ -42,9 +41,9 @@ class BratsDataset(Dataset):
 
         modalities = np.asarray(modalities)
         segmentation_mask = np.asarray(segmentation_mask)
+
         if self.label:
             segmentation_mask = nifi_utils.get_one_label_volume(segmentation_mask, self.label)
-        segmentation_mask = self._resize_volume(segmentation_mask)
         segmentation_mask = segmentation_mask[np.newaxis]
 
         return modalities, segmentation_mask, paths
@@ -55,13 +54,10 @@ class BratsDataset(Dataset):
     def _load_volume_modality(self, idx: int, modality: int):
         if modality in self.modalities_to_use.keys() and self.modalities_to_use[modality]:
             volume =  self._load_volume(nii_data=self.data[idx, modality])
-            return self._resize_volume(volume)
+            return volume
         else:
             return None
 
     def _load_volume(self, nii_data: str) -> np.ndarray:
         volume = nifi_io.load_nifi_volume(nii_data)
         return volume
-
-    def _resize_volume(self, volume):
-        return nifi_utils.resize_volume(volume)

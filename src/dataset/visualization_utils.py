@@ -6,21 +6,22 @@ from nilearn.plotting import plot_anat
 
 
 def plot_3_view(modal, volume_type: np.ndarray, s: int=100, save: bool=True):
-    ''' Plot slice of volume seen from each view (x, y, z)'''
+    """ Plot slice of volume seen from each view (x, y, z)"""
     views = [volume_type[s, :, :], volume_type[:, s, :], volume_type[:, :, s]]
     fig, axes = plt.subplots(1, len(views))
 
     for i, slice in enumerate(views):
-        dst = slice.numpy()
-        # dst = cv2.resize(dst, (200, 200), interpolation=cv2.INTER_CUBIC)
+        dst = slice # .numpy()
         axes[i].imshow(dst.T, cmap='viridis', origin="lower")
     if save:
         fig.savefig(f'plot_{modal}_{time.time()}.png')
     else:
         plt.show()
 
-def plot_axis_overlayed(modalities: list, segmentation_mask: str, subject: int, axis: str='x', save: bool=False):
-    '''Save or show figure of provided axis'''
+
+def plot_axis_overlayed(modalities: list, segmentation_mask: str, subject: int, axis: str = 'x', save: bool=False):
+    """Save or show figure of provided axis"""
+
     fig, axes = plt.subplots(len(modalities), 1)
     for i, modality in enumerate(modalities):
         display = plot_anat(modality, draw_cross=False, display_mode=axis, axes=axes[i], figure=fig, title=subject)
@@ -32,11 +33,12 @@ def plot_axis_overlayed(modalities: list, segmentation_mask: str, subject: int, 
         matplotlib.use('TkAgg')
         plt.show()
 
+
 def plot_batch(images, gt, paths=None, save=True):
-    '''Plot, for a given batch, different types of visualizations.
+    """Plot, for a given batch, different types of visualizations.
     If paths: plot overlayed axis plot
     If paths=None: plot slice of volume
-    '''
+    """
     for element_index in range(0, len(images)):
         if paths:
             patient_modalities = [paths[0][element_index], paths[1][element_index] , paths[2][element_index], paths[3][element_index]]

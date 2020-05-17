@@ -2,13 +2,12 @@
 Source material from: https://github.com/mattmacy/vnet.pytorch
 '''
 import torch.nn as nn
-from model.vnet.input_output_transitions import InputTransition, OutputTransition
-from model.vnet.up_down_transitions import DownTransition, UpTransition
+from models.vnet.input_output_transitions import InputTransition, OutputTransition
+from models.vnet.up_down_transitions import DownTransition, UpTransition
 
 
 class VNet(nn.Module):
-    # the number of convolutions in each layer corresponds
-    # to what is in the actual prototxt, not the intent
+
     def __init__(self, elu: bool=True, batch_size: int=1, labels: int=4):
         super(VNet, self).__init__()
 
