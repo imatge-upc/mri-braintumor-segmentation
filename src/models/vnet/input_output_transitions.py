@@ -23,34 +23,21 @@ class InputTransition(nn.Module):
         out = self.bn1(conv_x)
         join = torch.add(out, x)
         out = self.relu1(join)
-
         # x16 = torch.cat( (x,)*n_channels_to_split, 0) (inside the add)
-
         return out
 
 
 class OutputTransition(nn.Module):
-    def __init__(self, inChans, elu, nll):
-        super(OutputTransition, self).__init__()
-        self.conv1 = nn.Conv3d(inChans, 2, kernel_size=5, padding=2)
-        self.bn1 = ContBatchNorm3d(2)
-        self.conv2 = nn.Conv3d(2, 2, kernel_size=1)
-        self.relu1 = add_elu(elu, 2)
+    '''
+    Decoder output layer
+    output the prediction of segmentation result
+    '''
 
-        if nll:
-            self.softmax = F.log_softmax
-        else:
-            self.softmax = F.softmax
+    def __init__(self, inChans, outChans):
+        super(OutputTransition, self).__init__()
+
+        self.conv1 = nn.Conv3d(in_channels=inChans, out_channels=outChans, kernel_size=1)
+        self.actv1 = nn.Sigmoid()
 
     def forward(self, x):
-        # convolve 32 down to 2 channels
-        out = self.relu1(self.bn1(self.conv1(x)))
-        out = self.conv2(out)
-
-        # make channels the last axis
-        out = out.permute(0, 2, 3, 4, 1).contiguous()
-        # flatten
-        out = out.view(out.numel() // 2, 2)
-        out = self.softmax(out)
-
-        return out
+        return self.actv1(self.conv1(x))

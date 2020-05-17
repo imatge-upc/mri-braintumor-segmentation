@@ -26,7 +26,6 @@ class BratsDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        logger.debug(f'PACIENT: {idx}')
         flair = self._load_volume_modality(idx, BratsDataset.flair_idx)
         t1 = self._load_volume_modality(idx, BratsDataset.t1_idx)
         t2= self._load_volume_modality(idx, BratsDataset.t2_idx)
@@ -46,6 +45,7 @@ class BratsDataset(Dataset):
         if self.label:
             segmentation_mask = nifi_utils.get_one_label_volume(segmentation_mask, self.label)
         segmentation_mask = self._resize_volume(segmentation_mask)
+        segmentation_mask = segmentation_mask[np.newaxis]
 
         return modalities, segmentation_mask, paths
 
@@ -60,7 +60,6 @@ class BratsDataset(Dataset):
             return None
 
     def _load_volume(self, nii_data: str) -> np.ndarray:
-        logger.debug(nii_data)
         volume = nifi_io.load_nifi_volume(nii_data)
         return volume
 

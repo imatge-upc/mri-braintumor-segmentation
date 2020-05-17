@@ -9,10 +9,12 @@ from model.vnet.up_down_transitions import DownTransition, UpTransition
 class VNet(nn.Module):
     # the number of convolutions in each layer corresponds
     # to what is in the actual prototxt, not the intent
-    def __init__(self, elu: bool=True, nll:bool=False, batch_size: int=1):
+    def __init__(self, elu: bool=True, batch_size: int=1, labels: int=4):
         super(VNet, self).__init__()
 
         self.batch_size = batch_size
+        self.seg_outChans = labels
+
         self.in_tr = InputTransition(in_channels=self.batch_size,
                                      out_channels=16, elu=elu)
         # Downsampling
@@ -28,7 +30,7 @@ class VNet(nn.Module):
         self.up_tr32 = UpTransition(64, 32, 1, elu)
 
         # Output
-        self.out_tr = OutputTransition(32, elu, nll)
+        self.out_tr = OutputTransition(32, self.seg_outChans)
 
     def forward(self, x):
 
