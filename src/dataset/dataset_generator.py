@@ -1,10 +1,10 @@
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-import dataset.io as nifi_io
-import dataset.nifi_volume_utils as nifi_utils
-from dataset.augmentations.brats_augmentations import zero_mean_unit_variance_normalization
-from logging_conf import logger
+import src.dataset.io as nifi_io
+import src.dataset.nifi_volume_utils as nifi_utils
+from src.dataset.augmentations.brats_augmentations import zero_mean_unit_variance_normalization
+from src.logging_conf import logger
 
 class BratsDataset(Dataset):
 

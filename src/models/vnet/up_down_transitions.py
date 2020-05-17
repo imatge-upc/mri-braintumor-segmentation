@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-from models.vnet.LU_conv import LUConv
-from models.vnet.cont_batch_norm_3d import ContBatchNorm3d
-from models.vnet.activation_functions import add_elu
+from .LU_conv import LUConv
+from .cont_batch_norm_3d import ContBatchNorm3d
+from .activation_functions import add_elu
 
 def passthrough(x, **kwargs):
     return x

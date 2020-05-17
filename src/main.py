@@ -5,12 +5,12 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 from sklearn.model_selection import train_test_split
 
-from config import get_configuration, get_dataset_path, create_log_directory
-from dataset.dataset_generator import BratsDataset
-from dataset import io
-import train, test
-from models.vnet import vnet
-from logging_conf import logger
+from src.config import get_configuration, get_dataset_path, create_log_directory
+from src.dataset.dataset_generator import BratsDataset
+from src.dataset import io
+from src import train, test
+from src.models.vnet import vnet
+from src.logging_conf import logger
 
 ######## PARAMS
 logger.info("Processing Parameters...")

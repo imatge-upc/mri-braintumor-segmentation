@@ -1,11 +1,11 @@
 import torch
 from torch.optim import lr_scheduler
 from tqdm import tqdm
-from losses.losses import SoftDiceLoss
-from metrics.training_metrics import AverageMeter, dice_coefficient
-from dataset import visualization_utils as visualization
-from logging_conf import logger
-from models.io_model import save_checkpoint
+from src.losses.losses import SoftDiceLoss
+from src.metrics.training_metrics import AverageMeter, dice_coefficient
+from src.dataset import visualization_utils as visualization
+from src.logging_conf import logger
+from src.models.io_model import save_checkpoint
 
 
 

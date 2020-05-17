@@ -1,7 +1,7 @@
 import configparser
 import os
 import time
-from logging_conf import logger
+from src.logging_conf import logger
 
 
 def get_dataset_path(local_path, server_path):

@@ -1,7 +1,7 @@
 import os
 import torch
 
-from logging_conf import logger
+from src.logging_conf import logger
 
 
 def create_dir(path):

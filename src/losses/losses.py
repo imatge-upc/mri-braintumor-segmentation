@@ -2,6 +2,7 @@ import torch
 from torch.nn.modules.loss import _Loss
 
 
+
 class SoftDiceLoss(_Loss):
     """
     Soft_Dice = 2*|dot(A, B)| / (|dot(A, A)| + |dot(B, B)| + eps)

@@ -1,6 +1,7 @@
 # Repository
 results/
 .DS_Store
+tensorboard_logs/
 
 # Caches
 __pycache__/
@@ -20,3 +21,6 @@ venv.bak/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+# builds
+*.egg-info/

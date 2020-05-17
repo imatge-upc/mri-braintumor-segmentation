@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+
 class ContBatchNorm3d(nn.modules.batchnorm._BatchNorm):
 
     def _check_input_dim(self, input):
