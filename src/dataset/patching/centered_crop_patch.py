@@ -1,8 +1,10 @@
+from typing import Tuple
+
 import numpy as np
 from src.dataset.patching.commons import array4d_center_crop, array3d_center_crop
 
 
-def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple):
+def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple) -> Tuple[np.ndarray, np.ndarray]:
     """
     Centered crop patch. Just one patch per patient
     """

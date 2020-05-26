@@ -13,4 +13,4 @@ def test_visual_test():
     volume, volume_patch, seg_patch = patching_strategy(patching, (80, 80, 80))
     plot_3_view("equal_flair", volume[0, :, :, :], 100, save=save)
     plot_3_view("equal_patch_flair", volume_patch[0, :, :, :], 40, save=save)
-    plot_3_view("equal_path_seg", seg_patch, 40, save=save)
+    plot_3_view("equal_path_seg", seg_patch[:, :, :], 40, save=save)
