@@ -14,7 +14,7 @@ from src.dataset import visualization_utils as visualization
 from src.dataset.brats_dataset import BratsDataset
 from src.dataset.batch_sampler import BratsSampler
 from src.dataset import io_utils
-from src import train, test
+from src import test
 from src.models.vnet import vnet
 from src.logging_conf import logger
 

@@ -38,7 +38,7 @@ class BratsSampler(Sampler):
 
 if __name__ == "__main__":
     p = "/Users/lauramora/Documents/MASTER/TFM/Data/"
-    path_train, path_test = get_dataset_path(p, "something_else")
+    path_train, path_test = get_dataset_path(p, "something_else", "MICCAI_BraTS_2019_Data_Training", "MICCAI_BraTS_2019_Data_Validation")
 
     modalities_to_use = {BratsDataset.flair_idx: True,
                          BratsDataset.t1_idx: True,

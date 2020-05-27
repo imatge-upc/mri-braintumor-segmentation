@@ -3,6 +3,10 @@ from typing import Tuple
 import numpy as np
 import nibabel as nib
 
+def save_nifi_volume(volume:np.ndarray, path:str):
+    img = nib.Nifti1Image(volume, np.eye(4))
+    img.header.get_xyzt_units()
+    img.to_filename(path)
 
 
 def load_nifi_volume(filepath: str) -> np.ndarray:
@@ -33,7 +37,7 @@ def get_dataset(rootdir: str) -> Tuple[np.ndarray, np.ndarray]:
     return data, ground_truth
 
 
-def get_dataset_path(local_path, server_path):
+def get_dataset_path(local_path, server_path, train_folder, val_folder):
 
     if os.path.exists(local_path):
         root_path = local_path
@@ -42,7 +46,7 @@ def get_dataset_path(local_path, server_path):
     else:
         raise ValueError('No path is working')
 
-    path_train = os.path.join(root_path, 'MICCAI_BraTS_2019_Data_Training/')
-    path_test = os.path.join(root_path, 'MICCAI_BraTS_2019_Data_Validation/')
+    path_train = os.path.join(root_path, train_folder)
+    path_test = os.path.join(root_path, val_folder)
 
     return path_train, path_test

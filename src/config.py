@@ -31,7 +31,9 @@ class BratsConfiguration:
 
         self.config["dataset"]["path_train"], self.config["dataset"]["path_test"] = \
             io_utils.get_dataset_path(self.config.get("dataset", "dataset_root_path_local"),
-                                      self.config.get("dataset", "dataset_root_path_server"))
+                                      self.config.get("dataset", "dataset_root_path_server"),
+                                      self.config.get("dataset", "dataset_train_folder"),
+                                      self.config.get("dataset", "dataset_val_folder"))
 
         self.config["dataset"]["batch_size"] = str(self.config.getint("dataset", "n_patients_per_batch") * self.config.getint("dataset", "n_patches"))
         self.patch_size = tuple([int(item) for item in self.config.get("dataset", "patch_size").split("\n")])
