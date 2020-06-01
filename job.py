@@ -7,4 +7,4 @@ os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 
 sys.path.append(os.getcwd())
-os.system('python src/main.py resources/config.ini')
+os.system(f'python src/{sys.argv[1]} resources/config.ini')
