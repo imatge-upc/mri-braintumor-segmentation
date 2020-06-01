@@ -40,11 +40,21 @@ class BratsConfiguration:
                                                               self.config.get("model", "model_path_server"))
         create_directory(self.config.get("model", "model_path"))
 
+        sampling_method = self.config["dataset"]["sampling_method"].split(".")[-1]
         self.config["dataset"]["root_path"] = get_correct_path(self.config.get("dataset", "dataset_root_path_local"),
                                                                self.config.get("dataset", "dataset_root_path_server"))
-        self.config["dataset"]["path_train"] = os.path.join(self.config["dataset"]["root_path"], "train")
-        self.config["dataset"]["path_val"] = os.path.join(self.config["dataset"]["root_path"], "validation")
-        self.config["dataset"]["train_csv"] = os.path.join(self.config["dataset"]["path_train"], self.config.get("dataset", "train_csv"))
+
+        self.config["dataset"]["path_train"] = os.path.join(self.config["dataset"]["root_path"],
+                                                            self.config["dataset"]["dataset_train_folder"],
+                                                            sampling_method)
+
+        self.config["dataset"]["path_val"] = os.path.join(self.config["dataset"]["root_path"],
+                                                          self.config["dataset"]["dataset_val_folder"],
+                                                          sampling_method)
+
+        self.config["dataset"]["train_csv"] = os.path.join(self.config["dataset"]["path_train"],
+                                                           self.config.get("dataset", "train_csv"))
+
         self.config["dataset"]["val_csv"] = os.path.join(self.config["dataset"]["path_val"], self.config.get("dataset", "val_csv"))
 
         self.config["dataset"]["batch_size"] = str(self.config.getint("dataset", "n_patients_per_batch") * self.config.getint("dataset", "n_patches"))

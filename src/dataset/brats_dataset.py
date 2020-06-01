@@ -50,7 +50,7 @@ class BratsDataset(Dataset):
         segmentation_mask = self._load_volume_gt(os.path.join(root_path, self.data[idx].seg))
         segmentation_mask = self.convert_from_labels(segmentation_mask)
 
-        patch_modality, patch_segmentation = self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
+        patch_modality, patch_segmentation = modalities, segmentation_mask # self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
         return idx, patch_modality, patch_segmentation
 
 

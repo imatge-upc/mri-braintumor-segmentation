@@ -44,8 +44,8 @@ data = dataset_utils.read_brats(dataset_config.get("train_csv"))
 
 # data_train, data_val = train_test_split(data, test_size=0.25, random_state=42)
 
-data_train = data[:n_patches]
-data_val = data[n_patches:n_patches*2]
+data_train = data[:1]
+data_val = data[:1]
 
 modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,
                      BratsDataset.t1ce_idx: True}
