@@ -42,10 +42,10 @@ logger.info("Creating Dataset...")
 
 data = dataset_utils.read_brats(dataset_config.get("train_csv"))
 
-data_train, data_val = train_test_split(data, test_size=0.25, random_state=42)
+# data_train, data_val = train_test_split(data, test_size=0.25, random_state=42)
 
-# data_train = data_train[:1]
-# ∫data_val = data_val[:1]
+data_train = data[:n_patches]
+data_val = data[n_patches:n_patches*2]
 
 modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,
                      BratsDataset.t1ce_idx: True}
@@ -67,7 +67,7 @@ if basic_config.getboolean("plot"):
     i, x, y = next(iter(train_loader))
     print(x.shape)
     logger.info('Plotting images')
-    # visualization.plot_batch_cubes(i, x, y)
+    visualization.plot_batch_cubes(i, x, y)
     visualization.plot_brain_batch_per_patient(i, train_dataset.data)
 
 
@@ -94,8 +94,8 @@ if basic_config.getboolean("train_flag"):
     optimizer = torch.optim.SGD(network.parameters(), lr=model_config.getfloat("learning_rate"),
                                 momentum=model_config.getfloat("momentum"), weight_decay=model_config.getfloat("weight_decay"))
 
-    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"),
-                                               patience=model_config.getint("patience"))
+    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"), patience=model_config.getint("patience"))
+
     criterion = DiceLoss(classes=n_classes)
 
     args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"))

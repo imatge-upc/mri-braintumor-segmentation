@@ -14,8 +14,7 @@ def check_path_exists(path):
         raise FileNotFoundError(path)
     return path
 
-def get_dataset_path(local_path, server_path,):
-
+def get_correct_path(local_path, server_path):
     if os.path.exists(local_path):
         root_path = local_path
     elif os.path.exists(server_path):
@@ -23,6 +22,7 @@ def get_dataset_path(local_path, server_path,):
     else:
         raise ValueError('No path is working')
     return root_path
+
 
 
 class BratsConfiguration:
@@ -36,12 +36,12 @@ class BratsConfiguration:
 
     def prepare_parameters(self):
         create_directory(f'{self.config.get("basics", "tensorboard_logs")}_{round(time.time())}')
+        self.config["model"]["model_path"] = get_correct_path(self.config.get("model", "model_path_local"),
+                                                              self.config.get("model", "model_path_server"))
         create_directory(self.config.get("model", "model_path"))
 
-
-        self.config["dataset"]["root_path"] = get_dataset_path(self.config.get("dataset", "dataset_root_path_local"),
+        self.config["dataset"]["root_path"] = get_correct_path(self.config.get("dataset", "dataset_root_path_local"),
                                                                self.config.get("dataset", "dataset_root_path_server"))
-
         self.config["dataset"]["path_train"] = os.path.join(self.config["dataset"]["root_path"], "train")
         self.config["dataset"]["path_val"] = os.path.join(self.config["dataset"]["root_path"], "validation")
         self.config["dataset"]["train_csv"] = os.path.join(self.config["dataset"]["path_train"], self.config.get("dataset", "train_csv"))

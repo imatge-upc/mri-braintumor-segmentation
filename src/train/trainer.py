@@ -26,7 +26,7 @@ class Trainer:
         self.lr_scheduler = lr_scheduler
         self.writer = writer
 
-        self.start_epoch = 1
+        self.start_epoch = 0
         self.args = args
 
     def start(self):
