@@ -10,7 +10,7 @@ class TrainerArgs:
     def __init__(self, n_epochs=50, device="cpu", output_path=""):
         self.n_epochs = n_epochs
         self.device = device
-        self.output_patch = output_path
+        self.output_path = output_path
 
 class Trainer:
 
@@ -41,6 +41,7 @@ class Trainer:
 
             self._epoch_summary(epoch, train_loss, val_loss)
             is_best = bool(val_loss < best_loss)
+            best_loss = val_loss if is_best else best_loss
             save_checkpoint({
                 'epoch': self.start_epoch + epoch + 1,
                 'state_dict': self.model.state_dict(),

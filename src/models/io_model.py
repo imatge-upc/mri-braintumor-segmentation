@@ -12,9 +12,8 @@ def create_dir(path):
 def save_checkpoint(state, is_best, output_path):
     """Save checkpoint if a new best is achieved"""
     if is_best:
-        save_path = os.path.join(output_path,
-                                 f"checkpoint_epoch_{state['epoch']}_acc_{state['best_accuracy']}_loss_{state['loss']}.pth")
+        save_path = os.path.join(output_path, f"checkpoint_epoch_{state['epoch']}_val_loss_{state['val_loss']}.pth")
         logger.info(f"Saving a new best to {save_path}")
         torch.save(state, save_path)
     else:
-        logger.info("Validation Accuracy did not improve")
+        logger.info("Validation loss did not improve")
