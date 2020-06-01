@@ -2,6 +2,7 @@
 results/
 .DS_Store
 tensorboard_logs/
+*.pth
 
 # Caches
 __pycache__/

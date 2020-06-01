@@ -1,20 +1,18 @@
 import os
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
-import nibabel as nib
+import csv
+from src.dataset.patient import Patient
 
-def save_nifi_volume(volume:np.ndarray, path:str):
-    img = nib.Nifti1Image(volume, np.eye(4))
-    img.header.get_xyzt_units()
-    img.to_filename(path)
-
-
-def load_nifi_volume(filepath: str) -> np.ndarray:
-    proxy = nib.load(filepath)
-    img = proxy.get_fdata()
-    proxy.uncache()
-    return img
-
+def read_brats(csv_path: str) -> List:
+    patients = []
+    with open(csv_path, 'r') as csvfile:
+        reader = csv.reader(csvfile, skipinitialspace=True)
+        next(reader, None)
+        for row in reader:
+            patients.append(Patient(idx=row[0], center=row[3], grade=row[1], patient=row[2], patch_name=row[4],
+                                    size=list(map(int, row[5].split("x"))), data_path=os.path.dirname(csv_path)))
+    return patients
 
 def get_dataset(rootdir: str) -> Tuple[np.ndarray, np.ndarray]:
     data = np.empty([0, 4], dtype='object')
@@ -37,16 +35,3 @@ def get_dataset(rootdir: str) -> Tuple[np.ndarray, np.ndarray]:
     return data, ground_truth
 
 
-def get_dataset_path(local_path, server_path, train_folder, val_folder):
-
-    if os.path.exists(local_path):
-        root_path = local_path
-    elif os.path.exists(server_path):
-        root_path = server_path
-    else:
-        raise ValueError('No path is working')
-
-    path_train = os.path.join(root_path, train_folder)
-    path_test = os.path.join(root_path, val_folder)
-
-    return path_train, path_test

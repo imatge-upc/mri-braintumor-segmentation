@@ -13,7 +13,7 @@ from src.config import BratsConfiguration
 from src.dataset import visualization_utils as visualization
 from src.dataset.brats_dataset import BratsDataset
 from src.dataset.batch_sampler import BratsSampler
-from src.dataset import io_utils
+from src.dataset import dataset_utils
 from src import test
 from src.models.vnet import vnet
 from src.logging_conf import logger
@@ -40,13 +40,12 @@ logger.info(f"Device: {device}")
 ######## DATASET
 logger.info("Creating Dataset...")
 
-data, labels = io_utils.get_dataset(dataset_config.get("path_train"))
-x_train, x_val, y_train, y_val = train_test_split(data, labels, test_size=0.25, random_state=42)
+data = dataset_utils.read_brats(dataset_config.get("train_csv"))
 
-x_train = x_train[:1]
-y_train = y_train[:1]
-x_val = x_val[:1]
-y_val = y_val[:1]
+data_train, data_val = train_test_split(data, test_size=0.25, random_state=42)
+
+# data_train = data_train[:1]
+# ∫data_val = data_val[:1]
 
 modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,
                      BratsDataset.t1ce_idx: True}
@@ -56,11 +55,11 @@ transforms = T.Compose([T.ToTensor()])
 
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
-train_dataset = BratsDataset(x_train, y_train, modalities_to_use, sampling_method, patch_size, transforms)
+train_dataset = BratsDataset(data_train, modalities_to_use, sampling_method, patch_size, transforms)
 train_sampler = BratsSampler(train_dataset, n_patients_per_batch, n_patches)
 train_loader = DataLoader(dataset=train_dataset, batch_sampler=train_sampler, num_workers=4)
 
-val_dataset = BratsDataset(x_val, y_val, modalities_to_use, sampling_method, patch_size, transforms)
+val_dataset = BratsDataset(data_val, modalities_to_use, sampling_method, patch_size, transforms)
 val_sampler = BratsSampler(train_dataset, n_patients_per_batch, n_patches)
 val_loader = DataLoader(dataset=val_dataset, batch_sampler=val_sampler, num_workers=4)
 
@@ -68,8 +67,8 @@ if basic_config.getboolean("plot"):
     i, x, y = next(iter(train_loader))
     print(x.shape)
     logger.info('Plotting images')
-    visualization.plot_batch_cubes(i, x, y)
-    visualization.plot_brain_batch_per_patient(i, train_dataset.dataset_data, train_dataset.dataset_segmentation)
+    # visualization.plot_batch_cubes(i, x, y)
+    visualization.plot_brain_batch_per_patient(i, train_dataset.data)
 
 
 

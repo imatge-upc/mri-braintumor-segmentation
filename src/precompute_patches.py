@@ -3,11 +3,11 @@ import os
 import sys
 
 from src.dataset.batch_sampler import BratsSampler
-from src.dataset.io_utils import save_nifi_volume
+from src.dataset.nifi_volume_utils import save_nifi_volume
 from torch.utils.data import DataLoader
 from torchvision import transforms as T
 
-from src.dataset import io_utils
+from src.dataset import dataset_utils
 from src.config import BratsConfiguration
 from src.dataset.brats_dataset import BratsDataset
 from tqdm import tqdm
@@ -31,7 +31,7 @@ sampling_name = dataset_config.get("sampling_method").split(".")[-1]
 method_path = f"/Users/lauramora/Documents/MASTER/TFM/Data/2019/MICCAI_BraTS_2019_Data_Training_patches/{sampling_name}"
 
 
-data, labels = io_utils.get_dataset(dataset_config.get("path_train"))
+data, labels = dataset_utils.get_dataset(dataset_config.get("path_train"))
 
 
 train_dataset = BratsDataset(data, labels, modalities_to_use, sampling_method, patch_size, T.Compose([T.ToTensor()]))
@@ -39,7 +39,7 @@ train_sampler = BratsSampler(train_dataset, n_patients_per_batch, n_patches)
 train_loader = DataLoader(dataset=train_dataset, batch_sampler=train_sampler, num_workers=4)
 
 
-for patient_id, data_batch, labels_batch in tqdm(train_loader, desc="Training epoch"):
+for patient_id, data_batch, labels_batch in tqdm(train_loader, desc="Computing patches"):
     patient_base_name = train_dataset.get_patient_info(patient_id)["name"]
 
     for i, (patch_modalities, patch_seg) in enumerate(zip(data_batch, labels_batch)):

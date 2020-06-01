@@ -3,7 +3,6 @@ from random import shuffle
 from torch.utils.data import Sampler, DataLoader
 
 from src.dataset.brats_dataset import BratsDataset
-from src.dataset.io_utils import get_dataset_path
 
 
 class BratsSampler(Sampler):
@@ -38,7 +37,7 @@ class BratsSampler(Sampler):
 
 if __name__ == "__main__":
     p = "/Users/lauramora/Documents/MASTER/TFM/Data/"
-    path_train, path_test = get_dataset_path(p, "something_else", "MICCAI_BraTS_2019_Data_Training", "MICCAI_BraTS_2019_Data_Validation")
+    path_train, path_test = "MICCAI_BraTS_2019_Data_Training", "MICCAI_BraTS_2019_Data_Validation"
 
     modalities_to_use = {BratsDataset.flair_idx: True,
                          BratsDataset.t1_idx: True,

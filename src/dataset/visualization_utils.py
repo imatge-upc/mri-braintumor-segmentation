@@ -1,3 +1,5 @@
+import os
+
 from matplotlib import pyplot as plt
 import matplotlib
 import time
@@ -38,11 +40,11 @@ def plot_axis_overlayed(modalities: list, segmentation_mask: str, subject: int, 
         plt.show()
 
 
-def plot_brain_batch_per_patient(patient_ids, images, gt, save=True):
+def plot_brain_batch_per_patient(patient_ids, data, save=True):
     for patient in patient_ids:
-        patient = patient.item()
-        patient_modalities = [images[patient][0], images[patient][1], images[patient][2], images[patient][3]]
-        patient_seg = gt[patient]
+        patient = data[patient.item()]
+        patient_modalities = list(map(lambda x: os.path.join(patient.data_path, patient.patient, x), [patient.flair, patient.t2, patient.t1, patient.t1ce]))
+        patient_seg = os.path.join(patient.data_path, patient.patient, patient.seg)
         plot_axis_overlayed(patient_modalities, patient_seg, patient, axis='x', save=save)
 
 

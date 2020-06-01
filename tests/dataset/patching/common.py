@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from src.dataset.visualization_utils import plot_3_view
-from src.dataset.io_utils import load_nifi_volume
+from src.dataset.nifi_volume_utils import load_nifi_volume
 
 
 dataset_path = "/Users/lauramora/Documents/MASTER/TFM/Data/MICCAI_BraTS_2019_Data_Training/HGG/"
