@@ -12,7 +12,8 @@ def start(model, dataloader, device):
         batch_preds = torch.sigmoid(model(images.to(device)))
         batch_preds = batch_preds.detach().cpu().numpy()
 
+        print(batch_preds.shape)
 
-        ax1.imshow(np.squeeze(batch_preds), cmap='gray')
-        ax2.imshow(np.squeeze(labels_batch), cmap='gray')
-        break
+        # ax1.imshow(np.squeeze(batch_preds), cmap='gray')
+        # ax2.imshow(np.squeeze(labels_batch), cmap='gray')
+        # break

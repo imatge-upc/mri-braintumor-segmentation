@@ -85,10 +85,9 @@ else:
     raise ValueError("Bad parameter for network {}".format(model_config.get("network")))
 
 
-##### TRAIN
-logger.info("Start Training")
-
 if basic_config.getboolean("train_flag"):
+    ##### TRAIN
+    logger.info("Start Training")
     network.to(device)
 
     writer = SummaryWriter(tensorboard_logdir)
@@ -107,23 +106,5 @@ if basic_config.getboolean("train_flag"):
 if basic_config.getboolean("test_flag") :
     checkpoint_path = "results/checkpoints/checkpoint_epoch_1_val_loss_0.45609837770462036.pth"
     model, _, epoch, loss = load_model(network, checkpoint_path, None, False)
-    model.eval()
+    inference(model, train_loader, device)
 
-    import os
-    import numpy as np
-
-    for patient in data:
-
-        patient_path = os.path.join(patient.data_path, patient.patch_name)
-        flair = load_volume(os.path.join(patient_path, patient.flair), False)
-        t1 =    load_volume(os.path.join(patient_path, patient.t1), False)
-        t2 =    load_volume(os.path.join(patient_path, patient.t2), False)
-        t1_ce = load_volume(os.path.join(patient_path, patient.t1ce), False)
-        seg = load_volume(os.path.join(patient_path, patient.seg), False)
-
-        modalities = torch.from_numpy(np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))).float()
-        modalities = modalities.unsqueeze(0)
-
-        pred = model(modalities)
-        res = torch.sigmoid(pred).detach().cpu().numpy()
-        save_nifi_volume(res, "result.nii.gz")
