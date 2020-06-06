@@ -17,3 +17,18 @@ def save_checkpoint(state, is_best, output_path):
         torch.save(state, save_path)
     else:
         logger.info("Validation loss did not improve")
+
+def load_model(model, path: str, optimizer=None, resume: bool=False, device: str="cpu"):
+    if resume:
+        assert optimizer is not None, "Need optimizer to resume training"
+
+    checkpoint = torch.load(path, map_location=torch.device(device))
+    epoch = checkpoint['epoch']
+    loss = checkpoint['val_loss']
+
+    model.load_state_dict(checkpoint['state_dict'])
+
+    if resume:
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+    return model, optimizer, epoch, loss

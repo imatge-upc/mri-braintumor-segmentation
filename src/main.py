@@ -1,20 +1,22 @@
 import importlib
 import sys
 import torch
+from src.dataset.nifi_volume_utils import save_nifi_volume
 from src.losses.dice_loss import DiceLoss
+from src.models.io_model import load_model
+from src.precompute_patches import load_volume
 from src.train.trainer import Trainer, TrainerArgs
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms as T
-from sklearn.model_selection import train_test_split
 
 from src.config import BratsConfiguration
 from src.dataset import visualization_utils as visualization
 from src.dataset.brats_dataset import BratsDataset
 from src.dataset.batch_sampler import BratsSampler
 from src.dataset import dataset_utils
-from src import test
+from src import inference
 from src.models.vnet import vnet
 from src.logging_conf import logger
 
@@ -103,5 +105,25 @@ if basic_config.getboolean("train_flag"):
     trainer.start()
 
 if basic_config.getboolean("test_flag") :
-    test.start()
+    checkpoint_path = "results/checkpoints/checkpoint_epoch_1_val_loss_0.45609837770462036.pth"
+    model, _, epoch, loss = load_model(network, checkpoint_path, None, False)
+    model.eval()
 
+    import os
+    import numpy as np
+
+    for patient in data:
+
+        patient_path = os.path.join(patient.data_path, patient.patch_name)
+        flair = load_volume(os.path.join(patient_path, patient.flair), False)
+        t1 =    load_volume(os.path.join(patient_path, patient.t1), False)
+        t2 =    load_volume(os.path.join(patient_path, patient.t2), False)
+        t1_ce = load_volume(os.path.join(patient_path, patient.t1ce), False)
+        seg = load_volume(os.path.join(patient_path, patient.seg), False)
+
+        modalities = torch.from_numpy(np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))).float()
+        modalities = modalities.unsqueeze(0)
+
+        pred = model(modalities)
+        res = torch.sigmoid(pred).detach().cpu().numpy()
+        save_nifi_volume(res, "result.nii.gz")
