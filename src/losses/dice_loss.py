@@ -84,7 +84,6 @@ class DiceLoss(nn.Module):
         if weight is not None:
             intersect = weight * intersect
 
-        # here we can use standard dice (input + target).sum(-1) or extension (see V-Net) (input^2 + target^2).sum(-1)
         denominator = (input * input).sum(-1) + (target * target).sum(-1)
         return 2 * (intersect / denominator.clamp(min=epsilon))
 

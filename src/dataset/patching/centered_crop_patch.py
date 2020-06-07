@@ -9,6 +9,6 @@ def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple) -> Tuple
     Centered crop patch. Just one patch per patient
     """
     volume_patch = array4d_center_crop(volume, patch_size)
-    seg_patch = array3d_center_crop(labels, patch_size)
+    seg_patch =  array3d_center_crop(labels, patch_size) if labels else None
 
     return volume_patch, seg_patch

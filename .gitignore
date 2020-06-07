@@ -3,6 +3,7 @@ results/
 .DS_Store
 tensorboard_logs/
 *.pth
+*.nii.gz
 
 # Caches
 __pycache__/
@@ -25,3 +26,4 @@ venv.bak/
 
 # builds
 *.egg-info/
+

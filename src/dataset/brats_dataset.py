@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import torch
+from src.dataset.dataset_utils import convert_from_labels
 from torch.utils.data import Dataset
 from torchvision import transforms
 
@@ -48,7 +49,7 @@ class BratsDataset(Dataset):
         modalities = np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))
 
         segmentation_mask = self._load_volume_gt(os.path.join(root_path, self.data[idx].seg))
-        segmentation_mask = self.convert_from_labels(segmentation_mask)
+        segmentation_mask = convert_from_labels(segmentation_mask)
 
         patch_modality, patch_segmentation = modalities, segmentation_mask # self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
         return idx, patch_modality, patch_segmentation
@@ -70,12 +71,3 @@ class BratsDataset(Dataset):
 
     def get_patient_info(self, idx):
         return {attr[0]: attr[1] for attr in vars(self.data[idx]).items()}
-
-
-    def convert_from_labels(self, segmentation_map):
-        segmentation_map[segmentation_map == 4] = 3
-        return segmentation_map
-
-    def convert_to_labels(self, segmentation_map):
-        segmentation_map[segmentation_map == 3] = 4
-        return segmentation_map

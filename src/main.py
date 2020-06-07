@@ -39,6 +39,7 @@ n_classes = dataset_config.getint("classes")
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 logger.info(f"Device: {device}")
 
+
 ######## DATASET
 logger.info("Creating Dataset...")
 
@@ -106,5 +107,5 @@ if basic_config.getboolean("train_flag"):
 if basic_config.getboolean("test_flag") :
     checkpoint_path = "results/checkpoints/checkpoint_epoch_1_val_loss_0.45609837770462036.pth"
     model, _, epoch, loss = load_model(network, checkpoint_path, None, False)
-    inference(model, train_loader, device)
+    inference.start(model, train_loader, device)
 
