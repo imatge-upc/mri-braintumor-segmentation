@@ -1,4 +1,3 @@
-import importlib
 import os
 import sys
 
@@ -13,7 +12,7 @@ from src.models.vnet import vnet
 import numpy as np
 
 
-def _load_data(patient: Patient, sampling_method) -> np.ndarray:
+def _load_data(patient: Patient) -> np.ndarray:
     patient_path = os.path.join(patient.data_path, patient.patch_name)
 
     flair = load_nifi_volume(os.path.join(patient_path, patient.flair), True)
@@ -21,14 +20,20 @@ def _load_data(patient: Patient, sampling_method) -> np.ndarray:
     t2 = load_nifi_volume(os.path.join(patient_path, patient.t2), True)
     t1_ce = load_nifi_volume(os.path.join(patient_path, patient.t1ce), True)
     modalities = np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))
-    # modalities, _ = sampling_method.patching(modalities, None, (160, 192, 128))
+
     return modalities
 
-def predict(model, patient: Patient, sampling_method, device: torch.device) -> np.ndarray:
+def predict(model, patient: Patient, add_padding: bool, device: torch.device) -> np.ndarray:
     model.eval()
 
     with torch.no_grad():
-        images = torch.from_numpy(_load_data(patient, sampling_method)).unsqueeze(0)
+        images = _load_data(patient)
+        if add_padding:
+            new_array = np.zeros((4, 240, 240, 240))
+            new_array[:,  :images.shape[1], :images.shape[2], :images.shape[3]] = images
+            images = new_array
+
+        images = torch.from_numpy(images).unsqueeze(0)
         inputs = images.float().to(device)
 
         preds = model(inputs)
@@ -41,20 +46,21 @@ def predict(model, patient: Patient, sampling_method, device: torch.device) -> n
 
 
 if __name__ == "__main__":
+
     config = BratsConfiguration(sys.argv[1])
     model_config = config.get_model_config()
     dataset_config = config.get_dataset_config()
     basic_config = config.get_basic_config()
-    sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
+
+    add_padding = True if dataset_config.get("sampling_method").split(".")[-1] == "no_patch" else False
 
     network = vnet.VNet(elu=model_config.getboolean("use_elu"), in_channels=4, classes=4)
 
-    checkpoint_path = "results/checkpoints/checkpoint_epoch_1_val_loss_0.45609837770462036.pth"
+
+    checkpoint_path = os.path.join(model_config.get("model_path"), model_config.get("checkpoint"))
     model, _, epoch, loss = load_model(network, checkpoint_path, None, False)
 
     data = dataset_utils.read_brats(dataset_config.get("train_csv"))
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    prediction = predict(model, data[0], sampling_method, device)
-
-    print()
+    prediction = predict(model, data[0], add_padding, device)
