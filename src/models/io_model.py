@@ -18,7 +18,7 @@ def save_checkpoint(state, is_best, output_path):
     else:
         logger.info("Validation loss did not improve")
 
-def load_model(model, path: str, optimizer=None, resume: bool=False, device: str="cpu"):
+def load_model(model, path: str, device, optimizer=None, resume: bool=False):
     if resume:
         assert optimizer is not None, "Need optimizer to resume training"
 

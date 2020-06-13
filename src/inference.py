@@ -41,6 +41,7 @@ def predict(model, patient: Patient, add_padding: bool, device: torch.device) ->
         output_array = convert_to_labels(output_array)
 
     output_path = os.path.join(patient.data_path, patient.patch_name, f"{patient.patch_name}_prediction.nii.gz")
+    print(f"Saving prediction to: {output_path}")
     save_nifi_volume(output_array, output_path)
     return output_array
 
@@ -51,16 +52,17 @@ if __name__ == "__main__":
     model_config = config.get_model_config()
     dataset_config = config.get_dataset_config()
     basic_config = config.get_basic_config()
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     add_padding = True if dataset_config.get("sampling_method").split(".")[-1] == "no_patch" else False
 
     network = vnet.VNet(elu=model_config.getboolean("use_elu"), in_channels=4, classes=4)
+    network.to(device)
 
 
     checkpoint_path = os.path.join(model_config.get("model_path"), model_config.get("checkpoint"))
-    model, _, epoch, loss = load_model(network, checkpoint_path, None, False)
+    model, _, epoch, loss = load_model(network, checkpoint_path, device, None, False)
 
     data = dataset_utils.read_brats(dataset_config.get("train_csv"))
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     prediction = predict(model, data[0], add_padding, device)

@@ -35,10 +35,19 @@ class BratsConfiguration:
         self.prepare_parameters()
 
     def prepare_parameters(self):
-        create_directory(f'{self.config.get("basics", "tensorboard_logs")}_{round(time.time())}')
+
         self.config["model"]["model_path"] = get_correct_path(self.config.get("model", "model_path_local"),
                                                               self.config.get("model", "model_path_server"))
-        create_directory(self.config.get("model", "model_path"))
+
+        if self.config.get("basics", "train_flag"):
+            logger.info("Create model directory and save configuration")
+            create_directory(f'{self.config.get("basics", "tensorboard_logs")}_{round(time.time())}')
+            self.config["model"]["model_path"] = os.path.join(self.config.get("model", "model_path"), f"model_{round(time.time())}")
+            create_directory(self.config["model"]["model_path"])
+            # save current configuration there
+            with open(os.path.join(self.config["model"]["model_path"], "config.ini"), 'w') as configfile:
+                self.config.write(configfile)
+
 
         sampling_method = self.config["dataset"]["sampling_method"].split(".")[-1]
         self.config["dataset"]["root_path"] = get_correct_path(self.config.get("dataset", "dataset_root_path_local"),
