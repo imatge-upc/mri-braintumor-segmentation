@@ -7,8 +7,6 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 from src.dataset import nifi_volume_utils as nifi_utils
-from src.dataset.augmentations.brats_augmentations import zero_mean_unit_variance_normalization
-
 
 
 class BratsDataset(Dataset):
@@ -32,6 +30,7 @@ class BratsDataset(Dataset):
         self.sampling_method = sampling_method
         self.patch_size = patch_size
         self.transforms = transforms
+        self.normalize = False
 
     def __len__(self):
         return len(self.data)
@@ -55,18 +54,15 @@ class BratsDataset(Dataset):
         return idx, patch_modality, patch_segmentation
 
 
-    def _load_volume_modality(self, modality_path: str, modality: int, normalize: bool=True):
+    def _load_volume_modality(self, modality_path: str, modality: int):
         if modality in self.modalities_to_use.keys() and self.modalities_to_use[modality]:
-
-            volume = nifi_utils.load_nifi_volume(modality_path)
-            if normalize:
-                volume = zero_mean_unit_variance_normalization(volume)
+            volume = nifi_utils.load_nifi_volume(modality_path, self.normalize)
             return volume
         else:
             return None
 
     def _load_volume_gt(self, seg_mask: str) -> np.ndarray:
-        return nifi_utils.load_nifi_volume(seg_mask)
+        return nifi_utils.load_nifi_volume(seg_mask, normalize=False) # segmentation --> always false
 
 
     def get_patient_info(self, idx):

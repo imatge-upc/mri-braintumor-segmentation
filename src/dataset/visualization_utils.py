@@ -24,12 +24,12 @@ def plot_3_view(modal, volume_type: np.ndarray, s: int=100, save: bool=True):
         plt.show()
 
 
-def plot_axis_overlayed(modalities: list, segmentation_mask: str, subject: int, axis: str = 'x', save: bool=False):
+def plot_axis_overlayed(modalities: dict, segmentation_mask: str, subject: int, axis: str = 'x', save: bool=False):
     """Save or show figure of provided axis"""
     fig, axes = plt.subplots(len(modalities), 1)
 
-    for i, modality in enumerate(modalities):
-        display = plot_anat(modality, draw_cross=False, display_mode=axis, axes=axes[i], figure=fig, title=subject)
+    for i, (modality_name, modality_path) in enumerate(modalities.items()):
+        display = plot_anat(modality_path, draw_cross=False, display_mode=axis, axes=axes[i], figure=fig, title=modality_name)
         display.add_overlay(segmentation_mask)
 
     if save:
@@ -42,9 +42,10 @@ def plot_axis_overlayed(modalities: list, segmentation_mask: str, subject: int, 
 def plot_brain_batch_per_patient(patient_ids, data, save=True):
     for patient in patient_ids:
         patient = data[patient.item()]
-        patient_modalities = list(map(lambda x: os.path.join(patient.data_path, patient.patient, x), [patient.flair, patient.t2, patient.t1, patient.t1ce]))
-        patient_seg = os.path.join(patient.data_path, patient.patient, patient.seg)
-        plot_axis_overlayed(patient_modalities, patient_seg, patient, axis='x', save=save)
+        patient_modalities = list(map(lambda x: os.path.join(patient.data_path, patient.patch_name, x), [patient.flair, patient.t2, patient.t1, patient.t1ce]))
+        patient_modalities = {"flair": patient_modalities[0],"t2": patient_modalities[1],"t1": patient_modalities[2],"t1ce": patient_modalities[3] }
+        patient_seg = os.path.join(patient.data_path, patient.patch_name, patient.seg)
+        plot_axis_overlayed(patient_modalities, patient_seg, patient.patch_name, axis='x', save=save)
 
 
 def plot_batch_slice(images, gt, save=True):

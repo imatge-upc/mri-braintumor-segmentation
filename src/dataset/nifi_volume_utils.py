@@ -15,7 +15,7 @@ def save_nifi_volume(volume:np.ndarray, path:str):
     img.to_filename(path)
 
 
-def load_nifi_volume(filepath: str, normalize: bool=True) -> np.ndarray:
+def load_nifi_volume(filepath: str, normalize: bool=False) -> np.ndarray:
     proxy = nib.load(filepath)
     img = proxy.get_fdata()
     proxy.uncache()

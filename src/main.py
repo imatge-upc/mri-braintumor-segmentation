@@ -16,7 +16,6 @@ from src.dataset import visualization_utils as visualization
 from src.dataset.brats_dataset import BratsDataset
 from src.dataset.batch_sampler import BratsSampler
 from src.dataset import dataset_utils
-from src import inference
 from src.models.vnet import vnet
 from src.logging_conf import logger
 
@@ -50,9 +49,10 @@ data = dataset_utils.read_brats(dataset_config.get("train_csv"))
 data_train = data[:n_patches]
 data_val = data[:n_patches]
 
+
+n_modalities = dataset_config.getint("n_modalities") # like color channels
 modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,
                      BratsDataset.t1ce_idx: True}
-n_modalities = 4
 
 transforms = T.Compose([T.ToTensor()])
 
@@ -70,7 +70,7 @@ if basic_config.getboolean("plot"):
     i, x, y = next(iter(train_loader))
     print(x.shape)
     logger.info('Plotting images')
-    visualization.plot_batch_cubes(i, x, y)
+    # visualization.plot_batch_cubes(i, x, y)
     visualization.plot_brain_batch_per_patient(i, train_dataset.data)
 
 
@@ -103,9 +103,4 @@ if basic_config.getboolean("train_flag"):
     args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"))
     trainer = Trainer(args, network, optimizer, criterion, train_loader, val_loader, scheduler, writer)
     trainer.start()
-
-if basic_config.getboolean("test_flag") :
-    checkpoint_path = "results/checkpoints/checkpoint_epoch_1_val_loss_0.45609837770462036.pth"
-    model, _, epoch, loss = load_model(network, checkpoint_path, None, False)
-    inference.start(model, train_loader, device)
-
+    print("Finished!")
