@@ -1,10 +1,9 @@
 import importlib
 import sys
 import torch
-from src.dataset.nifi_volume_utils import save_nifi_volume
+
+from src.dataset.train_val_split import train_val_split
 from src.losses.dice_loss import DiceLoss
-from src.models.io_model import load_model
-from src.precompute_patches import load_volume
 from src.train.trainer import Trainer, TrainerArgs
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
@@ -44,10 +43,10 @@ logger.info("Creating Dataset...")
 
 data = dataset_utils.read_brats(dataset_config.get("train_csv"))
 
-# data_train, data_val = train_test_split(data, test_size=0.25, random_state=42)
+data_train, data_val = train_val_split(data, val_size=0.25)
 
-data_train = data[:n_patches]
-data_val = data[:n_patches]
+# data_train = data[:n_patches]
+# data_val = data[:n_patches]
 
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
