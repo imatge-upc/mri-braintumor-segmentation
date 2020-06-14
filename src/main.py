@@ -48,7 +48,6 @@ data_train, data_val = train_val_split(data, val_size=0.25)
 # data_train = data[:n_patches]
 # data_val = data[:n_patches]
 
-
 n_modalities = dataset_config.getint("n_modalities") # like color channels
 modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,
                      BratsDataset.t1ce_idx: True}
