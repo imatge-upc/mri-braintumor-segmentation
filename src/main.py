@@ -59,7 +59,7 @@ train_sampler = BratsPatchSampler(train_dataset, n_patients_per_batch, n_patches
 train_loader = DataLoader(dataset=train_dataset, batch_sampler=train_sampler, num_workers=4)
 
 val_dataset = BratsDataset(data_val, modalities_to_use, sampling_method, patch_size, transforms)
-val_sampler = BratsSampler(train_dataset, n_patients_per_batch, n_patches)
+val_sampler = BratsSampler(val_dataset, n_patients_per_batch, n_patches)
 val_loader = DataLoader(dataset=val_dataset, batch_sampler=val_sampler, num_workers=4)
 
 if basic_config.getboolean("plot"):
