@@ -5,7 +5,7 @@ import torch
 from src.config import BratsConfiguration
 from src.dataset import dataset_utils
 from src.dataset.dataset_utils import convert_to_labels
-from src.dataset.nifi_volume_utils import save_nifi_volume, load_nifi_volume
+from src.dataset.nifi_volume_utils import save_segmask_as_nifi_volume, load_nifi_volume
 from src.dataset.patient import Patient
 from src.models.io_model import load_model
 from src.models.vnet import vnet
@@ -41,8 +41,12 @@ def predict(model, patient: Patient, add_padding: bool, device: torch.device) ->
         output_array = convert_to_labels(output_array)
 
     output_path = os.path.join(patient.data_path, patient.patch_name, f"{patient.patch_name}_prediction.nii.gz")
+    flair_path = os.path.join(patient.data_path, patient.patch_name, patient.flair)
     print(f"Saving prediction to: {output_path}")
-    save_nifi_volume(output_array, output_path)
+    if add_padding:
+        output_array = output_array[:, :, :155]
+    save_segmask_as_nifi_volume(output_array, flair_path, output_path)
+
     return output_array
 
 
@@ -60,7 +64,7 @@ if __name__ == "__main__":
     network.to(device)
 
 
-    checkpoint_path = os.path.join(model_config.get("model_path"), model_config.get("checkpoint"))
+    checkpoint_path = os.path.join(model_config.get("model_path_local"), model_config.get("checkpoint"))
     model, _, epoch, loss = load_model(network, checkpoint_path, device, None, False)
 
     data = dataset_utils.read_brats(dataset_config.get("train_csv"))

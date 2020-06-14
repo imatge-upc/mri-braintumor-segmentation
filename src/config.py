@@ -39,10 +39,13 @@ class BratsConfiguration:
         self.config["model"]["model_path"] = get_correct_path(self.config.get("model", "model_path_local"),
                                                               self.config.get("model", "model_path_server"))
 
-        if self.config.get("basics", "train_flag"):
+        train  = self.config.getboolean("basics", "train_flag")
+        if train:
+
             logger.info("Create model directory and save configuration")
             create_directory(f'{self.config.get("basics", "tensorboard_logs")}_{round(time.time())}')
             self.config["model"]["model_path"] = os.path.join(self.config.get("model", "model_path"), f"model_{round(time.time())}")
+
             create_directory(self.config["model"]["model_path"])
             # save current configuration there
             with open(os.path.join(self.config["model"]["model_path"], "config.ini"), 'w') as configfile:
