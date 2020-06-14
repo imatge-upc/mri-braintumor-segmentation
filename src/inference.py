@@ -64,7 +64,7 @@ if __name__ == "__main__":
     network.to(device)
 
 
-    checkpoint_path = os.path.join(model_config.get("model_path_local"), model_config.get("checkpoint"))
+    checkpoint_path = os.path.join(model_config.get("model_path"), model_config.get("checkpoint"))
     model, _, epoch, loss = load_model(network, checkpoint_path, device, None, False)
 
     data = dataset_utils.read_brats(dataset_config.get("train_csv"))
