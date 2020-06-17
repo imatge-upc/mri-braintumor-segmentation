@@ -43,7 +43,8 @@ class BratsConfiguration:
         if train:
 
             logger.info("Create model directory and save configuration")
-            create_directory(f'{self.config.get("basics", "tensorboard_logs")}_{round(time.time())}')
+            self.config["basics"]["tensorboard_logs"] = f'{self.config.get("basics", "tensorboard_logs")}_{round(time.time())}'
+            create_directory(self.config.get("basics", "tensorboard_logs"))
             self.config["model"]["model_path"] = os.path.join(self.config.get("model", "model_path"), f"model_{round(time.time())}")
 
             create_directory(self.config["model"]["model_path"])

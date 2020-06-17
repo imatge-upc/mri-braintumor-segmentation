@@ -29,7 +29,7 @@ def get_split_random(data: np.array, patches_by_patient: dict, val_size: float) 
 
 
 
-def train_val_split(data: list, val_size: float=0.25):
+def train_val_split(data: list, val_size: float=0.25) -> Tuple[List, List]:
     patches_by_patient_lgg = {}
     patches_by_patient_hgg = {}
 

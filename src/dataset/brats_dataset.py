@@ -13,7 +13,7 @@ class BratsDataset(Dataset):
 
     flair_idx, t1_idx, t2_idx, t1ce_idx = 0, 1, 2, 3
 
-    def __init__(self, data: np.ndarray, modalities_to_use: dict, sampling_method,
+    def __init__(self, data: list, modalities_to_use: dict, sampling_method,
                  patch_size: tuple, transforms: transforms):
         """
 
