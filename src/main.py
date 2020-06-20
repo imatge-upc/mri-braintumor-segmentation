@@ -43,7 +43,7 @@ logger.info("Creating Dataset...")
 
 data = dataset_utils.read_brats(dataset_config.get("train_csv"))
 
-data_train, data_val = train_val_split(data, val_size=0.25)
+data_train, data_val = train_val_split(data, val_size=0.2)
 
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
@@ -55,12 +55,12 @@ transforms = T.Compose([T.ToTensor()])
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
 train_dataset = BratsDataset(data_train, modalities_to_use, sampling_method, patch_size, transforms)
-train_sampler = BratsPatchSampler(train_dataset, n_patients_per_batch, n_patches)
-train_loader = DataLoader(dataset=train_dataset, batch_sampler=train_sampler, num_workers=4)
+# train_sampler = BratsPatchSampler(train_dataset, n_patients_per_batch, n_patches)
+train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 val_dataset = BratsDataset(data_val, modalities_to_use, sampling_method, patch_size, transforms)
-val_sampler = BratsSampler(val_dataset, n_patients_per_batch, n_patches)
-val_loader = DataLoader(dataset=val_dataset, batch_sampler=val_sampler, num_workers=4)
+# val_sampler = BratsSampler(val_dataset, n_patients_per_batch, n_patches)
+val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if basic_config.getboolean("plot"):
     i, x, y = next(iter(train_loader))
