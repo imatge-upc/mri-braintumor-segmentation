@@ -40,12 +40,14 @@ class BratsConfiguration:
                                                               self.config.get("model", "model_path_server"))
 
         train  = self.config.getboolean("basics", "train_flag")
+
         if train:
+            model_name = f"model_{round(time.time())}"
 
             logger.info("Create model directory and save configuration")
-            self.config["basics"]["tensorboard_logs"] = f'{self.config.get("basics", "tensorboard_logs")}_{round(time.time())}'
+            self.config["basics"]["tensorboard_logs"] = os.path.join(self.config.get("basics", "tensorboard_logs"), model_name)
             create_directory(self.config.get("basics", "tensorboard_logs"))
-            self.config["model"]["model_path"] = os.path.join(self.config.get("model", "model_path"), f"model_{round(time.time())}")
+            self.config["model"]["model_path"] = os.path.join(self.config.get("model", "model_path"), model_name)
 
             create_directory(self.config["model"]["model_path"])
             # save current configuration there
@@ -70,7 +72,9 @@ class BratsConfiguration:
 
         self.config["dataset"]["val_csv"] = os.path.join(self.config["dataset"]["path_val"], self.config.get("dataset", "val_csv"))
 
-        self.config["dataset"]["batch_size"] = str(self.config.getint("dataset", "n_patients_per_batch") * self.config.getint("dataset", "n_patches"))
+        if "batch_size" not in self.config["dataset"]:
+            self.config["dataset"]["batch_size"] = str(self.config.getint("dataset", "n_patients_per_batch") * self.config.getint("dataset", "n_patches"))
+
         self.patch_size = tuple([int(item) for item in self.config.get("dataset", "patch_size").split("\n")])
 
 

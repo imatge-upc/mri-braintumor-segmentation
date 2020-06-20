@@ -46,7 +46,6 @@ class BratsPatchSampler(Sampler):
         self.dataset_indices = list(range(0, len(dataset)))
         self.dataset = dataset.data
         self.patches_by_patient = self._generate_structure()
-        print()
 
     def _generate_structure(self):
         patches_by_patient = {}
@@ -97,7 +96,7 @@ if __name__ == "__main__":
     sampling_method = importlib.import_module("src.dataset.patching.random_tumor_distribution")
 
     dataset = BratsDataset(data_train, modalities_to_use, sampling_method, (64,64,64), T.Compose([T.ToTensor()]))
-    sampler = BratsPatchSampler(dataset, n_patients=2, n_samples=15)
+    sampler = BratsPatchSampler(dataset, n_patients=2, n_samples=3)
     train_loader = DataLoader(dataset=dataset, batch_sampler=sampler, num_workers=1)
 
 
