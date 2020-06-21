@@ -41,7 +41,7 @@ logger.info(f"Device: {device}")
 ######## DATASET
 logger.info("Creating Dataset...")
 
-data = dataset_utils.read_brats(dataset_config.get("train_csv"))
+data, _ = dataset_utils.read_brats(dataset_config.get("train_csv"))
 
 data_train, data_val = train_val_split(data, val_size=0.2)
 

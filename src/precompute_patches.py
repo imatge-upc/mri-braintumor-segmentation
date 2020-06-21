@@ -29,7 +29,8 @@ if __name__ == "__main__":
     patch_size_str = "x".join(list(map(str, patch_size)))
     n_patches = dataset_config.getint("n_patches")
 
-    data = dataset_utils.read_brats(dataset_config.get("train_csv"))[:3]
+    data, data_test  = dataset_utils.read_brats(dataset_config.get("train_csv"))
+    data.extend(data_test)
 
     sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
     sampling_name = dataset_config.get("sampling_method").split(".")[-1]
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     with open(f"{method_path}/brats20_data.csv", "w") as file:
 
         writer = csv.writer(file)
-        writer.writerow(["ID","Grade","subject_ID", "Center", "Patch", "Size"])
+        writer.writerow(["ID","Grade","subject_ID", "Center", "Patch", "Size", "Train"])
         idx = 0
         for patient in tqdm(data, total=len(data), desc="Computing patches"):
             patient_path = os.path.join(patient.data_path, patient.patch_name)
@@ -74,5 +75,7 @@ if __name__ == "__main__":
                 save_nifi_volume(patch_modality[2], t2_path)
                 save_nifi_volume(patch_modality[3], t1ce_path)
 
-                writer.writerow([idx, patient.grade, patient.patch_name, patient.center, patient_patch_name, patch_size_str])
+                train_or_test = "train" if patient.train else "test"
+                writer.writerow([idx, patient.grade, patient.patch_name, patient.center, patient_patch_name,
+                                 patch_size_str, train_or_test])
                 idx += 1
