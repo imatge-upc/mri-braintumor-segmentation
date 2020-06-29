@@ -69,4 +69,8 @@ if __name__ == "__main__":
 
     _, data_test = dataset_utils.read_brats(dataset_config.get("train_csv"))
 
-    prediction = predict(model, data_test[0], add_padding, device)
+    # Use idx to execute predictions in parallel
+    idx = int(os.environ.get("SLURM_ARRAY_TASK_ID"))
+    prediction = predict(model, data_test[idx], add_padding, device)
+
+    # ADD metrics
