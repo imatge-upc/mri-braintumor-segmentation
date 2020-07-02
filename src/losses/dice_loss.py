@@ -1,6 +1,7 @@
 """
 Code was adapted and modified from https://github.com/black0017/MedicalZooPytorch
 """
+from typing import Tuple
 import torch
 from torch import nn
 
@@ -51,8 +52,9 @@ class DiceLoss(nn.Module):
         self.normalization = nn.Sigmoid() if sigmoid_normalization else nn.Softmax(dim=1)
         self.classes = classes
 
-    def _flatten(self, tensor):
-        """Flattens a given tensor such that the channel axis is first.
+    def _flatten(self, tensor: torch.tensor) -> torch.tensor:
+        """
+        Flattens a given tensor such that the channel axis is first.
         The shapes are transformed as follows:
            (N, C, D, H, W) -> (C, N * D * H * W)
         """
@@ -61,18 +63,18 @@ class DiceLoss(nn.Module):
         transposed = tensor.permute(axis_order) # Transpose: (N, C, D, H, W) -> (C, N, D, H, W)
         return transposed.contiguous().view(C, -1) # Flatten: (C, N, D, H, W) -> (C, N * D * H * W)
 
-    def dice(self, input, target, weight, epsilon=1e-6):
+    def dice(self, input: torch.tensor, target: torch.tensor, weight: float, epsilon=1e-6) -> float:
         """
         Computes DiceCoefficient as defined in https://arxiv.org/abs/1606.04797 given  a multi channel input and target.
         Assumes the input is a normalized probability, e.g. a result of Sigmoid or Softmax function.
-        Args:
-             input (torch.Tensor): NxCxSpatial input tensor
-             target (torch.Tensor): NxCxSpatial target tensor
-             epsilon (float): prevents division by zero
-             weight (torch.Tensor): Cx1 tensor of weight per channel/class
-        """
 
-        # input and target shapes must match
+        :param input: NxCxSpatial input tensor
+        :param target:  NxCxSpatial target tensor
+        :param weight: prevents division by zero
+        :param epsilon: Cx1 tensor of weight per channel/class
+        :return: dice coefficient
+
+        """
         assert input.size() == target.size(), "'input' and 'target' must have the same shape"
 
         input = self._flatten(input)
@@ -88,7 +90,7 @@ class DiceLoss(nn.Module):
         return 2 * (intersect / denominator.clamp(min=epsilon))
 
 
-    def forward(self, input, target):
+    def forward(self, input: torch.tensor, target: torch.tensor) -> Tuple[float, float]:
         target = expand_as_one_hot(target.long(), self.classes)
 
         assert input.dim() == target.dim() == 5, "'input' and 'target' have different number of dims"
@@ -96,8 +98,8 @@ class DiceLoss(nn.Module):
         input = self.normalization(input)
 
         per_channel_dice = self.dice(input, target, weight=self.weight) # compute per channel Dice coefficient
-        loss = (1. - torch.mean(per_channel_dice))
-        per_channel_dice = per_channel_dice.detach().cpu().numpy()
+        mean =  torch.mean(per_channel_dice)
+        loss = (1. - mean)
 
         # average Dice score across all channels/classes
-        return loss, per_channel_dice
+        return loss, mean.item()
