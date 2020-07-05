@@ -33,25 +33,28 @@ class Trainer:
         best_loss = 1000
 
         for epoch in range(self.start_epoch, self.args.n_epochs):
-            train_loss = self.train_epoch(epoch)
-            val_loss = self.val_epoch(epoch)
+            train_dice_loss, train_dice_score = self.train_epoch(epoch)
+            val_dice_loss, val_dice_score = self.val_epoch(epoch)
 
             if self.lr_scheduler:
-                self.lr_scheduler.step(val_loss)
+                self.lr_scheduler.step(val_dice_loss)
 
-            self._epoch_summary(epoch, train_loss, val_loss)
-            is_best = bool(val_loss < best_loss)
-            best_loss = val_loss if is_best else best_loss
+            self._epoch_summary(epoch, train_dice_loss, val_dice_loss, train_dice_score, val_dice_score)
+            is_best = bool(val_dice_loss < best_loss)
+            best_loss = val_dice_loss if is_best else best_loss
             save_checkpoint({
                 'epoch': self.start_epoch + epoch + 1,
                 'state_dict': self.model.state_dict(),
-                'val_loss': best_loss
+                'val_loss': round(best_loss, 2),
+                'val_dice_score': val_dice_score
             }, is_best, self.args.output_path)
 
 
     def train_epoch(self, epoch):
         self.model.train()
         losses = AverageMeter()
+        dice_score = AverageMeter()
+
         i = 0
         for patients_ids, data_batch, labels_batch in tqdm(self.train_data_loader, desc="Training epoch"):
 
@@ -63,20 +66,25 @@ class Trainer:
 
             outputs = self.model(inputs)
 
-            loss_dice, per_ch_score = self.criterion(outputs, targets)
+            loss_dice, mean_dice = self.criterion(outputs, targets)
 
             loss_dice.backward()
             self.optimizer.step()
 
             losses.update(loss_dice.cpu(), data_batch.size(0))
-            self.writer.add_scalar('Training loss', loss_dice.item(), epoch * len(self.train_data_loader) + i)
+            dice_score.update(mean_dice.cpu(), data_batch.size(0))
+
+            self.writer.add_scalar('Training Dice Loss', loss_dice.item(), epoch * len(self.train_data_loader) + i)
+            self.writer.add_scalar('Training Dice Score', mean_dice.item(), epoch * len(self.train_data_loader) + i)
+
             i += 1
 
-        return losses.avg
+        return losses.avg, dice_score.avg
 
     def val_epoch(self, epoch):
         self.model.eval()
         losses = AverageMeter()
+        dice_score = AverageMeter()
         i = 0
         for patients_ids, data_batch, labels_batch in tqdm(self.valid_data_loader, desc="Validation epoch"):
 
@@ -86,17 +94,20 @@ class Trainer:
 
             outputs = self.model(inputs)
 
-            loss_dice, per_ch_score = self.criterion(outputs, targets)
+            loss_dice, mean_dice = self.criterion(outputs, targets)
 
             loss_dice.backward()
 
             losses.update(loss_dice.cpu(), data_batch.size(0))
-            self.writer.add_scalar('Validation loss', loss_dice.item(), epoch * len(self.valid_data_loader) + i)
+            dice_score.update(mean_dice.cpu(), data_batch.size(0))
+            self.writer.add_scalar('Validation Dice Loss', loss_dice.item(), epoch * len(self.valid_data_loader) + i)
+            self.writer.add_scalar('Validation Dice Score', mean_dice.item(), epoch * len(self.valid_data_loader) + i)
             i += 1
 
-        return losses.avg
+        return losses.avg, dice_score.avg
 
-    def _epoch_summary(self, epoch, train_loss, val_loss):
-        logger.info(
-            f'epoch: {epoch} | train_loss: {train_loss:.2f} | val_loss {val_loss:.2f}')
+    def _epoch_summary(self, epoch, train_loss, val_loss, train_dice_score, val_dice_score):
+        logger.info(f'epoch: {epoch}\n '
+                    f'**Dice Loss: train_loss: {train_loss:.2f} | val_loss {val_loss:.2f} \n'
+                    f'**Dice Score: train_dice_score {train_dice_score:.2f} | val_dice_score {val_dice_score:.2f}')
 

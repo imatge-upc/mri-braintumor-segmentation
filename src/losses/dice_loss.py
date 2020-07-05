@@ -102,4 +102,4 @@ class DiceLoss(nn.Module):
         loss = (1. - mean)
 
         # average Dice score across all channels/classes
-        return loss, mean.item()
+        return loss, mean

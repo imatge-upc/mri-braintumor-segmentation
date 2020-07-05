@@ -7,9 +7,9 @@ def get_confusion_matrix(prediction: np.ndarray, reference: np.ndarray) -> Tuple
 
     assert prediction.shape == reference.shape, "'prediction' and 'reference' must have the same shape"
 
-    tp = int(((prediction != 0) * (reference != 0)).sum())
+    tp = int(((prediction != 0) * (reference != 0)).sum()) # overlap
     fp = int(((prediction != 0) * (reference == 0)).sum())
-    tn = int(((prediction == 0) * (reference == 0)).sum())
+    tn = int(((prediction == 0) * (reference == 0)).sum()) # no segmentation
     fn = int(((prediction == 0) * (reference != 0)).sum())
 
     return tp, fp, tn, fn
@@ -17,7 +17,7 @@ def get_confusion_matrix(prediction: np.ndarray, reference: np.ndarray) -> Tuple
 
 def dice(tp: int, fp:int, fn:int) -> float:
     """
-    Dice coefficient computed using the definition of true positive (TP), false positive (FP), and false negative (FN),
+    Dice coefficient computed using the definition of true positive (TP), false positive (FP), and false negative (FN)
     2TP / (2TP + FP + FN)
     """
     denominator = 2*tp + fp + fn
@@ -32,7 +32,6 @@ def hausdorff(prediction: np.ndarray, reference: np.ndarray) -> float:
 def sensitivity(tp, fn) -> float:
     """TP / (TP + FN)"""
     all_positives = tp + fn
-
     return tp / all_positives
 
 # Specificity: precision

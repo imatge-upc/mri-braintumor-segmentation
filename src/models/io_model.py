@@ -1,6 +1,5 @@
 import os
 import torch
-
 from src.logging_conf import logger
 
 
@@ -12,7 +11,7 @@ def create_dir(path):
 def save_checkpoint(state, is_best, output_path):
     """Save checkpoint if a new best is achieved"""
     if is_best:
-        save_path = os.path.join(output_path, f"checkpoint_epoch_{state['epoch']}_val_loss_{state['val_loss']}.pth")
+        save_path = os.path.join(output_path, f"checkpoint_epoch_{state['epoch']}_val_loss_{state['val_loss']}_dice_{state['val_dice_score']}.pth")
         logger.info(f"Saving a new best to {save_path}")
         torch.save(state, save_path)
     else:
