@@ -4,7 +4,7 @@ import sys
 import torch
 from src.config import BratsConfiguration
 from src.dataset import dataset_utils
-from src.dataset.dataset_utils import convert_to_labels
+from src.dataset import brats_labels
 from src.dataset.nifi_volume_utils import save_segmask_as_nifi_volume, load_nifi_volume
 from src.dataset.patient import Patient
 from src.models.io_model import load_model
@@ -38,7 +38,7 @@ def predict(model, patient: Patient, add_padding: bool, device: torch.device) ->
 
         preds = model(inputs)
         output_array = np.asarray(preds[0].max(0)[1].byte().cpu().data)
-        output_array = convert_to_labels(output_array)
+        output_array = brats_labels.convert_to_brats_labels(output_array)
 
     output_path = os.path.join(patient.data_path, patient.patch_name, f"{patient.patch_name}_prediction.nii.gz")
     flair_path = os.path.join(patient.data_path, patient.patch_name, patient.flair)
@@ -67,10 +67,8 @@ if __name__ == "__main__":
     checkpoint_path = os.path.join(model_config.get("model_path"), model_config.get("checkpoint"))
     model, _, epoch, loss = load_model(network, checkpoint_path, device, None, False)
 
-    _, data_test = dataset_utils.read_brats(dataset_config.get("train_csv"))
+    data_train, data_test = dataset_utils.read_brats(dataset_config.get("train_csv"))
 
     # Use idx to execute predictions in parallel
     idx = int(os.environ.get("SLURM_ARRAY_TASK_ID"))
     prediction = predict(model, data_test[idx], add_padding, device)
-
-    # ADD metrics

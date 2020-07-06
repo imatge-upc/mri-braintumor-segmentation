@@ -4,6 +4,8 @@ results/
 tensorboard_logs/
 *.pth
 *.nii.gz
+*.csv
+*.png
 
 # Caches
 __pycache__/

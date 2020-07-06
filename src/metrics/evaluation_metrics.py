@@ -4,7 +4,9 @@ import numpy as np
 
 
 def get_confusion_matrix(prediction: np.ndarray, reference: np.ndarray) -> Tuple[int, int, int, int]:
-
+    """
+    Computes tp/fp/tn/fn from teh provided segmentations
+    """
     assert prediction.shape == reference.shape, "'prediction' and 'reference' must have the same shape"
 
     tp = int(((prediction != 0) * (reference != 0)).sum()) # overlap
@@ -22,7 +24,6 @@ def dice(tp: int, fp:int, fn:int) -> float:
     """
     denominator = 2*tp + fp + fn
     return (2 * tp / denominator)
-
 
 # Hausdorff
 def hausdorff(prediction: np.ndarray, reference: np.ndarray) -> float:

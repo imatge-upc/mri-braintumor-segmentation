@@ -27,11 +27,3 @@ def create_roi_mask(data: np.ndarray) -> np.ndarray:
     data[data > 0.0] = 1
     data[data <= 0.0] = 0
     return data
-
-def convert_from_labels(segmentation_map: np.ndarray) -> np.ndarray:
-    segmentation_map[segmentation_map == 4] = 3
-    return segmentation_map
-
-def convert_to_labels(segmentation_map: np.ndarray) -> np.ndarray:
-    segmentation_map[segmentation_map == 3] = 4
-    return segmentation_map

@@ -45,7 +45,7 @@ class Trainer:
             save_checkpoint({
                 'epoch': self.start_epoch + epoch + 1,
                 'state_dict': self.model.state_dict(),
-                'val_loss': round(best_loss, 2),
+                'val_loss': best_loss,
                 'val_dice_score': val_dice_score
             }, is_best, self.args.output_path)
 
