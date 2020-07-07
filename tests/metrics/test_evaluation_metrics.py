@@ -37,32 +37,30 @@ def test_50_percent_dice_score():
     assert dice_score == 0.5
 
 def test_dice_zerodivicion():
-    with pytest.raises(ZeroDivisionError) as e:
-        _ = metrics.dice(tp=0, fp=0, fn=0)
+    assert metrics.dice(tp=0, fp=0, fn=0) == 0
 
 def test_precision_correct():
-    precision = metrics.specificity(tn=10, fp=0)
+    precision = metrics.precision(tp=10, fp=0)
     assert precision == 1
 
 def test_precision_50_percent():
-    precision = metrics.specificity(tn=10, fp=10)
+    precision = metrics.precision(tp=10, fp=10)
     assert precision == 0.5
 
 def test_precision_zerodivicion():
-    with pytest.raises(ZeroDivisionError):
-        _ = metrics.specificity(tn=0, fp=0)
+    precision = metrics.precision(tp=0, fp=0)
+    assert precision == 0
 
 def test_recall_correct():
-    recall = metrics.sensitivity(tp=10, fn=0)
+    recall = metrics.recall(tp=10, fn=0)
     assert recall == 1
 
 def test_recall_50_percent():
-    recall = metrics.sensitivity(tp=10, fn=10)
+    recall = metrics.recall(tp=10, fn=10)
     assert recall == 0.5
 
 def test_recall_zerodivicion():
-    with pytest.raises(ZeroDivisionError):
-        _ = metrics.sensitivity(tp=0, fn=0)
+    assert metrics.recall(tp=0, fn=0) == 0
 
 def test_acc_correct():
     recall = metrics.accuracy(tp=10, fp=0, tn=10, fn=0)
@@ -73,8 +71,7 @@ def test_acc_50_percent():
     assert recall == 0.5
 
 def test_acc_zerodivicion():
-    with pytest.raises(ZeroDivisionError):
-        _ = metrics.accuracy(tp=0, fp=0, tn=0, fn=0)
+    assert metrics.accuracy(tp=0, fp=0, tn=0, fn=0) == 0
 
 def test_fscore_correct():
     recall = metrics.fscore(tp=10, fp=0, tn=10, fn=0)
@@ -85,9 +82,8 @@ def test_fscore_50_percent():
     assert recall == 0.5
 
 def test_fscore_zerodivicion():
-    with pytest.raises(ZeroDivisionError):
-        _ = metrics.fscore(tp=0, fp=10, tn=0, fn=10)
+    assert metrics.fscore(tp=0, fp=10, tn=0, fn=10) == 0
 
 def test_fscore_zero_beta_raises_exeception():
-    with pytest.raises(Exception):
+    with pytest.raises(AssertionError):
         _ = metrics.fscore(tp=10, fp=10, tn=10, fn=10, beta=0)
