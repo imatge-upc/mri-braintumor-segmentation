@@ -3,16 +3,17 @@ from medpy import metric
 import numpy as np
 
 
-def get_confusion_matrix(prediction: np.ndarray, reference: np.ndarray) -> Tuple[int, int, int, int]:
+def get_confusion_matrix(prediction: np.ndarray, reference: np.ndarray, roi_mask: np.ndarray) -> Tuple[int, int, int, int]:
     """
     Computes tp/fp/tn/fn from teh provided segmentations
     """
     assert prediction.shape == reference.shape, "'prediction' and 'reference' must have the same shape"
 
-    tp = int(((prediction != 0) * (reference != 0)).sum()) # overlap
-    fp = int(((prediction != 0) * (reference == 0)).sum())
-    tn = int(((prediction == 0) * (reference == 0)).sum()) # no segmentation
-    fn = int(((prediction == 0) * (reference != 0)).sum())
+
+    tp = int((roi_mask*(prediction != 0) * (reference != 0)).sum()) # overlap
+    fp = int((roi_mask*(prediction != 0) * (reference == 0)).sum())
+    tn = int((roi_mask*(prediction == 0) * (reference == 0)).sum()) # no segmentation
+    fn = int((roi_mask*(prediction == 0) * (reference != 0)).sum())
 
     return tp, fp, tn, fn
 

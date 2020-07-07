@@ -10,13 +10,13 @@ from src.metrics import evaluation_metrics as eval
 from tqdm import tqdm
 
 
-def compute(volume_pred, volume_gt):
-    tp, fp, tn, fn = eval.get_confusion_matrix(volume_pred, volume_gt)
+def compute(volume_pred, volume_gt, roi_mask):
+    tp, fp, tn, fn = eval.get_confusion_matrix(volume_pred, volume_gt, roi_mask)
     dc = eval.dice(tp, fp, fn)
 
     hd = eval.hausdorff(volume_pred, volume_gt)
     recall  = eval.recall(tp, fn)
-    precision = eval.precision(tn, fp)
+    precision = eval.precision(tp, fp)
     acc = eval.accuracy(tp, fp, tn, fn)
     f1 = eval.fscore(tp, fp, tn ,fn)
 
@@ -44,6 +44,7 @@ if __name__ == "__main__":
 
             patient_data = []
             gt_path = os.path.join(patient.data_path, patient.patient, f"{patient.seg}")
+            data_path = os.path.join(patient.data_path, patient.patient, f"{patient.flair}")
             prediction_path  = os.path.join(patient.data_path, patient.patient, f"{patient.patient}_prediction.nii.gz")
             if not os.path.exists(prediction_path):
                 print(f"{prediction_path} not found")
@@ -53,7 +54,8 @@ if __name__ == "__main__":
 
             volume_gt_all = nifi_utils.load_nifi_volume(gt_path)
             volume_pred_all = nifi_utils.load_nifi_volume(prediction_path)
-
+            volume = nifi_utils.load_nifi_volume(data_path)
+            roi_mask = dataset_utils.create_roi_mask(volume)
 
             for typee in ["wt", "tc", "et"]:
                 compute_metrics = True
@@ -71,8 +73,8 @@ if __name__ == "__main__":
                     if len(np.unique(volume_gt)) == 1 and np.unique(volume_gt)[0] == 0:
                         print("there is no enchancing tumor region in the ground truth")
 
-                dc, hd, recall, precision, acc, f1, conf_matrix = compute(volume_pred, volume_gt)
+                dc, hd, recall, precision, acc, f1, conf_matrix = compute(volume_pred, volume_gt, roi_mask)
                 patient_data.extend([dc, hd, recall, precision, acc, f1, conf_matrix])
 
-
+            print(patient_data)
             writer.writerow(patient_data)
