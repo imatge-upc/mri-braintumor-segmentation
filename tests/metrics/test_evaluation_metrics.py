@@ -6,9 +6,13 @@ from src.metrics import evaluation_metrics as metrics
 def volume():
     return np.random.randint(4, size=(4, 4, 4))
 
+@pytest.fixture(scope="function")
+def roi():
+    return np.ones(shape=(4, 4, 4))
 
-def test_confusion_matrix_correct_output(volume):
-    tp, fp, tn, fn = metrics.get_confusion_matrix(volume, volume)
+
+def test_confusion_matrix_correct_output(volume, roi):
+    tp, fp, tn, fn = metrics.get_confusion_matrix(volume, volume, roi)
 
     non_zero = np.count_nonzero(volume)
     zero = np.prod(volume.shape) - non_zero
@@ -18,10 +22,10 @@ def test_confusion_matrix_correct_output(volume):
     assert fp == 0
     assert fn == 0
 
-def test_confusion_matrix_assertation_error_size_mismatch(volume):
+def test_confusion_matrix_assertation_error_size_mismatch(volume, roi):
     with pytest.raises(Exception) as e:
         ref = np.random.randint(4, size=(2, 2, 4))
-        _, _, _, _ = metrics.get_confusion_matrix(volume, ref)
+        _, _, _, _ = metrics.get_confusion_matrix(volume, ref, roi)
 
 
 def test_hausdorff_distance_correct_output(volume):
