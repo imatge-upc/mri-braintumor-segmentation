@@ -3,14 +3,14 @@ from src.dataset.patching.commons import array3d_center_crop
 
 
 def _select_random_start_in_tumor(segmentation_mask, patch_size):
-    """
-    """
+    # filter region where we can compute tumor
     crop_shape = (segmentation_mask.shape[0]-patch_size[0],
                   segmentation_mask.shape[1]-patch_size[1],
                   segmentation_mask.shape[2]-patch_size[2])
 
     cropped_mask = array3d_center_crop(segmentation_mask, crop_shape)
 
+    # select tumor region and random choose center
     tumor_region_indices = np.nonzero(cropped_mask)
     axis_center = np.random.randint(0, len(tumor_region_indices[0]))
 

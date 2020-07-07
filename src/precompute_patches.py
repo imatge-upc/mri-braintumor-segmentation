@@ -6,7 +6,6 @@ from src.dataset.augmentations.brats_augmentations import zero_mean_unit_varianc
 from src.dataset import nifi_volume_utils as nifi_utils
 from src.dataset.nifi_volume_utils import save_nifi_volume
 
-
 from src.dataset import dataset_utils
 from src.config import BratsConfiguration
 from tqdm import tqdm
@@ -29,12 +28,13 @@ if __name__ == "__main__":
     patch_size_str = "x".join(list(map(str, patch_size)))
     n_patches = dataset_config.getint("n_patches")
 
-    data, data_test  = dataset_utils.read_brats(dataset_config.get("train_csv"))
+    data_csv = "/mnt/gpid07/users/laura.mora/datasets/2020/train/no_patch/brats20_data.csv"
+    data, data_test  = dataset_utils.read_brats(data_csv)
     data.extend(data_test)
 
     sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
     sampling_name = dataset_config.get("sampling_method").split(".")[-1]
-    method_path = f"{dataset_config.get('root_path')}/train_patches/{sampling_name}"
+    method_path = f"{dataset_config.get('root_path')}/train/{sampling_name}"
     if not os.path.exists(method_path):
         os.makedirs(method_path)
 
