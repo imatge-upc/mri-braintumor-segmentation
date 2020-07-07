@@ -9,6 +9,8 @@ from src.dataset.nifi_volume_utils import save_segmask_as_nifi_volume, load_nifi
 from src.dataset.patient import Patient
 from src.models.io_model import load_model
 from src.models.vnet import vnet
+from src.metrics import evaluation_metrics as eval
+
 import numpy as np
 
 
@@ -72,3 +74,21 @@ if __name__ == "__main__":
     # Use idx to execute predictions in parallel
     idx = int(os.environ.get("SLURM_ARRAY_TASK_ID"))
     prediction = predict(model, data_test[idx], add_padding, device)
+
+
+    # compute metrics
+    patient_path = os.path.join(data_test[idx].data_path, data_test[idx].patch_name, data_test[idx].seg)
+
+    if os.path.exists(patient_path):
+
+        volume_gt = load_nifi_volume(patient_path, False)
+        tp, fp, tn, fn = eval.get_confusion_matrix(prediction, volume_gt)
+        dc = eval.dice(tp, fp, fn)
+
+        hd = eval.hausdorff(prediction, volume_gt)
+        recall = eval.recall(tp, fn)
+        precision = eval.precision(tn, fp)
+        acc = eval.accuracy(tp, fp, tn, fn)
+        f1 = eval.fscore(tp, fp, tn, fn)
+
+        print([dc, hd, recall, precision, acc, f1, (tp, fp, tn, fn )])
