@@ -1,7 +1,9 @@
 import os
 import sys
-
+import time
 import torch
+
+from src.compute_metric_results import compute_wt_tc_et
 from src.config import BratsConfiguration
 from src.dataset import dataset_utils
 from src.dataset import brats_labels
@@ -10,6 +12,7 @@ from src.dataset.patient import Patient
 from src.models.io_model import load_model
 from src.models.vnet import vnet
 from src.metrics import evaluation_metrics as eval
+from src.dataset import nifi_volume_utils as nifi_utils
 
 import numpy as np
 
@@ -47,6 +50,7 @@ def predict(model, patient: Patient, add_padding: bool, device: torch.device) ->
     print(f"Saving prediction to: {output_path}")
     if add_padding:
         output_array = output_array[:, :, :155]
+
     save_segmask_as_nifi_volume(output_array, flair_path, output_path)
 
     return output_array
@@ -78,17 +82,12 @@ if __name__ == "__main__":
 
     # compute metrics
     patient_path = os.path.join(data_test[idx].data_path, data_test[idx].patch_name, data_test[idx].seg)
+    data_path = os.path.join(data_test[idx].data_path, data_test[idx].patch_name, data_test[idx].flair)
 
     if os.path.exists(patient_path):
 
         volume_gt = load_nifi_volume(patient_path, False)
-        tp, fp, tn, fn = eval.get_confusion_matrix(prediction, volume_gt)
-        dc = eval.dice(tp, fp, fn)
+        volume = nifi_utils.load_nifi_volume(data_path)
 
-        hd = eval.hausdorff(prediction, volume_gt)
-        recall = eval.recall(tp, fn)
-        precision = eval.precision(tn, fp)
-        acc = eval.accuracy(tp, fp, tn, fn)
-        f1 = eval.fscore(tp, fp, tn, fn)
-
-        print([dc, hd, recall, precision, acc, f1, (tp, fp, tn, fn )])
+        metrics = compute_wt_tc_et(prediction, volume_gt, volume)
+        print(metrics)

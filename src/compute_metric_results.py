@@ -23,6 +23,34 @@ def compute(volume_pred, volume_gt, roi_mask):
     return dc, hd, recall, precision, acc, f1, (tp, fp, tn, fn)
 
 
+def compute_wt_tc_et(prediction, reference, flair):
+
+    metrics = []
+    roi_mask = dataset_utils.create_roi_mask(flair)
+
+    for typee in ["wt", "tc", "et"]:
+
+        if typee == "wt":
+            volume_gt = brats_labels.get_wt(reference)
+            volume_pred = brats_labels.get_wt(prediction)
+
+        elif typee == "tc":
+            volume_gt = brats_labels.get_tc(reference)
+            volume_pred = brats_labels.get_tc(prediction)
+
+        elif typee == "et":
+            volume_gt = brats_labels.get_et(reference)
+            volume_pred = brats_labels.get_et(prediction)
+            if len(np.unique(volume_gt)) == 1 and np.unique(volume_gt)[0] == 0:
+                print("there is no enchancing tumor region in the ground truth")
+        else:
+            continue
+
+        dc, hd, recall, precision, acc, f1, conf_matrix = compute(volume_pred, volume_gt, roi_mask)
+        metrics.extend([dc, hd, recall, precision, acc, f1, conf_matrix])
+
+    return metrics
+
 if __name__ == "__main__":
     config = BratsConfiguration(sys.argv[1])
     model_config = config.get_model_config()
@@ -55,26 +83,6 @@ if __name__ == "__main__":
             volume_gt_all = nifi_utils.load_nifi_volume(gt_path)
             volume_pred_all = nifi_utils.load_nifi_volume(prediction_path)
             volume = nifi_utils.load_nifi_volume(data_path)
-            roi_mask = dataset_utils.create_roi_mask(volume)
 
-            for typee in ["wt", "tc", "et"]:
-                compute_metrics = True
-                if typee == "wt":
-                    volume_gt = brats_labels.get_wt(volume_gt_all)
-                    volume_pred = brats_labels.get_wt(volume_pred_all)
-
-                elif typee == "tc":
-                    volume_gt = brats_labels.get_tc(volume_gt_all)
-                    volume_pred = brats_labels.get_tc(volume_pred_all)
-
-                elif typee == "et":
-                    volume_gt = brats_labels.get_et(volume_gt_all)
-                    volume_pred = brats_labels.get_et(volume_pred_all)
-                    if len(np.unique(volume_gt)) == 1 and np.unique(volume_gt)[0] == 0:
-                        print("there is no enchancing tumor region in the ground truth")
-
-                dc, hd, recall, precision, acc, f1, conf_matrix = compute(volume_pred, volume_gt, roi_mask)
-                patient_data.extend([dc, hd, recall, precision, acc, f1, conf_matrix])
-
-            print(patient_data)
+            patient_data = compute_wt_tc_et(volume_pred_all, volume_gt_all, volume)
             writer.writerow(patient_data)
