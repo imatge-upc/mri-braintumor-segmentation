@@ -31,10 +31,12 @@ def enable_dropout(model):
             m.train()
 
 def predict(model, patient: Patient, add_padding: bool, device: torch.device, monte_carlo: bool=True) -> np.ndarray:
+    model.eval()
+
     if monte_carlo:
         enable_dropout(model)
 
-    model.eval()
+
 
     with torch.no_grad():
         images = _load_data(patient)
