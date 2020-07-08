@@ -1,8 +1,6 @@
 import os
 import sys
-import time
 import torch
-
 from src.compute_metric_results import compute_wt_tc_et
 from src.config import BratsConfiguration
 from src.dataset import dataset_utils
@@ -11,7 +9,6 @@ from src.dataset.nifi_volume_utils import save_segmask_as_nifi_volume, load_nifi
 from src.dataset.patient import Patient
 from src.models.io_model import load_model
 from src.models.vnet import vnet
-from src.metrics import evaluation_metrics as eval
 from src.dataset import nifi_volume_utils as nifi_utils
 
 import numpy as np
@@ -28,7 +25,15 @@ def _load_data(patient: Patient) -> np.ndarray:
 
     return modalities
 
-def predict(model, patient: Patient, add_padding: bool, device: torch.device) -> np.ndarray:
+def enable_dropout(model):
+    for m in model.modules():
+        if m.__class__.__name__.startswith('Dropout'):
+            m.train()
+
+def predict(model, patient: Patient, add_padding: bool, device: torch.device, monte_carlo: bool=True) -> np.ndarray:
+    if monte_carlo:
+        enable_dropout(model)
+
     model.eval()
 
     with torch.no_grad():
