@@ -14,7 +14,7 @@ class TrainerArgs:
 
 class Trainer:
 
-    def __init__(self, args, model, optimizer, criterion, train_loader, val_loader, lr_scheduler, writer):
+    def __init__(self, args, model, optimizer, criterion, start_epoch, train_loader, val_loader, lr_scheduler, writer):
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
@@ -26,7 +26,7 @@ class Trainer:
         self.lr_scheduler = lr_scheduler
         self.writer = writer
 
-        self.start_epoch = 0
+        self.start_epoch = start_epoch
         self.args = args
 
     def start(self):

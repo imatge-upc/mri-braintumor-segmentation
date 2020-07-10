@@ -95,8 +95,9 @@ if basic_config.getboolean("train_flag"):
                                 momentum=model_config.getfloat("momentum"), weight_decay=model_config.getfloat("weight_decay"))
 
     if basic_config.getboolean("resume"):
-        model, optimizer, epoch, loss  = load_model(network, checkpoint_path, device, optimizer, True)
-
+        model, optimizer, start_epoch, loss  = load_model(network, checkpoint_path, device, optimizer, True)
+    else:
+        start_epoch = 0
 
     writer = SummaryWriter(tensorboard_logdir)
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"), patience=model_config.getint("patience"))
@@ -104,6 +105,6 @@ if basic_config.getboolean("train_flag"):
     criterion = DiceLoss(classes=n_classes)
 
     args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"))
-    trainer = Trainer(args, network, optimizer, criterion, train_loader, val_loader, scheduler, writer)
+    trainer = Trainer(args, network, optimizer, criterion, start_epoch, train_loader, val_loader, scheduler, writer)
     trainer.start()
     print("Finished!")
