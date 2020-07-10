@@ -15,17 +15,6 @@ from src.logging_conf import logger
 import numpy as np
 
 
-def _load_data(patient: Patient) -> np.ndarray:
-    patient_path = os.path.join(patient.data_path, patient.patch_name)
-
-    flair = load_nifi_volume(os.path.join(patient_path, patient.flair), True)
-    t1 = load_nifi_volume(os.path.join(patient_path, patient.t1), True)
-    t2 = load_nifi_volume(os.path.join(patient_path, patient.t2), True)
-    t1_ce = load_nifi_volume(os.path.join(patient_path, patient.t1ce), True)
-    modalities = np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))
-
-    return modalities
-
 def enable_dropout(model):
     for m in model.modules():
         if m.__class__.__name__.startswith('Dropout'):
@@ -37,10 +26,9 @@ def predict(model, patient: Patient, add_padding: bool, device: torch.device, mo
     if monte_carlo:
         enable_dropout(model)
 
-
-
     with torch.no_grad():
-        images = _load_data(patient)
+        images = patient.load_mri_volumes()
+
         if add_padding:
             new_array = np.zeros((4, 240, 240, 240))
             new_array[:,  :images.shape[1], :images.shape[2], :images.shape[3]] = images

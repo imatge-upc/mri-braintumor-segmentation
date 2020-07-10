@@ -2,7 +2,6 @@ import importlib
 import os
 import sys
 import csv
-from src.dataset.augmentations.brats_augmentations import zero_mean_unit_variance_normalization
 from src.dataset import nifi_volume_utils as nifi_utils
 from src.dataset.nifi_volume_utils import save_nifi_volume
 
@@ -10,12 +9,6 @@ from src.dataset import dataset_utils
 from src.config import BratsConfiguration
 from tqdm import tqdm
 import numpy as np
-
-def load_volume(volume_path: str, normalize: bool=True) -> np.ndarray:
-    volume = nifi_utils.load_nifi_volume(volume_path)
-    if normalize:
-        volume = zero_mean_unit_variance_normalization(volume)
-    return volume
 
 
 if __name__ == "__main__":
@@ -45,11 +38,11 @@ if __name__ == "__main__":
         idx = 0
         for patient in tqdm(data, total=len(data), desc="Computing patches"):
             patient_path = os.path.join(patient.data_path, patient.patch_name)
-            flair = load_volume(os.path.join(patient_path, patient.flair), True)
-            t1 =    load_volume(os.path.join(patient_path, patient.t1), True)
-            t2 =    load_volume(os.path.join(patient_path, patient.t2), True)
-            t1_ce = load_volume(os.path.join(patient_path, patient.t1ce), True)
-            seg = load_volume(os.path.join(patient_path, patient.seg), False)
+            flair, _ = nifi_utils.load_nifi_volume(os.path.join(patient_path, patient.flair), True)
+            t1, _ = nifi_utils.load_nifi_volume(os.path.join(patient_path, patient.t1), True)
+            t2, _ = nifi_utils.load_nifi_volume(os.path.join(patient_path, patient.t2), True)
+            t1_ce, _ = nifi_utils.load_nifi_volume(os.path.join(patient_path, patient.t1ce), True)
+            seg, _ = nifi_utils.load_nifi_volume(os.path.join(patient_path, patient.seg), False)
 
             modalities = np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))
 

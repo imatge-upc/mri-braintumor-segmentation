@@ -80,9 +80,9 @@ if __name__ == "__main__":
 
             patient_data.extend([patient.patient, patient.grade, patient.center, patient.size])
 
-            volume_gt_all = nifi_utils.load_nifi_volume(gt_path)
-            volume_pred_all = nifi_utils.load_nifi_volume(prediction_path)
-            volume = nifi_utils.load_nifi_volume(data_path)
+            volume_gt_all, _ = nifi_utils.load_nifi_volume(gt_path)
+            volume_pred_all, _ = nifi_utils.load_nifi_volume(prediction_path)
+            volume, _ = nifi_utils.load_nifi_volume(data_path)
 
             patient_data = compute_wt_tc_et(volume_pred_all, volume_gt_all, volume)
             writer.writerow(patient_data)

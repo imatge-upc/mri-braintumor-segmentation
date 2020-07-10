@@ -16,11 +16,11 @@ def plot(volume: np.ndarray, patch: np.ndarray, volume_slice: int = 100):
 
 
 def load_patient() -> Tuple[np.ndarray, np.ndarray]:
-    flair = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_flair.nii.gz"))
-    t1 = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_t1.nii.gz"))
-    t1ce = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_t1ce.nii.gz"))
-    t2 = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_t2.nii.gz"))
-    masks = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_seg.nii.gz"))
+    flair, _ = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_flair.nii.gz"))
+    t1, _ = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_t1.nii.gz"))
+    t1ce, _ = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_t1ce.nii.gz"))
+    t2, _ = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_t2.nii.gz"))
+    masks, _ = load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_seg.nii.gz"))
 
     modalities = np.asarray([t1, t1ce, t2, flair])
 

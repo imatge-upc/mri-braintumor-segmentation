@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import nibabel as nib
 from src.dataset.augmentations.brats_augmentations import zero_mean_unit_variance_normalization
@@ -19,11 +21,11 @@ def save_segmask_as_nifi_volume(seg_mask: np.ndarray, volume_path: str , path:st
     img = nib.Nifti1Image(seg_mask, aff_func)
     img.to_filename(path)
 
-def load_nifi_volume(filepath: str, normalize: bool=False) -> np.ndarray:
-    proxy = nib.load(filepath)
-    img = proxy.get_fdata()
-    proxy.uncache()
+def load_nifi_volume(filepath: str, normalize: bool=False) -> Tuple[np.ndarray, np.ndarray]:
+    nib_data = nib.load(filepath)
+    img = nib_data.get_fdata()
+    nib_data.uncache()
     if normalize:
         img = zero_mean_unit_variance_normalization(img)
-    return img
+    return img, nib_data
 
