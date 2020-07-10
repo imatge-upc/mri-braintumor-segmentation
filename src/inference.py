@@ -10,6 +10,7 @@ from src.dataset.patient import Patient
 from src.models.io_model import load_model
 from src.models.vnet import vnet
 from src.dataset import nifi_volume_utils as nifi_utils
+from src.logging_conf import logger
 
 import numpy as np
 
@@ -54,7 +55,7 @@ def predict(model, patient: Patient, add_padding: bool, device: torch.device, mo
 
     output_path = os.path.join(patient.data_path, patient.patch_name, f"{patient.patch_name}_prediction.nii.gz")
     flair_path = os.path.join(patient.data_path, patient.patch_name, patient.flair)
-    print(f"Saving prediction to: {output_path}")
+    logger.info(f"Saving prediction to: {output_path}")
     if add_padding:
         output_array = output_array[:, :, :155]
 
