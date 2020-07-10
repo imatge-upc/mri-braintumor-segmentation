@@ -40,9 +40,13 @@ class BratsConfiguration:
                                                               self.config.get("model", "model_path_server"))
 
         train  = self.config.getboolean("basics", "train_flag")
+        resume = self.config.getboolean("basics", "resume")
 
         if train:
-            model_name = f"model_{round(time.time())}"
+            if resume:
+                model_name, _ = os.path.split(self.config.get("model", "checkpoint"))
+            else:
+                model_name = f"model_{round(time.time())}"
 
             logger.info("Create model directory and save configuration")
             self.config["basics"]["tensorboard_logs"] = os.path.join(self.config.get("basics", "tensorboard_logs"), model_name)

@@ -44,7 +44,8 @@ class Trainer:
             best_loss = val_dice_loss if is_best else best_loss
             save_checkpoint({
                 'epoch': self.start_epoch + epoch + 1,
-                'state_dict': self.model.state_dict(),
+                'model_state_dict': self.model.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict(),
                 'val_loss': best_loss,
                 'val_dice_score': val_dice_score
             }, is_best, self.args.output_path)

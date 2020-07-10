@@ -1,9 +1,11 @@
 import importlib
+import os
 import sys
 import torch
 
 from src.dataset.train_val_split import train_val_split
 from src.losses.dice_loss import DiceLoss
+from src.models.io_model import load_model
 from src.train.trainer import Trainer, TrainerArgs
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
@@ -29,6 +31,8 @@ basic_config = config.get_basic_config()
 
 patch_size = config.patch_size
 tensorboard_logdir = basic_config.get("tensorboard_logs")
+checkpoint_path = model_config.get("checkpoint")
+
 batch_size = dataset_config.getint("batch_size")
 n_patches = dataset_config.getint("n_patches")
 n_patients_per_batch = dataset_config.getint("n_patients_per_batch")
@@ -87,11 +91,14 @@ if basic_config.getboolean("train_flag"):
     logger.info("Start Training")
     network.to(device)
 
-    writer = SummaryWriter(tensorboard_logdir)
-
     optimizer = torch.optim.SGD(network.parameters(), lr=model_config.getfloat("learning_rate"),
                                 momentum=model_config.getfloat("momentum"), weight_decay=model_config.getfloat("weight_decay"))
 
+    if basic_config.getboolean("resume"):
+        model, optimizer, epoch, loss  = load_model(network, checkpoint_path, device, optimizer, True)
+
+
+    writer = SummaryWriter(tensorboard_logdir)
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"), patience=model_config.getint("patience"))
 
     criterion = DiceLoss(classes=n_classes)
