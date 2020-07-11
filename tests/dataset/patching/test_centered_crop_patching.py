@@ -1,6 +1,6 @@
 from src.dataset.patching.centered_crop_patch import patching
 from tests.dataset.patching.common import patching_strategy, save
-from src.dataset.visualization_utils import plot_3_view
+from src.dataset.utils.visualization import plot_3_view
 
 
 def test_assert_patch_shape():

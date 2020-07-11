@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from src.dataset.nifi_volume_utils import load_nifi_volume
+from src.dataset.utils.nifi_volume import load_nifi_volume
 
 class Patient:
     def __init__(self, idx: str, center: str, grade: str, patient: str, patch_name: str,

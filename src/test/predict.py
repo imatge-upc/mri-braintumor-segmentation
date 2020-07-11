@@ -4,7 +4,7 @@ from typing import Tuple
 import torch
 import numpy as np
 from src.dataset import brats_labels
-from src.dataset.nifi_volume_utils import save_segmask_as_nifi_volume
+from src.dataset.utils.nifi_volume import save_segmask_as_nifi_volume
 from src.dataset.patient import Patient
 from src.logging_conf import logger
 

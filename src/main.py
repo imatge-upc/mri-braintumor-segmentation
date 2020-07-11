@@ -1,9 +1,8 @@
 import importlib
-import os
 import sys
 import torch
-
 from src.dataset.train_val_split import train_val_split
+
 from src.losses.dice_loss import DiceLoss
 from src.models.io_model import load_model
 from src.train.trainer import Trainer, TrainerArgs
@@ -13,10 +12,8 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms as T
 
 from src.config import BratsConfiguration
-from src.dataset import visualization_utils as visualization
-from src.dataset.brats_dataset import BratsDataset
-from src.dataset.batch_sampler import BratsSampler, BratsPatchSampler
-from src.dataset import dataset_utils
+from src.dataset.loaders.brats_dataset import BratsDataset
+from src.dataset.utils import dataset, visualization as visualization
 from src.models.vnet import vnet
 from src.logging_conf import logger
 
@@ -35,7 +32,6 @@ checkpoint_path = model_config.get("checkpoint")
 
 batch_size = dataset_config.getint("batch_size")
 n_patches = dataset_config.getint("n_patches")
-n_patients_per_batch = dataset_config.getint("n_patients_per_batch")
 n_classes = dataset_config.getint("classes")
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -45,12 +41,9 @@ logger.info(f"Device: {device}")
 ######## DATASET
 logger.info("Creating Dataset...")
 
-data, data_test = dataset_utils.read_brats(dataset_config.get("train_csv"))
-
-# data_train, data_val = train_val_split(data, val_size=0.2)
-
-data_train = data_test[:1]
-data_val = data_test[:1]
+data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
+data_train, data_val = train_val_split(data, val_size=0.2)
+data_train = data_train * n_patches
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
 modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,
@@ -61,11 +54,9 @@ transforms = T.Compose([T.ToTensor()])
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
 train_dataset = BratsDataset(data_train, modalities_to_use, sampling_method, patch_size, transforms)
-# train_sampler = BratsPatchSampler(train_dataset, n_patients_per_batch, n_patches)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 val_dataset = BratsDataset(data_val, modalities_to_use, sampling_method, patch_size, transforms)
-# val_sampler = BratsSampler(val_dataset, n_patients_per_batch, n_patches)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if basic_config.getboolean("plot"):

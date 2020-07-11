@@ -86,14 +86,15 @@ class DiceLoss(nn.Module):
         if weight is not None:
             intersect = weight * intersect
 
-        denominator = (input * input).sum(-1) + (target * target).sum(-1)
-        return 2 * (intersect / denominator.clamp(min=epsilon))
+        union = (input * input).sum(-1) + (target * target).sum(-1)
+        return 2 * (intersect / union.clamp(min=epsilon))
 
 
     def forward(self, input: torch.tensor, target: torch.tensor) -> Tuple[float, float]:
         target = expand_as_one_hot(target.long(), self.classes)
+        input = expand_as_one_hot(input.long(), self.classes)
 
-        assert input.dim() == target.dim() == 5, "'input' and 'target' have different number of dims"
+        assert input.dim() == target.dim() == 5, f"'input' {input.dim()} and 'target' {target.dim()} have different number of dims "
 
         input = self.normalization(input)
 

@@ -2,7 +2,7 @@ import random
 from typing import Tuple, List
 
 import numpy as np
-from src.dataset import dataset_utils
+from src.dataset.utils import dataset
 
 
 def add_patch(patches_by_patient: dict, index: int, patient: str):
@@ -59,6 +59,6 @@ def train_val_split(data: list, val_size: float=0.25) -> Tuple[List, List]:
 
 if __name__ == "__main__":
     csv_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/random_tumor_distribution/brats20_data.csv"
-    data, _ = dataset_utils.read_brats(csv_path)
+    data, _ = dataset.read_brats(csv_path)
     train, val = train_val_split(data)
     print()

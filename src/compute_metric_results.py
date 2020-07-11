@@ -2,9 +2,8 @@ import csv
 import sys
 import os
 import numpy as np
-from src.dataset import nifi_volume_utils as nifi_utils
 from src.config import BratsConfiguration
-from src.dataset import dataset_utils
+from src.dataset.utils import dataset, nifi_volume as nifi_utils
 from src.dataset import brats_labels
 from src.metrics import evaluation_metrics as eval
 from tqdm import tqdm
@@ -26,7 +25,7 @@ def compute(volume_pred, volume_gt, roi_mask):
 def compute_wt_tc_et(prediction, reference, flair):
 
     metrics = []
-    roi_mask = dataset_utils.create_roi_mask(flair)
+    roi_mask = dataset.create_roi_mask(flair)
 
     for typee in ["wt", "tc", "et"]:
 
@@ -57,7 +56,7 @@ if __name__ == "__main__":
     dataset_config = config.get_dataset_config()
     basic_config = config.get_basic_config()
 
-    data_train, data_test = dataset_utils.read_brats(dataset_config.get("train_csv"))
+    data_train, data_test = dataset.read_brats(dataset_config.get("train_csv"))
     data = data_test
 
     with open(f"results_test.csv", "w") as file:

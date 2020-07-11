@@ -3,12 +3,11 @@ import sys
 import torch
 from src.compute_metric_results import compute_wt_tc_et
 from src.config import BratsConfiguration
-from src.dataset import dataset_utils
-from src.dataset.nifi_volume_utils import load_nifi_volume
-from src.dataset.visualization_utils import plot_3_view
+from src.dataset.utils import dataset, nifi_volume as nifi_utils
+from src.dataset.utils.nifi_volume import load_nifi_volume
+from src.dataset.utils.visualization import plot_3_view
 from src.models.io_model import load_model
 from src.models.vnet import vnet
-from src.dataset import nifi_volume_utils as nifi_utils
 
 from src.test.predict import predict
 
@@ -29,7 +28,7 @@ if __name__ == "__main__":
     checkpoint_path = os.path.join(model_config.get("model_path"), model_config.get("checkpoint"))
     model, _, _, _ = load_model(network, checkpoint_path, device, None, False)
 
-    data_train, data_test = dataset_utils.read_brats(dataset_config.get("train_csv"))
+    data_train, data_test = dataset.read_brats(dataset_config.get("train_csv"))
 
     # Use idx to execute predictions in parallel
     idx = int(os.environ.get("SLURM_ARRAY_TASK_ID"))

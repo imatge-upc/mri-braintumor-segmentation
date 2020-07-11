@@ -1,7 +1,6 @@
 import random
 from torch.utils.data import Sampler, DataLoader
-
-from src.dataset.brats_dataset import BratsDataset
+from src.dataset.loaders.brats_dataset import BratsDataset
 
 
 
@@ -84,11 +83,11 @@ class BratsPatchSampler(Sampler):
 
 
 if __name__ == "__main__":
-    from src.dataset import dataset_utils
+    from src.dataset.utils import dataset
     from torchvision import transforms as T
     import importlib
 
-    data, _ = dataset_utils.read_brats("/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/random_tumor_distribution/brats20_data.csv")
+    data, _ = dataset.read_brats("/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/random_tumor_distribution/brats20_data.csv")
     data_train = data[:40]
     data_val = data[:40]
     modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,

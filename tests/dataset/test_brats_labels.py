@@ -1,9 +1,9 @@
 import pytest
 import os
 import numpy as np
-from src.dataset import nifi_volume_utils as nifi_utils
+from src.dataset.utils import nifi_volume as nifi_utils
 from src.dataset import brats_labels
-from src.dataset.visualization_utils import plot_3_view
+from src.dataset.utils.visualization import plot_3_view
 
 
 @pytest.fixture(scope="function")

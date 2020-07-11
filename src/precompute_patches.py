@@ -2,10 +2,9 @@ import importlib
 import os
 import sys
 import csv
-from src.dataset import nifi_volume_utils as nifi_utils
-from src.dataset.nifi_volume_utils import save_nifi_volume
+from src.dataset.utils.nifi_volume import save_nifi_volume
 
-from src.dataset import dataset_utils
+from src.dataset.utils import dataset, nifi_volume as nifi_utils
 from src.config import BratsConfiguration
 from tqdm import tqdm
 import numpy as np
@@ -22,7 +21,7 @@ if __name__ == "__main__":
     n_patches = dataset_config.getint("n_patches")
 
     data_csv = "/mnt/gpid07/users/laura.mora/datasets/2020/train/no_patch/brats20_data.csv"
-    data, data_test  = dataset_utils.read_brats(data_csv)
+    data, data_test  = dataset.read_brats(data_csv)
     data.extend(data_test)
 
     sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
