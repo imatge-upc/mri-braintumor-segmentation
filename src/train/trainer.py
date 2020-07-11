@@ -65,11 +65,11 @@ class Trainer:
             targets = labels_batch.float().to(self.args.device)
             inputs.require_grad = True
 
-            outputs_confs_vector = self.model(inputs)
-            best_score, best_prediction_map_vector = outputs_confs_vector.max(1) # get best
-            best_prediction_map = best_prediction_map_vector.view(targets.shape)
+            _, predictions = self.model(inputs)
+            # best_score, best_prediction_map_vector = outputs_confs_vector.max(1) # get best
+            # best_prediction_map = best_prediction_map_vector.view(targets.shape)
 
-            loss_dice, mean_dice = self.criterion(best_prediction_map, targets)
+            loss_dice, mean_dice = self.criterion(predictions, targets)
 
             loss_dice.backward()
             self.optimizer.step()
@@ -95,7 +95,7 @@ class Trainer:
             targets = labels_batch.float().to(self.args.device)
             inputs.require_grad = False
 
-            outputs = self.model(inputs)
+            _, outputs = self.model(inputs)
 
             loss_dice, mean_dice = self.criterion(outputs, targets)
 

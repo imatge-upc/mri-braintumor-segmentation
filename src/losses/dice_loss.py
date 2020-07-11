@@ -92,7 +92,6 @@ class DiceLoss(nn.Module):
 
     def forward(self, input: torch.tensor, target: torch.tensor) -> Tuple[float, float]:
         target = expand_as_one_hot(target.long(), self.classes)
-        input = expand_as_one_hot(input.long(), self.classes)
 
         assert input.dim() == target.dim() == 5, f"'input' {input.dim()} and 'target' {target.dim()} have different number of dims "
 
