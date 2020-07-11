@@ -27,7 +27,7 @@ def load_model(model, path: str, device, optimizer=None, resume: bool=False):
 
     model.load_state_dict(checkpoint['state_dict'])
 
-    if resume:
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    # if resume:
+    #     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     return model, optimizer, epoch, loss

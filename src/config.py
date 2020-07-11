@@ -24,7 +24,6 @@ def get_correct_path(local_path, server_path):
     return root_path
 
 
-
 class BratsConfiguration:
 
     def __init__(self, path):
@@ -50,6 +49,8 @@ class BratsConfiguration:
 
             logger.info("Create model directory and save configuration")
             self.config["basics"]["tensorboard_logs"] = os.path.join(self.config.get("basics", "tensorboard_logs"), model_name)
+            self.config["model"]["checkpoint"] = os.path.join(self.config.get("model", "model_path"), self.config.get("model", "checkpoint"))
+
             create_directory(self.config.get("basics", "tensorboard_logs"))
             self.config["model"]["model_path"] = os.path.join(self.config.get("model", "model_path"), model_name)
 
@@ -57,6 +58,7 @@ class BratsConfiguration:
             # save current configuration there
             with open(os.path.join(self.config["model"]["model_path"], "config.ini"), 'w') as configfile:
                 self.config.write(configfile)
+
 
 
         sampling_method = self.config["dataset"]["sampling_method"].split(".")[-1]

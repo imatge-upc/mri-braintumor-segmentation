@@ -1,3 +1,4 @@
+from src.dataset.visualization_utils import plot_3_view
 from src.models.io_model import save_checkpoint
 from tqdm import tqdm
 
@@ -65,9 +66,10 @@ class Trainer:
             targets = labels_batch.float().to(self.args.device)
             inputs.require_grad = True
 
-            outputs = self.model(inputs)
-
-            loss_dice, mean_dice = self.criterion(outputs, targets)
+            outputs_confs_vector = self.model(inputs)
+            best_score, best_prediction_map_vector = outputs_confs_vector.max(1) # get best
+            best_prediction_map = best_prediction_map_vector.view(targets[0].shape)
+            loss_dice, mean_dice = self.criterion(best_prediction_map, targets)
 
             loss_dice.backward()
             self.optimizer.step()

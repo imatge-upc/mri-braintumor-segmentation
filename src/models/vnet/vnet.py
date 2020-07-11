@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch
 from torchsummary import summary
+import torch.nn.functional as F
 
 
 
@@ -108,6 +109,7 @@ class UpTransition(nn.Module):
 class OutputTransition(nn.Module):
     def __init__(self, in_channels, classes, elu):
         super(OutputTransition, self).__init__()
+
         self.classes = classes
         self.conv1 = nn.Conv3d(in_channels, classes, kernel_size=5, padding=2)
         self.bn1 = torch.nn.BatchNorm3d(classes)
@@ -115,10 +117,19 @@ class OutputTransition(nn.Module):
         self.conv2 = nn.Conv3d(classes, classes, kernel_size=1)
         self.relu1 = ELUCons(elu, classes)
 
+        self.softmax = F.softmax
+
     def forward(self, x):
         # convolve 32 down to channels as the desired classes
         out = self.relu1(self.bn1(self.conv1(x)))
         out = self.conv2(out)
+
+        # make channels the last axis
+        out = out.permute(0, 2, 3, 4, 1).contiguous()
+        # flatten
+        out = out.view(out.numel() //  self.classes, self.classes)
+        out = self.softmax(out, dim=1)
+
         return out
 
 
