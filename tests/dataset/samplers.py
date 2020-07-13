@@ -19,11 +19,11 @@ def test():
     transforms = T.Compose([T.ToTensor()])
     sampling_method = importlib.import_module("src.dataset.patching.random_tumor_distribution")
     patch_size = (128, 128, 128)
-    n_patches = 2
+    n_patches = 10
 
     data = data * n_patches
     train_dataset = BratsDataset(data, modalities_to_use, sampling_method, patch_size, transforms)
-    train_loader = DataLoader(dataset=train_dataset,batch_size=2, shuffle=True, num_workers=1)
+    train_loader = DataLoader(dataset=train_dataset,batch_size=16, shuffle=True, num_workers=1)
 
 
     for idx, b_data, b_labels in train_loader:

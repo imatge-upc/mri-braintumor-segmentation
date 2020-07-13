@@ -42,8 +42,10 @@ logger.info(f"Device: {device}")
 logger.info("Creating Dataset...")
 
 data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
-data_train, data_val = train_val_split(data, val_size=0.2)
+data_train, data_val = train_val_split(data, val_size=0.1)
+
 data_train = data_train * n_patches
+data_val = data_val * n_patches
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
 modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,

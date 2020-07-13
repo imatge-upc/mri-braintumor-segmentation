@@ -65,9 +65,7 @@ class Trainer:
             targets = labels_batch.float().to(self.args.device)
             inputs.require_grad = True
 
-            _, predictions = self.model(inputs)
-            # best_score, best_prediction_map_vector = outputs_confs_vector.max(1) # get best
-            # best_prediction_map = best_prediction_map_vector.view(targets.shape)
+            predictions, _ = self.model(inputs)
 
             loss_dice, mean_dice = self.criterion(predictions, targets)
 
@@ -95,7 +93,7 @@ class Trainer:
             targets = labels_batch.float().to(self.args.device)
             inputs.require_grad = False
 
-            _, outputs = self.model(inputs)
+            outputs, _ = self.model(inputs)
 
             loss_dice, mean_dice = self.criterion(outputs, targets)
 

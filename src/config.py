@@ -60,8 +60,11 @@ class BratsConfiguration:
                 self.config.write(configfile)
 
 
+        if train:
+            sampling_method = "no_patch" # self.config["dataset"]["sampling_method"].split(".")[-1]
+        else:
+            sampling_method = self.config["dataset"]["sampling_method"].split(".")[-1]
 
-        sampling_method = "no_patch" # self.config["dataset"]["sampling_method"].split(".")[-1]
         self.config["dataset"]["root_path"] = get_correct_path(self.config.get("dataset", "dataset_root_path_local"),
                                                                self.config.get("dataset", "dataset_root_path_server"))
 
