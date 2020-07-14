@@ -31,12 +31,12 @@ if __name__ == "__main__":
     data_train, data_test = dataset.read_brats(dataset_config.get("train_csv"))
 
     # Use idx to execute predictions in parallel
-    idx = 0 # int(os.environ.get("SLURM_ARRAY_TASK_ID"))
-    prediction_scores, prediction, best_scores_map, pred = predict(model, data_test[idx], add_padding, device,
+    idx = int(os.environ.get("SLURM_ARRAY_TASK_ID"))
+    prediction_scores, prediction, best_scores_map = predict(model, data_test[idx], add_padding, device,
                                                                    monte_carlo=False, save=False)
 
     plot_3_view("prediction", prediction, s=20, save=True)
-    plot_3_view("score", pred, s=20, save=True)
+    plot_3_view("score", best_scores_map, s=20, save=True)
 
     # compute metrics
     patient_path = os.path.join(data_test[idx].data_path, data_test[idx].patch_name, data_test[idx].seg)

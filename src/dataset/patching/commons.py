@@ -10,6 +10,27 @@ def array4d_center_crop(data: np.ndarray, new_shape: tuple):
 
     return data[:, startx:startx + new_shape[0], starty:starty + new_shape[1], startz:startz + new_shape[2]]
 
+def array4d_crop(data: np.ndarray, new_shape: tuple, center: tuple):
+    assert len(data.shape) == 4
+    return data[:,
+           center[0] - new_shape[0]//2:center[0] + new_shape[0]//2,
+           center[1] - new_shape[1]//2:center[1] + new_shape[1]//2,
+           center[2] - new_shape[2]//2:center[2] + new_shape[2]//2]
+
+
+def fix_crop_center_3d(data: np.ndarray, patch_size: tuple, center: tuple):
+    def fix_center_coordinate(current_size: int, patch_size: int, center: int):
+        if center + (patch_size // 2) > current_size:
+            return center - (center + patch_size // 2 - current_size)
+        elif center - (patch_size // 2) < 0:
+            return center - (center - (patch_size // 2))
+        else:
+            return center
+
+    real_center_x = fix_center_coordinate(data.shape[0], patch_size[0], center[0])
+    real_center_y = fix_center_coordinate(data.shape[1], patch_size[1], center[1])
+    real_center_z = fix_center_coordinate(data.shape[2], patch_size[2], center[2])
+    return real_center_x, real_center_y, real_center_z
 
 def array3d_center_crop(data: np.ndarray, new_shape: tuple):
     assert len(data.shape) == 3

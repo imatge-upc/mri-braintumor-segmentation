@@ -3,6 +3,7 @@ from tqdm import tqdm
 
 from src.metrics.training_metrics import AverageMeter
 from src.logging_conf import logger
+from src.train.batch_tensorboard import write_segmentations
 
 
 
@@ -42,8 +43,9 @@ class Trainer:
             self._epoch_summary(epoch, train_dice_loss, val_dice_loss, train_dice_score, val_dice_score)
             is_best = bool(val_dice_loss < best_loss)
             best_loss = val_dice_loss if is_best else best_loss
+
             save_checkpoint({
-                'epoch': self.start_epoch + epoch + 1,
+                'epoch': epoch + 1,
                 'model_state_dict': self.model.state_dict(),
                 'optimizer_state_dict': self.optimizer.state_dict(),
                 'val_loss': best_loss,
@@ -65,8 +67,9 @@ class Trainer:
             targets = labels_batch.float().to(self.args.device)
             inputs.require_grad = True
 
+            print("Enter model...")
             predictions, _ = self.model(inputs)
-
+            print("Model done")
             loss_dice, mean_dice = self.criterion(predictions, targets)
 
             loss_dice.backward()

@@ -48,12 +48,11 @@ def plot_brain_batch_per_patient(patient_ids, data, save=True):
         plot_axis_overlayed(patient_modalities, patient_seg, patient.patch_name, axis='x', save=save)
 
 
-def plot_batch_slice(images, gt, save=True):
+def plot_batch_slice(images, gt, slice = 10, save=True):
     """Plot, for a given batch, different types of visualizations.
     If paths: plot overlayed axis plot
     If paths=None: plot slice of volume
     """
-    slice = 10
     for element_index in range(0, len(images)):
         for i, mod_id in enumerate(images):
             patient_mod = images[i][element_index]

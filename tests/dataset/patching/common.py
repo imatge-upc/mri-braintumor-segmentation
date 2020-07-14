@@ -31,3 +31,6 @@ def patching_strategy(patching_method, size: tuple) -> Tuple[np.ndarray, np.ndar
     volume, seg = load_patient()
     volume_patches, seg_patches = patching_method(volume, seg, size)
     return volume, volume_patches, seg_patches
+
+
+

@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 from src.dataset.utils import nifi_volume as nifi_utils
+from src.logging_conf import logger
 
 
 class BratsDataset(Dataset):
@@ -51,8 +52,9 @@ class BratsDataset(Dataset):
         segmentation_mask = brats_labels.convert_from_brats_labels(segmentation_mask)
 
         # patch_modality, patch_segmentation = modalities, segmentation_mask
+        logger.info(f"Patient path (Before sampling): {root_path}")
         patch_modality, patch_segmentation = self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
-
+        logger.info(f"Patient path (After sampling): {root_path}")
         return idx, patch_modality, patch_segmentation
 
 

@@ -15,7 +15,7 @@ def enable_dropout(model):
             m.train()
 
 def predict(model, patient: Patient, add_padding: bool, device: torch.device, monte_carlo: bool=True,
-            save: bool=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+            save: bool=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     model.eval()
 
     if monte_carlo:
@@ -32,8 +32,8 @@ def predict(model, patient: Patient, add_padding: bool, device: torch.device, mo
         images = torch.from_numpy(images).unsqueeze(0)
         inputs = images.float().to(device)
 
-        prediction, prediction_scores = model(inputs)
-        prediction = np.asarray(prediction[0].max(0)[1].byte().cpu().data)
+        _, prediction_scores = model(inputs)
+        # prediction = np.asarray(prediction[0].max(0)[1].byte().cpu().data)
 
         best_score, best_prediction_map_vector = prediction_scores.max(1) # get best prediction
 
@@ -51,5 +51,5 @@ def predict(model, patient: Patient, add_padding: bool, device: torch.device, mo
         logger.info(f"Saving prediction to: {output_path}")
         save_segmask_as_nifi_volume(prediction_map, flair_path, output_path)
 
-    return prediction_scores, prediction_map, best_scores_map, prediction
+    return prediction_scores, prediction_map, best_scores_map
 
