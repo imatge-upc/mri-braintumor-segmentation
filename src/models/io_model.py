@@ -25,7 +25,10 @@ def load_model(model, path: str, device, optimizer=None, resume: bool=False):
     epoch = checkpoint['epoch']
     loss = checkpoint['val_loss']
 
-    model.load_state_dict(checkpoint['model_state_dict'])
+    if "model_state_dict" in checkpoint.keys():
+        model.load_state_dict(checkpoint['model_state_dict'])
+    else:
+        model.load_state_dict(checkpoint['state_dict'])
 
     if resume:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])

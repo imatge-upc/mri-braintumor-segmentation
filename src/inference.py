@@ -28,7 +28,7 @@ if __name__ == "__main__":
     checkpoint_path = os.path.join(model_config.get("model_path"), model_config.get("checkpoint"))
     model, _, _, _ = load_model(network, checkpoint_path, device, None, False)
 
-    data_train, data_test = dataset.read_brats(dataset_config.get("train_csv"))
+    _, data_test = dataset.read_brats(dataset_config.get("val_csv"))
 
     # Use idx to execute predictions in parallel
     idx = int(os.environ.get("SLURM_ARRAY_TASK_ID"))

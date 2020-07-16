@@ -1,10 +1,10 @@
 from src.models.io_model import save_checkpoint
 from tqdm import tqdm
-
+import numpy as np
 from src.metrics.training_metrics import AverageMeter
 from src.logging_conf import logger
 from src.train.batch_tensorboard import write_segmentations
-
+import torch
 
 
 class TrainerArgs:
@@ -60,6 +60,7 @@ class Trainer:
 
         i = 0
         for patients_ids, data_batch, labels_batch in tqdm(self.train_data_loader, desc="Training epoch"):
+            patch_size = labels_batch[0].shape
 
             self.optimizer.zero_grad()
 
@@ -67,9 +68,7 @@ class Trainer:
             targets = labels_batch.float().to(self.args.device)
             inputs.require_grad = True
 
-            print("Enter model...")
-            predictions, _ = self.model(inputs)
-            print("Model done")
+            predictions, prediction_scores = self.model(inputs)
             loss_dice, mean_dice = self.criterion(predictions, targets)
 
             loss_dice.backward()
@@ -80,6 +79,15 @@ class Trainer:
 
             self.writer.add_scalar('Training Dice Loss', loss_dice.item(), epoch * len(self.train_data_loader) + i)
             self.writer.add_scalar('Training Dice Score', mean_dice.item(), epoch * len(self.train_data_loader) + i)
+
+            # _, best_prediction_map_vector = prediction_scores.max(1)  # get best prediction
+            #
+            # shape = torch.Size((data_batch.shape[0], data_batch.shape[2], data_batch.shape[3], data_batch.shape[4]))
+            # prediction_map = best_prediction_map_vector.view(shape)
+
+            # write_segmentations(labels_batch, self.writer, slice=round(patch_size[0]/2), pred=False)
+            # write_segmentations(prediction_map, self.writer, slice=round(patch_size[0]/2), pred=True)
+
 
             i += 1
 

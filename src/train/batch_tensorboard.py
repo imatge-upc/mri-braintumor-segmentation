@@ -5,10 +5,10 @@ import numpy as np
 
 
 
-def write_image_batch_tensorboard(images, writer):
+def write_image_batch_tensorboard(images, writer, name="batch"):
     img_grid = torchvision.utils.make_grid(images)
     matplotlib_imshow(img_grid)
-    writer.add_image('batch', img_grid)
+    writer.add_image(name, img_grid)
 
 def matplotlib_imshow(img, normalized=False):
     if normalized:
@@ -17,10 +17,11 @@ def matplotlib_imshow(img, normalized=False):
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
 
 
-
 def write_segmentations(segmentation_batch, writer, slice=30, pred=True):
     seg_maps_2d = []
     for seg_map in segmentation_batch:
         seg_slice = seg_map[:, slice, :].unsqueeze(0)
         seg_maps_2d.append(seg_slice)
-    write_image_batch_tensorboard(torch.stack(seg_maps_2d), writer)
+
+    name = "Predictions" if pred else "GroundTruth"
+    write_image_batch_tensorboard(torch.stack(seg_maps_2d), writer, name)
