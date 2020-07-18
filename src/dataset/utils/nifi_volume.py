@@ -21,11 +21,11 @@ def save_segmask_as_nifi_volume(seg_mask: np.ndarray, volume_path: str , path:st
     img = nib.Nifti1Image(seg_mask, aff_func)
     img.to_filename(path)
 
+
 def load_nifi_volume(filepath: str, normalize: bool=False) -> Tuple[np.ndarray, np.ndarray]:
-    nib_data = nib.load(filepath)
-    img = nib_data.get_fdata()
-    nib_data.uncache()
+    proxy_img = nib.load(filepath)
+    proxy_img.uncache()
+    img = np.asarray(proxy_img.dataobj)
     if normalize:
         img = zero_mean_unit_variance_normalization(img)
-    return img, nib_data
-
+    return img, proxy_img

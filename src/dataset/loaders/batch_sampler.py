@@ -1,6 +1,6 @@
 import random
 from torch.utils.data import Sampler, DataLoader
-from src.dataset.loaders.brats_dataset import BratsDataset
+from src.dataset.loaders.brats_dataset_whole_volume import BratsDataset
 
 
 

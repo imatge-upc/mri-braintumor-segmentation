@@ -60,38 +60,34 @@ class Trainer:
 
         i = 0
         for patients_ids, data_batch, labels_batch in tqdm(self.train_data_loader, desc="Training epoch"):
-            patch_size = labels_batch[0].shape
+            def step(trainer):
+                trainer.optimizer.zero_grad()
 
-            self.optimizer.zero_grad()
+                dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+                inputs = data_batch.type(dtype)
+                targets = labels_batch.type(dtype)
 
-            inputs = data_batch.float().to(self.args.device)
-            targets = labels_batch.float().to(self.args.device)
-            inputs.require_grad = True
+                # inputs = data_batch.float().to(trainer.args.device)
+                # targets = labels_batch.float().to(trainer.args.device)
+                inputs.require_grad = True
 
-            predictions, prediction_scores = self.model(inputs)
-            loss_dice, mean_dice = self.criterion(predictions, targets)
+                predictions, prediction_scores = trainer.model(inputs)
+                loss_dice, mean_dice = trainer.criterion(predictions, targets)
 
-            loss_dice.backward()
-            self.optimizer.step()
+                loss_dice.backward()
+                trainer.optimizer.step()
 
-            losses.update(loss_dice.cpu(), data_batch.size(0))
-            dice_score.update(mean_dice.cpu(), data_batch.size(0))
+                losses.update(loss_dice.cpu(), data_batch.size(0))
+                dice_score.update(mean_dice.cpu(), data_batch.size(0))
 
-            self.writer.add_scalar('Training Dice Loss', loss_dice.item(), epoch * len(self.train_data_loader) + i)
-            self.writer.add_scalar('Training Dice Score', mean_dice.item(), epoch * len(self.train_data_loader) + i)
-
-            # _, best_prediction_map_vector = prediction_scores.max(1)  # get best prediction
-            #
-            # shape = torch.Size((data_batch.shape[0], data_batch.shape[2], data_batch.shape[3], data_batch.shape[4]))
-            # prediction_map = best_prediction_map_vector.view(shape)
-
-            # write_segmentations(labels_batch, self.writer, slice=round(patch_size[0]/2), pred=False)
-            # write_segmentations(prediction_map, self.writer, slice=round(patch_size[0]/2), pred=True)
+                trainer.writer.add_scalar('Training Dice Loss', loss_dice.item(), epoch * len(trainer.train_data_loader) + i)
+                trainer.writer.add_scalar('Training Dice Score', mean_dice.item(), epoch * len(trainer.train_data_loader) + i)
+            step(self)
 
 
             i += 1
 
-        return losses.avg, dice_score.avg
+        return losses.avg(), dice_score.avg()
 
     def val_epoch(self, epoch):
         self.model.eval()
@@ -99,24 +95,27 @@ class Trainer:
         dice_score = AverageMeter()
         i = 0
         for patients_ids, data_batch, labels_batch in tqdm(self.valid_data_loader, desc="Validation epoch"):
+            def step(trainer):
+                inputs = data_batch.float().to(trainer.args.device)
+                targets = labels_batch.float().to(trainer.args.device)
+                inputs.require_grad = False
 
-            inputs = data_batch.float().to(self.args.device)
-            targets = labels_batch.float().to(self.args.device)
-            inputs.require_grad = False
+                outputs, _ = trainer.model(inputs)
 
-            outputs, _ = self.model(inputs)
+                loss_dice, mean_dice = trainer.criterion(outputs, targets)
 
-            loss_dice, mean_dice = self.criterion(outputs, targets)
+                loss_dice.backward()
 
-            loss_dice.backward()
+                losses.update(loss_dice.cpu(), data_batch.size(0))
+                dice_score.update(mean_dice.cpu(), data_batch.size(0))
+                trainer.writer.add_scalar('Validation Dice Loss', loss_dice.item(), epoch * len(trainer.valid_data_loader) + i)
+                trainer.writer.add_scalar('Validation Dice Score', mean_dice.item(), epoch * len(trainer.valid_data_loader) + i)
 
-            losses.update(loss_dice.cpu(), data_batch.size(0))
-            dice_score.update(mean_dice.cpu(), data_batch.size(0))
-            self.writer.add_scalar('Validation Dice Loss', loss_dice.item(), epoch * len(self.valid_data_loader) + i)
-            self.writer.add_scalar('Validation Dice Score', mean_dice.item(), epoch * len(self.valid_data_loader) + i)
+            step(self)
+
             i += 1
 
-        return losses.avg, dice_score.avg
+        return losses.avg(), dice_score.avg()
 
     def _epoch_summary(self, epoch, train_loss, val_loss, train_dice_score, val_dice_score):
         logger.info(f'epoch: {epoch}\n '

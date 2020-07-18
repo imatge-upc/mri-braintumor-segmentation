@@ -14,11 +14,13 @@ class Patient:
         self.size = size
         self.patch_name = patch_name
         self.train = train
-        self.t1ce = f"{self.patch_name}_t1ce.nii.gz"
-        self.t1 = f"{self.patch_name}_t1.nii.gz"
+
+        extension = "nii.gz"
+        self.t1ce = f"{self.patch_name}_t1ce.{extension}"
+        self.t1 = f"{self.patch_name}_t1.{extension}"
         self.t2 = f"{self.patch_name}_t2.nii.gz"
-        self.flair = f"{self.patch_name}_flair.nii.gz"
-        self.seg = f"{self.patch_name}_seg.nii.gz"
+        self.flair = f"{self.patch_name}_flair.{extension}"
+        self.seg = f"{self.patch_name}_seg.{extension}"
 
 
     def load_mri_volumes(self) -> np.ndarray:

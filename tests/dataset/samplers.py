@@ -2,7 +2,7 @@ import importlib
 import sys
 from src.config import BratsConfiguration
 from src.dataset.loaders.batch_sampler import BratsPatchSampler
-from src.dataset.loaders.brats_dataset import BratsDataset
+from src.dataset.loaders.brats_dataset_whole_volume import BratsDataset
 from src.dataset.utils import dataset
 from torch.utils.data import DataLoader
 from torchvision import transforms as T

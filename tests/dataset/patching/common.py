@@ -6,9 +6,9 @@ from src.dataset.utils.visualization import plot_3_view
 from src.dataset.utils.nifi_volume import load_nifi_volume
 
 
-dataset_path = "/Users/lauramora/Documents/MASTER/TFM/Data/MICCAI_BraTS_2019_Data_Training/HGG/"
-patient = "BraTS19_CBICA_AAB_1"
-save = False
+dataset_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/no_patch/"
+patient = "BraTS20_Training_001"
+save = True
 
 def plot(volume: np.ndarray, patch: np.ndarray, volume_slice: int = 100):
     plot_3_view("flair", volume[0, :, :, :], volume_slice, save=True)

@@ -10,7 +10,7 @@ def test_assert_patch_shape():
 
 
 def test_visual_test():
-    volume, volume_patch, seg_patch = patching_strategy(patching, (32, 32, 32))
-    plot_3_view("random_tumor_flair", volume[0, :, :, :], 100, save=save)
-    plot_3_view("random_tumor_patch_flair", volume_patch[0, :, :, :], 10, save=save)
-    plot_3_view("random_tumor_path_seg", seg_patch[:, :, :], 10, save=save)
+    volume, volume_patch, seg_patch = patching_strategy(patching, (64, 64, 64))
+   # plot_3_view("random_tumor_flair", volume[0, :, :, :], 100, save=save)
+    plot_3_view("random_tumor_patch_flair", volume_patch[0, :, :, :], 32, save=save)
+    plot_3_view("random_tumor_path_seg", seg_patch[:, :, :], 32, save=save)

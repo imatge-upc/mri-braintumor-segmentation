@@ -17,6 +17,6 @@ def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple):
     """
     center = _select_random_start_in_tumor(labels, patch_size)
     volume_patch = array4d_crop(volume, patch_size, center)
-    seg_patch = array4d_crop(labels[None], patch_size, center)[0,:,:,:]
+    seg_patch = array4d_crop(labels[None], patch_size, center)[0, :, :, :]
 
     return volume_patch, seg_patch

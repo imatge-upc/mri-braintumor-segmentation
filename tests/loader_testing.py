@@ -4,7 +4,7 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader
 from torchvision import transforms as T
-from src.dataset.loaders.brats_dataset import BratsDataset
+from src.dataset.loaders.brats_dataset_whole_volume import BratsDataset
 from src.dataset.utils import dataset
 from src.dataset.utils.visualization import plot_3_view, plot_batch_slice
 from matplotlib import pyplot as plt

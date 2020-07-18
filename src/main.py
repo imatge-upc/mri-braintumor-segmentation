@@ -12,7 +12,10 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms as T
 
 from src.config import BratsConfiguration
-from src.dataset.loaders.brats_dataset import BratsDataset
+from src.dataset.loaders.brats_dataset_whole_volume import BratsDataset
+from src.dataset.loaders.brats_dataset_patches import BratsDatasetPatches
+
+
 from src.dataset.utils import dataset, visualization as visualization
 from src.models.vnet import vnet
 from src.logging_conf import logger
@@ -42,10 +45,10 @@ logger.info(f"Device: {device}")
 logger.info("Creating Dataset...")
 
 data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
-data_train, data_val = train_val_split(data, val_size=0.1)
+# data_train, data_val = train_val_split(data, val_size=0.1)
 
-data_train = data_train[:2]  * n_patches
-data_val = data_val[:2] * n_patches
+data_train = [data[123]]  * n_patches
+data_val = [data[123]] * n_patches
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
 modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,
@@ -55,10 +58,10 @@ transforms = T.Compose([T.ToTensor()])
 
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
-train_dataset = BratsDataset(data_train, modalities_to_use, sampling_method, patch_size, transforms)
+train_dataset = BratsDatasetPatches(data_train, modalities_to_use, sampling_method, patch_size, transforms)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-val_dataset = BratsDataset(data_val, modalities_to_use, sampling_method, patch_size, transforms)
+val_dataset = BratsDatasetPatches(data_val, modalities_to_use, sampling_method, patch_size, transforms)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if basic_config.getboolean("plot"):

@@ -10,6 +10,7 @@ from src.dataset.utils import nifi_volume as nifi_utils
 from src.logging_conf import logger
 
 
+
 class BratsDataset(Dataset):
 
     flair_idx, t1_idx, t2_idx, t1ce_idx = 0, 1, 2, 3
@@ -51,9 +52,7 @@ class BratsDataset(Dataset):
         segmentation_mask = self._load_volume_gt(os.path.join(root_path, self.data[idx].seg))
         segmentation_mask = brats_labels.convert_from_brats_labels(segmentation_mask)
 
-        # patch_modality, patch_segmentation = modalities, segmentation_mask
-        patch_modality, patch_segmentation = self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
-        return idx, patch_modality, patch_segmentation
+        return idx, modalities, segmentation_mask
 
 
     def _load_volume_modality(self, modality_path: str, modality: int):

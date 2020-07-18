@@ -17,7 +17,7 @@ def plot_3_view(modal, volume_type: np.ndarray, s: int=100, save: bool=True):
 
     for i, slice in enumerate(views):
         dst = slice # .numpy()
-        axes[i].imshow(dst.T, cmap='gray', origin="lower")
+        axes[i].imshow(dst.T, cmap='viridis', origin="lower")
     if save:
         fig.savefig(f'plot_{modal}_{time.time()}.png')
     else:
