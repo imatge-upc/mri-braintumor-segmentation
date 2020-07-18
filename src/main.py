@@ -12,8 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms as T
 
 from src.config import BratsConfiguration
-from src.dataset.loaders.brats_dataset_whole_volume import BratsDataset
-from src.dataset.loaders.brats_dataset_patches import BratsDatasetPatches
+from src.dataset.loaders.brats_dataset import BratsDataset
 
 
 from src.dataset.utils import dataset, visualization as visualization
@@ -32,7 +31,6 @@ basic_config = config.get_basic_config()
 patch_size = config.patch_size
 tensorboard_logdir = basic_config.get("tensorboard_logs")
 checkpoint_path = model_config.get("checkpoint")
-
 batch_size = dataset_config.getint("batch_size")
 n_patches = dataset_config.getint("n_patches")
 n_classes = dataset_config.getint("classes")
@@ -51,17 +49,17 @@ data_train = data_train * n_patches
 data_val = data_val * n_patches
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
-modalities_to_use = {BratsDataset.flair_idx: True, BratsDataset.t1_idx: True, BratsDataset.t2_idx: True,
-                     BratsDataset.t1ce_idx: True}
+
 
 transforms = T.Compose([T.ToTensor()])
 
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
-train_dataset = BratsDatasetPatches(data_train, modalities_to_use, sampling_method, patch_size, transforms)
+compute_patch = True
+train_dataset = BratsDataset(data_train, sampling_method, patch_size, transforms, compute_patch=compute_patch)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-val_dataset = BratsDatasetPatches(data_val, modalities_to_use, sampling_method, patch_size, transforms)
+val_dataset = BratsDataset(data_val, sampling_method, patch_size, transforms, compute_patch=compute_patch)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if basic_config.getboolean("plot"):

@@ -1,13 +1,12 @@
 import os
 
 import numpy as np
-import torch
 from src.dataset import brats_labels
 from torch.utils.data import Dataset
 from torchvision import transforms
 
 from src.dataset.utils import nifi_volume as nifi_utils
-from src.logging_conf import logger
+import torch
 
 
 
@@ -15,8 +14,7 @@ class BratsDataset(Dataset):
 
     flair_idx, t1_idx, t2_idx, t1ce_idx = 0, 1, 2, 3
 
-    def __init__(self, data: list, modalities_to_use: dict, sampling_method,
-                 patch_size: tuple, transforms: transforms):
+    def __init__(self, data: list, sampling_method, patch_size: tuple, transforms: transforms, compute_patch: bool=False):
         """
 
         :param data:
@@ -26,13 +24,11 @@ class BratsDataset(Dataset):
         :param patch_size:
         :param transforms:
         """
-
         self.data = data
-        self.modalities_to_use = modalities_to_use
         self.sampling_method = sampling_method
         self.patch_size = patch_size
         self.transforms = transforms
-        self.normalize = False
+        self.compute_patch = compute_patch
 
     def __len__(self):
         return len(self.data)
@@ -43,27 +39,32 @@ class BratsDataset(Dataset):
             idx = idx.tolist()
 
         root_path = os.path.join(self.data[idx].data_path, self.data[idx].patch_name)
-        flair = self._load_volume_modality(os.path.join(root_path, self.data[idx].flair), BratsDataset.flair_idx)
-        t1 = self._load_volume_modality(os.path.join(root_path, self.data[idx].t1), BratsDataset.t1_idx)
-        t2 = self._load_volume_modality(os.path.join(root_path, self.data[idx].t2), BratsDataset.t2_idx)
-        t1_ce = self._load_volume_modality(os.path.join(root_path, self.data[idx].t1ce), BratsDataset.t1_idx)
+        flair = self._load_volume_modality(os.path.join(root_path, self.data[idx].flair))
+        t1 = self._load_volume_modality(os.path.join(root_path, self.data[idx].t1))
+        t2 = self._load_volume_modality(os.path.join(root_path, self.data[idx].t2))
+        t1_ce = self._load_volume_modality(os.path.join(root_path, self.data[idx].t1ce))
         modalities = np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))
 
         segmentation_mask = self._load_volume_gt(os.path.join(root_path, self.data[idx].seg))
         segmentation_mask = brats_labels.convert_from_brats_labels(segmentation_mask)
 
-        return idx, modalities, segmentation_mask
-
-
-    def _load_volume_modality(self, modality_path: str, modality: int):
-        if modality in self.modalities_to_use.keys() and self.modalities_to_use[modality]:
-            volume, _ = nifi_utils.load_nifi_volume(modality_path, self.normalize)
-            return volume
+        if self.compute_patch:
+            patch_modality, patch_segmentation = self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
         else:
-            return None
+            patch_modality, patch_segmentation = modalities, segmentation_mask
+
+        patch_modality = torch.from_numpy(patch_modality.astype(float))
+        patch_segmentation = torch.from_numpy(patch_segmentation.astype(int))
+
+        return idx, patch_modality, patch_segmentation
+
+
+    def _load_volume_modality(self, modality_path: str):
+        volume, _ = nifi_utils.load_nifi_volume(modality_path, True)
+        return  volume
 
     def _load_volume_gt(self, seg_mask: str) -> np.ndarray:
-        segmentation, _ = nifi_utils.load_nifi_volume(seg_mask, normalize=False) # segmentation --> always false
+        segmentation, _ = nifi_utils.load_nifi_volume(seg_mask, normalize=False)
         return segmentation
 
     def get_patient_info(self, idx):
