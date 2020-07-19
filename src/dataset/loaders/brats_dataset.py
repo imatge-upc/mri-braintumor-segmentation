@@ -43,20 +43,19 @@ class BratsDataset(Dataset):
         t1 = self._load_volume_modality(os.path.join(root_path, self.data[idx].t1))
         t2 = self._load_volume_modality(os.path.join(root_path, self.data[idx].t2))
         t1_ce = self._load_volume_modality(os.path.join(root_path, self.data[idx].t1ce))
-        modalities = np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))
+        modalities = np.stack((flair, t1, t2, t1_ce))
 
         segmentation_mask = self._load_volume_gt(os.path.join(root_path, self.data[idx].seg))
         segmentation_mask = brats_labels.convert_from_brats_labels(segmentation_mask)
 
         if self.compute_patch:
-            patch_modality, patch_segmentation = self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
-        else:
-            patch_modality, patch_segmentation = modalities, segmentation_mask
+            modalities, segmentation_mask = self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
 
-        patch_modality = torch.from_numpy(patch_modality.astype(float))
-        patch_segmentation = torch.from_numpy(patch_segmentation.astype(int))
 
-        return idx, patch_modality, patch_segmentation
+        modalities = torch.from_numpy(modalities.astype(float))
+        segmentation_mask = torch.from_numpy(segmentation_mask.astype(int))
+
+        return modalities, segmentation_mask
 
 
     def _load_volume_modality(self, modality_path: str):

@@ -11,7 +11,7 @@ def volume():
     patient = "BraTS20_Training_001"
     gen_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/no_patch/"
     volume_path  = os.path.join(gen_path, patient, f"{patient}_seg.nii.gz")
-    volume, _ = nifi_utils.load_nifi_volume(volume_path)
+    volume = nifi_utils.load_nifi_volume(volume_path)
     return volume
 
 

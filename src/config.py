@@ -24,6 +24,7 @@ def get_correct_path(local_path, server_path):
     return root_path
 
 
+
 class BratsConfiguration:
 
     def __init__(self, path):
@@ -61,7 +62,7 @@ class BratsConfiguration:
 
 
         if train:
-            sampling_method = "no_patch" # self.config["dataset"]["sampling_method"].split(".")[-1]
+            sampling_method =  self.config["dataset"]["source_sampling"].split(".")[-1]
         else:
             sampling_method = self.config["dataset"]["sampling_method"].split(".")[-1]
 

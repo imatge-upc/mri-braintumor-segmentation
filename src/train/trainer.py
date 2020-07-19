@@ -1,10 +1,8 @@
 from src.models.io_model import save_checkpoint
 from tqdm import tqdm
-import numpy as np
 from src.metrics.training_metrics import AverageMeter
 from src.logging_conf import logger
-from src.train.batch_tensorboard import write_segmentations
-import torch
+
 
 
 class TrainerArgs:
@@ -19,10 +17,12 @@ class Trainer:
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
+
         self.train_data_loader = train_loader
-        self.len_epoch = len(self.train_data_loader)
+        self.number_train_data = len(self.train_data_loader)
 
         self.valid_data_loader = val_loader
+        self.number_val_data = len(self.valid_data_loader)
 
         self.lr_scheduler = lr_scheduler
         self.writer = writer
@@ -59,29 +59,27 @@ class Trainer:
         dice_score = AverageMeter()
 
         i = 0
-        for patients_ids, data_batch, labels_batch in tqdm(self.train_data_loader, desc="Training epoch"):
+        for data_batch, labels_batch in tqdm(self.train_data_loader, desc="Training epoch"):
             def step(trainer):
                 trainer.optimizer.zero_grad()
 
-                #dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-                #inputs = data_batch.type(dtype)
-                #targets = labels_batch.type(dtype)
-
-                inputs = data_batch.to(trainer.args.device)
-                targets = labels_batch.to(trainer.args.device)
+                inputs = data_batch.float().to(trainer.args.device)
+                targets = labels_batch.float().to(trainer.args.device)
                 inputs.require_grad = True
 
-                predictions, prediction_scores = trainer.model(inputs)
+                predictions, _ = trainer.model(inputs)
                 loss_dice, mean_dice = trainer.criterion(predictions, targets)
-
                 loss_dice.backward()
                 trainer.optimizer.step()
 
-                losses.update(loss_dice.detach().item(), data_batch.size(0))
-                dice_score.update(mean_dice.detach().item(), data_batch.size(0))
+                loss_dice = loss_dice.detach().item()
+                mean_dice = mean_dice.detach().item()
+                losses.update(loss_dice, data_batch.size(0))
+                dice_score.update(mean_dice, data_batch.size(0))
 
-                trainer.writer.add_scalar('Training Dice Loss', loss_dice.item(), epoch * len(trainer.train_data_loader) + i)
-                trainer.writer.add_scalar('Training Dice Score', mean_dice.item(), epoch * len(trainer.train_data_loader) + i)
+                trainer.writer.add_scalar('Training Dice Loss', loss_dice, epoch * trainer.number_train_data + i)
+                trainer.writer.add_scalar('Training Dice Score', mean_dice, epoch * trainer.number_train_data + i)
+
             step(self)
 
 
@@ -93,8 +91,9 @@ class Trainer:
         self.model.eval()
         losses = AverageMeter()
         dice_score = AverageMeter()
+
         i = 0
-        for patients_ids, data_batch, labels_batch in tqdm(self.valid_data_loader, desc="Validation epoch"):
+        for data_batch, labels_batch in tqdm(self.valid_data_loader, desc="Validation epoch"):
             def step(trainer):
                 inputs = data_batch.float().to(trainer.args.device)
                 targets = labels_batch.float().to(trainer.args.device)
@@ -105,11 +104,13 @@ class Trainer:
                 loss_dice, mean_dice = trainer.criterion(outputs, targets)
 
                 loss_dice.backward()
+                loss_dice = loss_dice.detach().item()
+                mean_dice = mean_dice.detach().item()
 
-                losses.update(loss_dice.cpu(), data_batch.size(0))
-                dice_score.update(mean_dice.cpu(), data_batch.size(0))
-                trainer.writer.add_scalar('Validation Dice Loss', loss_dice.item(), epoch * len(trainer.valid_data_loader) + i)
-                trainer.writer.add_scalar('Validation Dice Score', mean_dice.item(), epoch * len(trainer.valid_data_loader) + i)
+                losses.update(loss_dice, data_batch.size(0))
+                dice_score.update(mean_dice, data_batch.size(0))
+                trainer.writer.add_scalar('Validation Dice Loss', loss_dice, epoch * trainer.number_val_data + i)
+                trainer.writer.add_scalar('Validation Dice Score', mean_dice, epoch * trainer.number_val_data + i)
 
             step(self)
 
