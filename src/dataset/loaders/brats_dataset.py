@@ -60,11 +60,11 @@ class BratsDataset(Dataset):
 
 
     def _load_volume_modality(self, modality_path: str):
-        volume, _ = nifi_utils.load_nifi_volume(modality_path, True)
+        volume = nifi_utils.load_nifi_volume(modality_path, True)
         return  volume
 
     def _load_volume_gt(self, seg_mask: str) -> np.ndarray:
-        segmentation, _ = nifi_utils.load_nifi_volume(seg_mask, normalize=False)
+        segmentation = nifi_utils.load_nifi_volume(seg_mask, normalize=False)
         return segmentation
 
     def get_patient_info(self, idx):

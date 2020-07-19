@@ -63,12 +63,12 @@ class Trainer:
             def step(trainer):
                 trainer.optimizer.zero_grad()
 
-                dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-                inputs = data_batch.type(dtype)
-                targets = labels_batch.type(dtype)
+                #dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+                #inputs = data_batch.type(dtype)
+                #targets = labels_batch.type(dtype)
 
-                # inputs = data_batch.float().to(trainer.args.device)
-                # targets = labels_batch.float().to(trainer.args.device)
+                inputs = data_batch.to(trainer.args.device)
+                targets = labels_batch.to(trainer.args.device)
                 inputs.require_grad = True
 
                 predictions, prediction_scores = trainer.model(inputs)
@@ -77,8 +77,8 @@ class Trainer:
                 loss_dice.backward()
                 trainer.optimizer.step()
 
-                losses.update(loss_dice.cpu(), data_batch.size(0))
-                dice_score.update(mean_dice.cpu(), data_batch.size(0))
+                losses.update(loss_dice.detach().item(), data_batch.size(0))
+                dice_score.update(mean_dice.detach().item(), data_batch.size(0))
 
                 trainer.writer.add_scalar('Training Dice Loss', loss_dice.item(), epoch * len(trainer.train_data_loader) + i)
                 trainer.writer.add_scalar('Training Dice Score', mean_dice.item(), epoch * len(trainer.train_data_loader) + i)

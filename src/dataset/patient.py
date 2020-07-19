@@ -26,15 +26,15 @@ class Patient:
     def load_mri_volumes(self) -> np.ndarray:
         patient_path = os.path.join(self.data_path, self.patch_name)
 
-        flair, _ = load_nifi_volume(os.path.join(patient_path, self.flair), True)
-        t1, _ = load_nifi_volume(os.path.join(patient_path, self.t1), True)
-        t2, _ = load_nifi_volume(os.path.join(patient_path, self.t2), True)
-        t1_ce, _ = load_nifi_volume(os.path.join(patient_path, self.t1ce), True)
+        flair = load_nifi_volume(os.path.join(patient_path, self.flair), True)
+        t1 = load_nifi_volume(os.path.join(patient_path, self.t1), True)
+        t2 = load_nifi_volume(os.path.join(patient_path, self.t2), True)
+        t1_ce = load_nifi_volume(os.path.join(patient_path, self.t1ce), True)
         modalities = np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))
 
         return modalities
 
     def load_gt_mask(self) -> np.ndarray:
         patient_path = os.path.join(self.data_path, self.patch_name)
-        volume, _ = load_nifi_volume(os.path.join(patient_path, self.seg), normalize=False)
+        volume = load_nifi_volume(os.path.join(patient_path, self.seg), normalize=False)
         return volume

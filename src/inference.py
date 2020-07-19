@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
 
     if os.path.exists(patient_path):
-        volume_gt, _ = load_nifi_volume(patient_path, False)
+        volume_gt = load_nifi_volume(patient_path, False)
         volume, _ = nifi_utils.load_nifi_volume(data_path)
         metrics = compute_wt_tc_et(prediction, volume_gt, volume)
         print(metrics)

@@ -22,10 +22,10 @@ def save_segmask_as_nifi_volume(seg_mask: np.ndarray, volume_path: str , path:st
     img.to_filename(path)
 
 
-def load_nifi_volume(filepath: str, normalize: bool=False) -> Tuple[np.ndarray, np.ndarray]:
+def load_nifi_volume(filepath: str, normalize: bool=False) -> np.ndarray:
     proxy_img = nib.load(filepath)
     proxy_img.uncache()
-    img = np.asarray(proxy_img.dataobj)
+    img = np.array(proxy_img.dataobj)
     if normalize:
         img = zero_mean_unit_variance_normalization(img)
-    return img, proxy_img
+    return img
