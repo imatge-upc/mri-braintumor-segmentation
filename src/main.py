@@ -43,19 +43,16 @@ logger.info(f"Device: {device}")
 logger.info("Creating Dataset...")
 
 data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
-# data_train, data_val = train_val_split(data, val_size=0.1)
-# data_train = data_train * n_patches
-# data_val = data_val * n_patches
-
-data_train = data
-data_val = data
+data_train, data_val = train_val_split(data, val_size=0.1)
+data_train = data_train * n_patches
+data_val = data_val * n_patches
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
 
+sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
 transforms = T.Compose([T.ToTensor()])
 
-sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
 compute_patch = basic_config.getboolean("compute_patches")
 train_dataset = BratsDataset(data_train, sampling_method, patch_size, transforms, compute_patch=compute_patch)

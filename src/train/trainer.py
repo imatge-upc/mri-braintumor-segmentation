@@ -1,3 +1,4 @@
+import torch
 from src.models.io_model import save_checkpoint
 from tqdm import tqdm
 from src.metrics.training_metrics import AverageMeter
@@ -94,21 +95,21 @@ class Trainer:
 
         i = 0
         for data_batch, labels_batch in tqdm(self.valid_data_loader, desc="Validation epoch"):
+
             def step(trainer):
                 inputs = data_batch.float().to(trainer.args.device)
                 targets = labels_batch.float().to(trainer.args.device)
-                inputs.require_grad = False
 
-                outputs, _ = trainer.model(inputs)
+                with torch.no_grad():
+                    outputs, _ = trainer.model(inputs)
 
-                loss_dice, mean_dice = trainer.criterion(outputs, targets)
+                    loss_dice, mean_dice = trainer.criterion(outputs, targets)
+                    loss_dice = loss_dice.detach().item()
+                    mean_dice = mean_dice.detach().item()
 
-                loss_dice.backward()
-                loss_dice = loss_dice.detach().item()
-                mean_dice = mean_dice.detach().item()
+                    losses.update(loss_dice, data_batch.size(0))
+                    dice_score.update(mean_dice, data_batch.size(0))
 
-                losses.update(loss_dice, data_batch.size(0))
-                dice_score.update(mean_dice, data_batch.size(0))
                 trainer.writer.add_scalar('Validation Dice Loss', loss_dice, epoch * trainer.number_val_data + i)
                 trainer.writer.add_scalar('Validation Dice Score', mean_dice, epoch * trainer.number_val_data + i)
 

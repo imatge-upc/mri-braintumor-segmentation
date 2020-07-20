@@ -42,11 +42,11 @@ def predict(model, patient: Patient, add_padding: bool, device: torch.device, mo
 
         prediction_map = brats_labels.convert_to_brats_labels(prediction_map)
 
-    output_path = os.path.join(patient.data_path, patient.patch_name, f"{patient.patch_name}_prediction.nii.gz")
+    output_path = os.path.join(patient.data_path, patient.patch_name, f"{patient.patch_name}.nii.gz")
     flair_path = os.path.join(patient.data_path, patient.patch_name, patient.flair)
+
     if add_padding:
         prediction_map = prediction_map[:, :, :155]
-
     if save:
         logger.info(f"Saving prediction to: {output_path}")
         save_segmask_as_nifi_volume(prediction_map, flair_path, output_path)
