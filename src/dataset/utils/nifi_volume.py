@@ -16,8 +16,7 @@ def save_nifi_volume(volume:np.ndarray, path:str):
     img.header.get_xyzt_units()
     img.to_filename(path)
 
-def save_segmask_as_nifi_volume(seg_mask: np.ndarray, volume_path: str , path:str):
-    aff_func = nib.load(volume_path).affine
+def save_segmask_as_nifi_volume(seg_mask: np.ndarray, aff_func, path:str):
     img = nib.Nifti1Image(seg_mask, aff_func)
     img.to_filename(path)
 

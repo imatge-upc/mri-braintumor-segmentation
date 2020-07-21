@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from src.dataset.utils.nifi_volume import load_nifi_volume
+import nibabel as nib
 
 class Patient:
     def __init__(self, idx: str, center: str, grade: str, patient: str, patch_name: str,
@@ -25,7 +26,6 @@ class Patient:
 
     def load_mri_volumes(self) -> np.ndarray:
         patient_path = os.path.join(self.data_path, self.patch_name)
-
         flair = load_nifi_volume(os.path.join(patient_path, self.flair), True)
         t1 = load_nifi_volume(os.path.join(patient_path, self.t1), True)
         t2 = load_nifi_volume(os.path.join(patient_path, self.t2), True)
@@ -38,3 +38,7 @@ class Patient:
         patient_path = os.path.join(self.data_path, self.patch_name)
         volume = load_nifi_volume(os.path.join(patient_path, self.seg), normalize=False)
         return volume
+
+    def get_affine(self):
+        patient_path = os.path.join(self.data_path, self.patch_name, self.flair)
+        return nib.load(patient_path).affine

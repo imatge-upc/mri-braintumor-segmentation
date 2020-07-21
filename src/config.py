@@ -91,6 +91,9 @@ class BratsConfiguration:
     def get_model_config(self):
         return self.config["model"]
 
+    def get_uncertainty_config(self):
+        return self.config["uncertainty"]
+
     def get_dataset_config(self):
         return self.config["dataset"]
 

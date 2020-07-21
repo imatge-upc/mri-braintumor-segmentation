@@ -9,19 +9,50 @@ from matplotlib import cm
 from skimage.transform import resize
 
 
+def plot_3_view(modal: str, vol: np.ndarray, s: int=100, discrete: bool=False,
+                color_map: str="gray", save: bool=True):
 
-def plot_3_view(modal, volume_type: np.ndarray, s: int=100, save: bool=True):
-    """ Plot slice of volume seen from each view (x, y, z)"""
-    views = [volume_type[s, :, :], volume_type[:, s, :], volume_type[:, :, s]]
-    fig, axes = plt.subplots(1, len(views))
+    views = [vol[s, :, :], vol[:, s, :], vol[:, :, s]]
+    fig = plt.figure(figsize=(10, 3.5))
 
-    for i, slice in enumerate(views):
-        dst = slice # .numpy()
-        axes[i].imshow(dst.T, cmap='viridis', origin="lower")
+    for position in range(1, len(views) + 1):
+        plt.subplot(1, len(views), position)
+        plt.imshow(views[position - 1].T, cmap=color_map)
+        plt.axis("off")
+        if discrete:
+            plt.clim(0, 4)
+
+    if discrete:
+        plt.colorbar(ticks=range(5))
+    else:
+        plt.colorbar()
+
     if save:
         fig.savefig(f'plot_{modal}_{time.time()}.png')
     else:
         plt.show()
+
+
+def plot_3_view_uncertainty(modal: str, vol: np.ndarray, s: int=100, color_map: str="gray", save: bool=True):
+
+    views = [vol[s, :, :], vol[:, s, :], vol[:, :, s]]
+    fig = plt.figure(figsize=(10, 3.5))
+
+    for position in range(1, len(views) + 1):
+        plt.subplot(1, len(views), position)
+        plt.imshow(views[position - 1].T, cmap=color_map)
+        plt.axis("off")
+        plt.clim(0, 100)
+
+    plt.colorbar()
+
+    if save:
+        fig.savefig(f'plot_unc_{modal}_{time.time()}.png')
+    else:
+        plt.show()
+
+
+
 
 
 def plot_axis_overlayed(modalities: dict, segmentation_mask: str, subject: int, axis: str = 'x', save: bool=False):
