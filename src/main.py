@@ -69,7 +69,6 @@ if basic_config.getboolean("plot"):
     visualization.plot_brain_batch_per_patient(i, train_dataset.data)
 
 
-
 ######## MODEL
 logger.info("Initiating Model...")
 
@@ -90,7 +89,9 @@ if basic_config.getboolean("train_flag"):
                                 momentum=model_config.getfloat("momentum"), weight_decay=model_config.getfloat("weight_decay"))
 
     if basic_config.getboolean("resume"):
+        logger.info("Loading model from checkpoint..")
         model, optimizer, start_epoch, loss  = load_model(network, checkpoint_path, device, optimizer, True)
+        logger.info(f"Loaded model with starting epoch {start_epoch}")
     else:
         start_epoch = 0
 

@@ -13,17 +13,16 @@ def enable_dropout(model):
         if m.__class__.__name__.startswith('Dropout'):
             m.train()
 
-def predict(model, patient: Patient, add_padding: bool, device: torch.device, monte_carlo: bool=True) -> Tuple[np.ndarray, np.ndarray]:
+def predict(model, images: np.ndarray, add_padding: bool, device: torch.device, monte_carlo: bool=True) -> Tuple[np.ndarray, np.ndarray]:
 
     model.eval()
     if monte_carlo:
         enable_dropout(model)
 
     with torch.no_grad():
-        images = patient.load_mri_volumes()
 
         if add_padding:
-            new_array = np.zeros((4, 240, 240, 156))
+            new_array = np.zeros((4, 240, 240, 240))
             new_array[:,  :images.shape[1], :images.shape[2], :images.shape[3]] = images
             images = new_array
 
@@ -45,7 +44,7 @@ def get_scores_map_from_vector(vector_prediction_scores: np.ndarray, path_size: 
     return best_score.view(path_size)
 
 
-def save_predictions(patient: Patient, results: dict, add_padding: bool, model_path: str, task: str):
+def save_predictions(patient: Patient, results: dict, model_path: str, task: str):
     assert task in ["segmentation_task", "uncertainty_task"], 'task must be on of ["segmentation_task", "uncertainty_task"] '
 
     output_dir = os.path.join(model_path, task)
@@ -55,9 +54,6 @@ def save_predictions(patient: Patient, results: dict, add_padding: bool, model_p
     for name, volume in results.items():
         file_name = f"{patient.patch_name}.nii.gz" if name == "prediction" else f"{patient.patch_name}_unc_{name}.nii.gz"
         output_path = os.path.join(output_dir, file_name)
-
-        if add_padding:
-            volume = volume[:, :, :155]
 
         affine_func = patient.get_affine()
         logger.info(f"Saving to: {output_path}")

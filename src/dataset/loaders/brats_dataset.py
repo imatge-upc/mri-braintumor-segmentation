@@ -1,5 +1,3 @@
-import os
-
 import numpy as np
 from src.dataset import brats_labels
 from torch.utils.data import Dataset
@@ -38,14 +36,9 @@ class BratsDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        root_path = os.path.join(self.data[idx].data_path, self.data[idx].patch_name)
-        flair = self._load_volume_modality(os.path.join(root_path, self.data[idx].flair))
-        t1 = self._load_volume_modality(os.path.join(root_path, self.data[idx].t1))
-        t2 = self._load_volume_modality(os.path.join(root_path, self.data[idx].t2))
-        t1_ce = self._load_volume_modality(os.path.join(root_path, self.data[idx].t1ce))
-        modalities = np.stack((flair, t1, t2, t1_ce))
+        modalities = self.data[idx].load_mri_volumes(normalize=True)
+        segmentation_mask = self.data[idx].load_gt_mask()
 
-        segmentation_mask = self._load_volume_gt(os.path.join(root_path, self.data[idx].seg))
         segmentation_mask = brats_labels.convert_from_brats_labels(segmentation_mask)
 
         if self.compute_patch:

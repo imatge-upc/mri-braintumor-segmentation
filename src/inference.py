@@ -38,19 +38,22 @@ if __name__ == "__main__":
     _, data_test = dataset.read_brats(dataset_config.get("train_csv"))
 
     idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 0
-    patch_size = data_test[idx].size
+
+    patch_size = (240, 240, 240) if add_padding else  data_test[idx].size
+
 
     ttd = unc_config.getboolean("monte_carlo")
     K = unc_config.getint("n_iterations")
 
     compute_metrics = True
 
+    images = data_test[idx].load_mri_volumes(normalize=True)
     results = {}
     if ttd:
         prediction_labels_maps, prediction_score_vectors = [], []
 
         for _ in tqdm(range(K), desc="Predicting.."):
-            prediction_four_channels, vector_prediction_scores = predict.predict(model, data_test[idx], add_padding,
+            prediction_four_channels, vector_prediction_scores = predict.predict(model, images, add_padding,
                                                                                  device, monte_carlo=ttd)
             prediction_labels_maps.append(predict.get_prediction_map(prediction_four_channels))
             prediction_score_vectors.append(vector_prediction_scores)
@@ -62,19 +65,26 @@ if __name__ == "__main__":
         pred_scores_mean = np.mean(pred_scores, axis=0)
         prediction_map = np.argmax(pred_scores_mean, axis=1).reshape(patch_size)
 
+        if add_padding:
+            wt_var = wt_var[:, :, :155]
+            tc_var = tc_var[:, :, :155]
+            et_var = et_var[:, :, :155]
+
         results = {"whole": wt_var, "core": tc_var, "enchance": et_var}
 
     else:
-        prediction_four_channels, vector_prediction_scores = predict.predict(model, data_test[idx], add_padding, device, monte_carlo=ttd)
+        prediction_four_channels, vector_prediction_scores = predict.predict(model, images, add_padding, device, monte_carlo=ttd)
         best_scores_map = predict.get_scores_map_from_vector(vector_prediction_scores, patch_size)
         prediction_map = predict.get_prediction_map(prediction_four_channels)
 
 
     prediction_map = brats_labels.convert_to_brats_labels(prediction_map)
+    if add_padding:
+        prediction_map = prediction_map[:, :, :155]
     results["prediction"] = prediction_map
 
     task = "uncertainty_task" if ttd else "segmentation_task"
-    predict.save_predictions(data_test[idx], results, add_padding, model_path, task)
+    predict.save_predictions(data_test[idx], results, model_path, task)
 
 
 

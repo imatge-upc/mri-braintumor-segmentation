@@ -1,7 +1,7 @@
 import os
 import numpy as np
-from src.dataset.utils.nifi_volume import load_nifi_volume
 import nibabel as nib
+from src.dataset.utils.nifi_volume import load_nifi_volume
 
 class Patient:
     def __init__(self, idx: str, center: str, grade: str, patient: str, patch_name: str,
@@ -24,13 +24,14 @@ class Patient:
         self.seg = f"{self.patch_name}_seg.{extension}"
 
 
-    def load_mri_volumes(self) -> np.ndarray:
+    def load_mri_volumes(self, normalize) -> np.ndarray:
         patient_path = os.path.join(self.data_path, self.patch_name)
-        flair = load_nifi_volume(os.path.join(patient_path, self.flair), True)
-        t1 = load_nifi_volume(os.path.join(patient_path, self.t1), True)
-        t2 = load_nifi_volume(os.path.join(patient_path, self.t2), True)
-        t1_ce = load_nifi_volume(os.path.join(patient_path, self.t1ce), True)
-        modalities = np.asarray(list(filter(lambda x: (x is not None), [flair, t1, t2, t1_ce])))
+
+        flair = load_nifi_volume(os.path.join(patient_path, self.flair), normalize)
+        t1 = load_nifi_volume(os.path.join(patient_path, self.t1), normalize)
+        t2 = load_nifi_volume(os.path.join(patient_path, self.t2), normalize)
+        t1_ce = load_nifi_volume(os.path.join(patient_path, self.t1ce), normalize)
+        modalities = np.stack((flair, t1, t2, t1_ce))
 
         return modalities
 
