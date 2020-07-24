@@ -2,6 +2,7 @@ import importlib
 import sys
 import torch
 from src.dataset.train_val_split import train_val_split
+from src.losses.ce_dice_loss import CrossEntropyDiceLoss3D
 
 from src.losses.dice_loss import DiceLoss
 from src.models.io_model import load_model
@@ -10,7 +11,7 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms as T
-
+from torch import nn
 from src.config import BratsConfiguration
 from src.dataset.loaders.brats_dataset import BratsDataset
 
@@ -34,6 +35,7 @@ checkpoint_path = model_config.get("checkpoint")
 batch_size = dataset_config.getint("batch_size")
 n_patches = dataset_config.getint("n_patches")
 n_classes = dataset_config.getint("classes")
+loss = model_config.get("loss")
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 logger.info(f"Device: {device}")
@@ -46,19 +48,21 @@ data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
 data_train, data_val = train_val_split(data, val_size=0.1)
 data_train = data_train * n_patches
 data_val = data_val * n_patches
+#
+# data_train = data_test[:1]
+# data_val = data_test[:1]
+
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
 
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
-transforms = T.Compose([T.ToTensor()])
-
 
 compute_patch = basic_config.getboolean("compute_patches")
-train_dataset = BratsDataset(data_train, sampling_method, patch_size, transforms, compute_patch=compute_patch)
+train_dataset = BratsDataset(data_train, sampling_method, patch_size, compute_patch=compute_patch)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-val_dataset = BratsDataset(data_val, sampling_method, patch_size, transforms, compute_patch=compute_patch)
+val_dataset = BratsDataset(data_val, sampling_method, patch_size, compute_patch=compute_patch)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if basic_config.getboolean("plot"):
@@ -98,9 +102,13 @@ if basic_config.getboolean("train_flag"):
     writer = SummaryWriter(tensorboard_logdir)
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"), patience=model_config.getint("patience"))
 
-    criterion = DiceLoss(classes=n_classes)
+    if loss == "dice":
+        criterion = DiceLoss(classes=n_classes)
+    else:
+        criterion = CrossEntropyDiceLoss3D(weight=None, classes=n_classes)
 
-    args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"))
+
+    args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"), loss)
     trainer = Trainer(args, network, optimizer, criterion, start_epoch, train_loader, val_loader, scheduler, writer)
     trainer.start()
     print("Finished!")

@@ -70,9 +70,9 @@ class DiceLoss(nn.Module):
 
         :param input: NxCxSpatial input tensor
         :param target:  NxCxSpatial target tensor
-        :param weight: prevents division by zero
-        :param epsilon: Cx1 tensor of weight per channel/class
-        :return: dice coefficient
+        :param weight: Cx1 tensor of weight per channel/class
+        :param epsilon: prevents division by zero
+        :return: dice loss, dice score
 
         """
         assert input.size() == target.size(), "'input' and 'target' must have the same shape"
@@ -98,7 +98,7 @@ class DiceLoss(nn.Module):
         input = self.normalization(input)
 
         per_channel_dice = self.dice(input, target, weight=self.weight) # compute per channel Dice coefficient
-        mean =  torch.mean(per_channel_dice)
+        mean = torch.mean(per_channel_dice)
         loss = (1. - mean)
 
         # average Dice score across all channels/classes
