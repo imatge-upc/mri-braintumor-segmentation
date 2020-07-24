@@ -16,7 +16,7 @@ def dataset():
 
 def test_dataset_no_patch(dataset):
     bs = 5
-    brats_dataset = BratsDataset(dataset, None, (240, 240, 155), transforms=None, compute_patch=False)
+    brats_dataset = BratsDataset(dataset, None, (240, 240, 155),  compute_patch=False)
     loader = DataLoader(dataset=brats_dataset, batch_size=bs, shuffle=True, num_workers=1)
     start = time.time()
     modalities, segmentation = next(iter(loader))
@@ -27,7 +27,7 @@ def test_dataset_no_patch(dataset):
 def test_dataset_random_distribution(dataset):
     bs = 5
     from src.dataset.patching import random_distribution
-    brats_dataset = BratsDataset(dataset, random_distribution, (128, 128, 128), transforms=None, compute_patch=True)
+    brats_dataset = BratsDataset(dataset, random_distribution, (128, 128, 128), compute_patch=True)
 
     loader = DataLoader(dataset=brats_dataset, batch_size=bs, shuffle=True, num_workers=1)
     start = time.time()
@@ -40,7 +40,7 @@ def test_dataset_random_distribution(dataset):
 def test_dataset_random_tumor_distribution(dataset):
     bs = 2
     from src.dataset.patching import random_tumor_distribution
-    brats_dataset = BratsDataset(dataset, random_tumor_distribution, (128, 128, 128), transforms=None, compute_patch=True)
+    brats_dataset = BratsDataset(dataset, random_tumor_distribution, (128, 128, 128),  compute_patch=True)
     loader = DataLoader(dataset=brats_dataset, batch_size=bs, shuffle=True, num_workers=1)
 
     start = time.time()

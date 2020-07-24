@@ -1,10 +1,9 @@
 import numpy as np
-from src.dataset import brats_labels
-from torch.utils.data import Dataset
-from torchvision import transforms
-
-from src.dataset.utils import nifi_volume as nifi_utils
 import torch
+from torch.utils.data import Dataset
+
+from src.dataset import brats_labels
+from src.dataset.utils import nifi_volume as nifi_utils
 
 
 
@@ -12,7 +11,7 @@ class BratsDataset(Dataset):
 
     flair_idx, t1_idx, t2_idx, t1ce_idx = 0, 1, 2, 3
 
-    def __init__(self, data: list, sampling_method, patch_size: tuple, transforms: transforms, compute_patch: bool=False):
+    def __init__(self, data: list, sampling_method, patch_size: tuple, compute_patch: bool=False):
         """
 
         :param data:
@@ -20,12 +19,10 @@ class BratsDataset(Dataset):
         :param modalities_to_use:
         :param sampling_method: patching method
         :param patch_size:
-        :param transforms:
         """
         self.data = data
         self.sampling_method = sampling_method
         self.patch_size = patch_size
-        self.transforms = transforms
         self.compute_patch = compute_patch
 
     def __len__(self):

@@ -13,7 +13,7 @@ def dataset():
     return data
 
 def test_dataset_no_patch(dataset):
-    brats_dataset = BratsDataset(dataset, None, (240, 240, 155), None, compute_patch=False)
+    brats_dataset = BratsDataset(dataset, None, (240, 240, 155), compute_patch=False)
     start = time.time()
     modalities, segmentation = brats_dataset.__getitem__(0)
     print("\n Time: ", time.time()-start)
@@ -22,7 +22,7 @@ def test_dataset_no_patch(dataset):
 
 def test_dataset_random_distribution(dataset):
     from src.dataset.patching import random_distribution
-    brats_dataset = BratsDataset(dataset, random_distribution, (128, 128, 128), transforms=None, compute_patch=True)
+    brats_dataset = BratsDataset(dataset, random_distribution, (128, 128, 128), compute_patch=True)
     start = time.time()
     modalities, segmentation = brats_dataset.__getitem__(0)
     print("\n Time: ", time.time()-start)
@@ -31,7 +31,7 @@ def test_dataset_random_distribution(dataset):
 
 def test_dataset_random_tumor_distribution(dataset):
     from src.dataset.patching import random_tumor_distribution
-    brats_dataset = BratsDataset(dataset, random_tumor_distribution, (128, 128, 128), transforms=None, compute_patch=True)
+    brats_dataset = BratsDataset(dataset, random_tumor_distribution, (128, 128, 128), compute_patch=True)
     start = time.time()
     modalities, segmentation = brats_dataset.__getitem__(0)
     print("\n Time: ", time.time()-start)
@@ -41,7 +41,7 @@ def test_dataset_random_tumor_distribution(dataset):
 
 def test_dataset_random_tumor_distribution_multiple_calls(dataset):
     from src.dataset.patching import random_tumor_distribution
-    brats_dataset = BratsDataset(dataset, random_tumor_distribution, (128, 128, 128), transforms=None,
+    brats_dataset = BratsDataset(dataset, random_tumor_distribution, (128, 128, 128),
                                  compute_patch=True)
 
     start = time.time()
