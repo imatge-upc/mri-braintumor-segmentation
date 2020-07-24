@@ -7,6 +7,39 @@ from matplotlib.colors import LinearSegmentedColormap
 from nilearn.plotting import plot_anat
 from matplotlib import cm
 from skimage.transform import resize
+import io
+
+
+def plot_batch(batch, seg: bool = False, slice: int = 32, batch_size: int=4):
+
+    def unnorm(data, epsilon=1e-8):
+        non_zero = data[data > 0.0]
+        mean = non_zero.mean()
+        std = non_zero.std() + epsilon
+        out = data * std + mean
+        out[data == 0] = 0
+        return out
+
+    plt.figure(figsize=(10, 3.5))
+
+    for i, volume in enumerate(batch):
+        plt.subplot(1, batch_size + 1, i + 1)
+
+        img = volume[:, slice, :].T if seg else volume[0, :, 32, :].T
+
+        npimg = img.cpu().detach().numpy()
+        img = npimg if seg else unnorm(npimg)
+        plt.imshow(img, cmap="gray")
+        plt.axis("off")
+
+    # name = f"{round(time.time())}_batch_pred.png" if seg else f"{round(time.time())}_batch_.png"
+    # fig.savefig(name)
+    buf = io.BytesIO()
+    plt.savefig(buf, format='jpeg')
+    buf.seek(0)
+    return buf
+
+
 
 
 def plot_3_view(modal: str, vol: np.ndarray, s: int=100, discrete: bool=False,
@@ -50,9 +83,6 @@ def plot_3_view_uncertainty(modal: str, vol: np.ndarray, s: int=100, color_map: 
         fig.savefig(f'plot_unc_{modal}_{time.time()}.png')
     else:
         plt.show()
-
-
-
 
 
 def plot_axis_overlayed(modalities: dict, segmentation_mask: str, subject: int, axis: str = 'x', save: bool=False):

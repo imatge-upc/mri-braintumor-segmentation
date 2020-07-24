@@ -1,10 +1,12 @@
 import torch
-from src.models.io_model import save_checkpoint
+from PIL import Image
+from torchvision import transforms as T
 from tqdm import tqdm
+
+from src.dataset.utils.visualization import plot_batch
+from src.models.io_model import save_checkpoint
 from src.metrics.training_metrics import AverageMeter
 from src.logging_conf import logger
-
-
 
 class TrainerArgs:
     def __init__(self, n_epochs=50, device="cpu", output_path=""):
@@ -81,12 +83,23 @@ class Trainer:
                 trainer.writer.add_scalar('Training Dice Loss', loss_dice, epoch * trainer.number_train_data + i)
                 trainer.writer.add_scalar('Training Dice Score', mean_dice, epoch * trainer.number_train_data + i)
 
+                trainer._add_image(data_batch, False, "Modality patch")
+                trainer._add_image(labels_batch, True, "Segmentation ground truth patch")
+                trainer._add_image(predictions[0].max(0)[1].unsqueeze(0), True, "Segmentation prediction patch")
+
+
             step(self)
 
 
             i += 1
 
         return losses.avg(), dice_score.avg()
+
+    def _add_image(self, batch, seg=False, title=""):
+        plot_buf = plot_batch(batch, seg=seg, slice=32, batch_size=2)
+        im = Image.open(plot_buf)
+        image = T.ToTensor()(im)
+        self.writer.add_image(title, image)
 
     def val_epoch(self, epoch):
         self.model.eval()
