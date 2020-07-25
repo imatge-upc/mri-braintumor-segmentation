@@ -90,8 +90,8 @@ class Trainer:
                     combined_loss_global.update(combined_loss, data_batch.size(0))
                     ce_loss_global.update(ce_loss, data_batch.size(0))
 
-                    trainer.writer.add_scalar('Combined CE-Dice Loss', combined_loss, epoch * trainer.number_train_data + i)
-                    trainer.writer.add_scalar('Cross Entropy Loss', ce_loss, epoch * trainer.number_train_data + i)
+                    trainer.writer.add_scalar('Train combined CE-Dice Loss', combined_loss, epoch * trainer.number_train_data + i)
+                    trainer.writer.add_scalar('Train Cross Entropy Loss', ce_loss, epoch * trainer.number_train_data + i)
 
 
                 dice_loss = dice_loss.detach().item()
@@ -105,7 +105,7 @@ class Trainer:
 
                 trainer._add_image(data_batch, False, "Modality patch")
                 trainer._add_image(labels_batch, True, "Segmentation ground truth patch")
-                trainer._add_image(predictions[0].max(0)[1].unsqueeze(0), True, "Segmentation prediction patch")
+                trainer._add_image(predictions.max(1)[1], True, "Segmentation prediction patch")
 
 
             step(self)
@@ -116,7 +116,7 @@ class Trainer:
         return dice_loss_global.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
 
     def _add_image(self, batch, seg=False, title=""):
-        plot_buf = plot_batch(batch, seg=seg, slice=32, batch_size=2)
+        plot_buf = plot_batch(batch, seg=seg, slice=32, batch_size=len(batch))
         im = Image.open(plot_buf)
         image = T.ToTensor()(im)
         self.writer.add_image(title, image)
@@ -146,8 +146,8 @@ class Trainer:
                         combined_loss_global.update(combined_loss, data_batch.size(0))
                         ce_loss_global.update(ce_loss, data_batch.size(0))
 
-                        trainer.writer.add_scalar('Combined CE-Dice Loss', combined_loss,epoch * trainer.number_val_data + i)
-                        trainer.writer.add_scalar('Cross Entropy Loss', ce_loss, epoch * trainer.number_val_data + i)
+                        trainer.writer.add_scalar('Validation Combined CE-Dice Loss', combined_loss,epoch * trainer.number_val_data + i)
+                        trainer.writer.add_scalar('Validation Cross Entropy Loss', ce_loss, epoch * trainer.number_val_data + i)
 
                     loss_dice = loss_dice.detach().item()
                     mean_dice = mean_dice.detach().item()
