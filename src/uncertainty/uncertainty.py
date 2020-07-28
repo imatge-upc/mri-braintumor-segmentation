@@ -18,7 +18,7 @@ def get_variation_uncertainty(prediction_score_vectors: List[torch.tensor], matr
     tc_var = np.var(np.sum(prediction_score_vectors[:, :, [1, 3]].cpu().numpy(), axis=2), axis=0).reshape( matrix_size) * 100
     et_var = np.var(prediction_score_vectors[:, :, 3].cpu().numpy(), axis=0).reshape(matrix_size) * 100
 
-    return wt_var, tc_var, et_var
+    return wt_var.astype(np.uint8), tc_var.astype(np.uint8), et_var.astype(np.uint8)
 
 
 def ttd_uncertainty_loop(model, images, add_padding, device, K=2):
