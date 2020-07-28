@@ -12,8 +12,7 @@ from src.dataset.utils import dataset, visualization
 from src.models.io_model import load_model
 from src.models.vnet import vnet
 from src.test import predict
-from src.uncertainty.uncertainty import get_variation_uncertainty
-
+from src.uncertainty.uncertainty import get_variation_uncertainty, ttd_uncertainty_loop
 
 if __name__ == "__main__":
 
@@ -50,14 +49,7 @@ if __name__ == "__main__":
     images = data_test[idx].load_mri_volumes(normalize=True)
     results = {}
     if ttd:
-        prediction_labels_maps, prediction_score_vectors = [], []
-
-        for _ in tqdm(range(K), desc="Predicting.."):
-            prediction_four_channels, vector_prediction_scores = predict.predict(model, images, add_padding,
-                                                                                 device, monte_carlo=ttd)
-            prediction_labels_maps.append(predict.get_prediction_map(prediction_four_channels))
-            prediction_score_vectors.append(vector_prediction_scores)
-
+        prediction_labels_maps, prediction_score_vectors = ttd_uncertainty_loop(model, images, add_padding, device, K)
         wt_var, tc_var, et_var = get_variation_uncertainty(prediction_score_vectors, patch_size)
 
         # Get segmentation map by computing the mean of the prediction scores and selecting bigger one

@@ -28,3 +28,11 @@ def load_nifi_volume(filepath: str, normalize: bool=False) -> np.ndarray:
     if normalize:
         img = zero_mean_unit_variance_normalization(img)
     return img
+
+def load_nifi_volume_return_nib(filepath: str, normalize: bool=False):
+    proxy_img = nib.load(filepath)
+    proxy_img.uncache()
+    img = np.array(proxy_img.dataobj)
+    if normalize:
+        img = zero_mean_unit_variance_normalization(img)
+    return img, proxy_img

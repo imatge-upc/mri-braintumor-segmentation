@@ -31,7 +31,7 @@ def predict(model, images: np.ndarray, add_padding: bool, device: torch.device, 
 
         four_channel_output, prediction_scores = model(inputs)
 
-    return four_channel_output, prediction_scores
+    return four_channel_output.detach().cpu(), prediction_scores.detach().cpu()
 
 
 def get_prediction_map(four_channel_prediction: torch.tensor) -> np.ndarray:

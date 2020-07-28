@@ -32,14 +32,12 @@ def plot_batch(batch, seg: bool = False, slice: int = 32, batch_size: int=4):
         plt.imshow(img, cmap="gray")
         plt.axis("off")
 
-    # name = f"{round(time.time())}_batch_pred.png" if seg else f"{round(time.time())}_batch_.png"
-    # fig.savefig(name)
+
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
     buf.seek(0)
-
+    plt.close()
     return buf
-
 
 
 
