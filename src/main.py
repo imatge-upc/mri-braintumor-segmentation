@@ -75,7 +75,12 @@ if basic_config.getboolean("plot"):
 logger.info("Initiating Model...")
 
 if model_config["network"] == "vnet":
-    network = vnet.VNet(elu=model_config.getboolean("use_elu"), in_channels=n_modalities, classes=n_classes)
+
+    network = vnet.VNet(elu=model_config.getboolean("use_elu"),
+                        in_channels=n_modalities,
+                        classes=n_classes,
+                        init_features_maps=model_config.getint("init_features_maps"))
+
     n_params = sum([p.data.nelement() for p in network.parameters()])
     logger.info("Number of params: {}".format(n_params))
 else:

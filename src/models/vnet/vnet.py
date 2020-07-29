@@ -138,12 +138,11 @@ class VNet(nn.Module):
     """
     Implementations based on the Vnet paper: https://arxiv.org/abs/1606.04797
     """
-    def __init__(self, elu=True, in_channels=1, classes=4): # input channels: the four modalities
+    def __init__(self, elu=True, in_channels=1, classes=4, init_features_maps=16): # input channels: the four modalities
         super(VNet, self).__init__()
         self.classes = classes
         self.in_channels = in_channels
 
-        init_features_maps = 16
         self.in_tr = InputTransition(in_channels, init_features_maps, elu=elu)
         self.down_tr32 = DownTransition(init_features_maps, 1, elu)
         self.down_tr64 = DownTransition(init_features_maps*2, 2, elu)
