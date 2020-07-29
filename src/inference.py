@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     model, _, _, _ = load_model(network, checkpoint_path, device, None, False)
 
-    _, data_test = dataset.read_brats(dataset_config.get("train_csv"))
+    _, data_test = dataset.read_brats(dataset_config.get("val_csv"))
 
     idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 0
 
@@ -62,7 +62,7 @@ if __name__ == "__main__":
             tc_var = tc_var[:, :, :155]
             et_var = et_var[:, :, :155]
 
-        results = {"whole": wt_var, "core": tc_var, "enchance": et_var}
+        results = {"whole": wt_var, "core": tc_var, "enhance": et_var}
 
     else:
         prediction_four_channels, vector_prediction_scores = predict.predict(model, images, add_padding, device, monte_carlo=ttd)
