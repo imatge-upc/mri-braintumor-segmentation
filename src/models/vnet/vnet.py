@@ -15,13 +15,21 @@ def ELUCons(elu, nchan):
     else:
         return nn.PReLU(nchan)
 
+def normalization(num_channels, typee):
+    if typee == "instance":
+        return torch.nn.InstanceNorm3d(num_channels)
+    elif typee == "group":
+        return torch.nn.GroupNorm(2,num_channels)
+    else:
+        return  torch.nn.BatchNorm3d(num_channels)
+
 
 class LUConv(nn.Module):
     def __init__(self, nchan, elu):
         super(LUConv, self).__init__()
         self.relu1 = ELUCons(elu, nchan)
         self.conv1 = nn.Conv3d(nchan, nchan, kernel_size=5, padding=2)
-        self.bn1 = torch.nn.BatchNorm3d(nchan)
+        self.bn1 = torch.nn.InstanceNorm3d(nchan)
 
     def forward(self, x):
         out = self.relu1(self.bn1(self.conv1(x)))
@@ -44,7 +52,7 @@ class InputTransition(nn.Module):
 
         self.conv1 = nn.Conv3d(self.in_channels, self.num_features, kernel_size=5, padding=2)
 
-        self.bn1 = torch.nn.BatchNorm3d(self.num_features)
+        self.bn1 = torch.nn.InstanceNorm3d(self.num_features)
 
         self.relu1 = ELUCons(elu, self.num_features)
 
@@ -62,7 +70,7 @@ class DownTransition(nn.Module):
         super(DownTransition, self).__init__()
         outChans = 2 * inChans
         self.down_conv = nn.Conv3d(inChans, outChans, kernel_size=2, stride=2)
-        self.bn1 = torch.nn.BatchNorm3d(outChans)
+        self.bn1 = torch.nn.InstanceNorm3d(outChans)
 
         self.do1 = passthrough
         self.relu1 = ELUCons(elu, outChans)
@@ -85,7 +93,7 @@ class UpTransition(nn.Module):
         super(UpTransition, self).__init__()
         self.up_conv = nn.ConvTranspose3d(inChans, outChans // 2, kernel_size=2, stride=2)
 
-        self.bn1 = torch.nn.BatchNorm3d(outChans // 2)
+        self.bn1 = torch.nn.InstanceNorm3d(outChans // 2)
         self.do1 = passthrough
         self.do2 = nn.Dropout3d()
         self.relu1 = ELUCons(elu, outChans // 2)
@@ -111,7 +119,7 @@ class OutputTransition(nn.Module):
 
         self.classes = classes
         self.conv1 = nn.Conv3d(in_channels, classes, kernel_size=5, padding=2)
-        self.bn1 = torch.nn.BatchNorm3d(classes)
+        self.bn1 = torch.nn.InstanceNorm3d(classes)
 
         self.conv2 = nn.Conv3d(classes, classes, kernel_size=1)
         self.relu1 = ELUCons(elu, classes)

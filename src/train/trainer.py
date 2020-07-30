@@ -112,8 +112,11 @@ class Trainer:
 
 
             i += 1
+        if self.args.loss == "dice":
+            return dice_loss_global.avg(), dice_score.avg(), 0, 0
+        else:
+            return dice_loss_global.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
 
-        return dice_loss_global.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
 
     def _add_image(self, batch, seg=False, title=""):
         plot_buf = plot_batch(batch, seg=seg, slice=32, batch_size=len(batch))
@@ -161,7 +164,10 @@ class Trainer:
 
             i += 1
 
-        return losses.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
+        if self.args.loss == "dice":
+            return losses.avg(), dice_score.avg(), 0, 0
+        else:
+            return losses.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
 
     def _epoch_summary(self, epoch, train_loss, val_loss, train_dice_score, val_dice_score, train_combined_loss, train_ce_loss, val_combined_loss, val_ce_loss):
 
