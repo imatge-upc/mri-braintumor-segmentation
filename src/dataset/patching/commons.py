@@ -38,6 +38,7 @@ def array3d_center_crop(data: np.ndarray, new_shape: tuple):
 
 
 def crop_volume_margin(volume, patch_size):
+
     assert len(volume.shape) == 3
 
     crop_shape = (volume.shape[0] - patch_size[0],
@@ -58,11 +59,19 @@ def select_patch_by_label_distribution(volume, segmentation_mask, patch_size, fu
 
     segmentation_mask_new = crop_volume_margin(segmentation_mask_new, patch_size)
 
-    positions = np.argwhere(segmentation_mask_new == selected_label)
-    axis_center = np.random.randint(0, len(positions))
-    center_x, center_y, center_z = positions[axis_center]
+    if selected_label == 0:
+        volume_new = crop_volume_margin(volume[0, :, :, :], patch_size)
+        seg_eq_0 = segmentation_mask_new == selected_label
+        volume_gt_0 = volume_new > 0
+        positions = np.argwhere(seg_eq_0*volume_gt_0)
 
-    seg_patch = segmentation_mask[center_x:center_x + patch_size[0], center_y:center_y + patch_size[1], center_z:center_z + patch_size[2]]
-    volume_patch = volume[:, center_x:center_x + patch_size[0], center_y:center_y + patch_size[1], center_z:center_z + patch_size[2]]
+    else:
+        positions = np.argwhere(segmentation_mask_new == selected_label)
+
+    axis_center = np.random.randint(0, len(positions))
+    start_x, start_y, start_z = positions[axis_center]
+
+    seg_patch = segmentation_mask[start_x:start_x + patch_size[0], start_y:start_y + patch_size[1], start_z:start_z + patch_size[2]]
+    volume_patch = volume[:, start_x:start_x + patch_size[0], start_y:start_y + patch_size[1], start_z:start_z + patch_size[2]]
 
     return volume_patch, seg_patch

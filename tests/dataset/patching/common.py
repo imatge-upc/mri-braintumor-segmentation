@@ -8,7 +8,7 @@ from src.dataset.utils.nifi_volume import load_nifi_volume
 
 dataset_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/no_patch/"
 patient = "BraTS20_Training_001"
-save = False
+save = True
 
 def plot(volume: np.ndarray, patch: np.ndarray, volume_slice: int = 100):
     plot_3_view("flair", volume[0, :, :, :], volume_slice, save=True)
