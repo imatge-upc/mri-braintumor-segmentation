@@ -46,7 +46,7 @@ def compute_wt_tc_et(prediction, reference, flair):
             continue
 
         dc, hd, recall, precision, acc, f1, conf_matrix = compute(volume_pred, volume_gt, roi_mask)
-        metrics.extend([dc, hd, recall, precision, acc, f1, conf_matrix])
+        metrics.extend([dc, hd, recall, precision, f1])
 
     return metrics
 
@@ -62,9 +62,9 @@ if __name__ == "__main__":
     with open(f"results_test.csv", "w") as file:
         writer = csv.writer(file)
         writer.writerow(["subject_ID", "Grade", "Center", "Size",
-                         "Dice WT", "HD WT", "Recall WT", "Precision WT", "Acc WT", "F1 WT", "CONF WT",
-                         "Dice TC", "HD TC", "Recall TC", "Precision TC", "Acc TC", "F1 TC", "CONF TC",
-                         "Dice ET", "HD ET", "Recall ET", "Precision ET", "Acc ET", "F1 ET", "CONF ET"
+                         "Dice WT", "HD WT", "Recall WT", "Precision WT", "F1 WT",
+                         "Dice TC", "HD TC", "Recall TC", "Precision TC", "F1 TC",
+                         "Dice ET", "HD ET", "Recall ET", "Precision ET", "F1 ET"
                          ])
 
         for patient in tqdm(data, total=len(data)):

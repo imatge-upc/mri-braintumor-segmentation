@@ -58,7 +58,6 @@ class Trainer:
                 'val_dice_score': val_dice_score
             }, is_best, self.args.output_path)
 
-
         save_model({
                 'epoch': self.args.n_epochs + 1,
                 'model_state_dict': self.model.state_dict(),
