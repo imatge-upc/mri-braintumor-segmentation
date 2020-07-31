@@ -97,7 +97,7 @@ if basic_config.getboolean("train_flag"):
 
     if basic_config.getboolean("resume"):
         logger.info("Loading model from checkpoint..")
-        model, optimizer, start_epoch, loss  = load_model(network, checkpoint_path, device, optimizer, True)
+        model, optimizer, start_epoch ,_  = load_model(network, checkpoint_path, device, optimizer, True)
         logger.info(f"Loaded model with starting epoch {start_epoch}")
     else:
         start_epoch = 0

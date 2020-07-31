@@ -160,6 +160,10 @@ class Trainer:
                 trainer.writer.add_scalar('Validation Dice Loss', loss_dice, epoch * trainer.number_val_data + i)
                 trainer.writer.add_scalar('Validation Dice Score', mean_dice, epoch * trainer.number_val_data + i)
 
+                trainer._add_image(data_batch, False, "Val Modality patch")
+                trainer._add_image(labels_batch, True, "Val Segmentation ground truth patch")
+                trainer._add_image(outputs.max(1)[1], True, "Val Segmentation prediction patch")
+
             step(self)
 
             i += 1

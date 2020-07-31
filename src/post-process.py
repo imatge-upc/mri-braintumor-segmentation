@@ -9,8 +9,8 @@ def load_segmentation(path):
 
 if __name__ == "__main__":
 
-    model_path =  "results/checkpoints/"
-    subject  = "BraTS20_Training_001"
+    model_path =  "results/checkpoints/model_1596122500/"
+    subject  = "BraTS20_Training_001_p0_160x192x128"
     path = os.path.join(model_path, f"segmentation_task/{subject}.nii.gz")
 
     segmentation, segmentation_nib = load_segmentation(path)

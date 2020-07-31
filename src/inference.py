@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     add_padding = True if dataset_config.get("sampling_method").split(".")[-1] == "no_patch" else False
 
-    network = vnet.VNet(elu=model_config.getboolean("use_elu"), in_channels=4, classes=4)
+    network = vnet.VNet(elu=model_config.getboolean("use_elu"), in_channels=4, classes=4, init_features_maps=model_config.getint("init_features_maps"))
     network.to(device)
 
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 0
 
-    patch_size = (240, 240, 240) if add_padding else  data_test[idx].size
+    patch_size = (240, 240, 240) if add_padding else data_test[idx].size
 
 
     ttd = unc_config.getboolean("monte_carlo")
