@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 0
 
-    patch_size = (240, 240, 240) if add_padding else data_test[idx].size
+    patch_size = (240, 240, 240) if add_padding else  data_test[idx].size
 
 
     ttd = unc_config.getboolean("monte_carlo")

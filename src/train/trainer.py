@@ -4,7 +4,7 @@ from torchvision import transforms as T
 from tqdm import tqdm
 
 from src.dataset.utils.visualization import plot_batch
-from src.models.io_model import save_checkpoint
+from src.models.io_model import save_checkpoint, save_model
 from src.metrics.training_metrics import AverageMeter
 from src.logging_conf import logger
 
@@ -36,6 +36,7 @@ class Trainer:
 
     def start(self):
         best_loss = 1000
+        val_dice_score = 0
 
         for epoch in range(self.start_epoch, self.args.n_epochs):
             train_dice_loss, train_dice_score, train_combined_loss, train_ce_loss = self.train_epoch(epoch)
@@ -57,6 +58,14 @@ class Trainer:
                 'val_dice_score': val_dice_score
             }, is_best, self.args.output_path)
 
+
+        save_model({
+                'epoch': self.args.n_epochs + 1,
+                'model_state_dict': self.model.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict(),
+                'val_loss': best_loss,
+                'val_dice_score': val_dice_score
+            }, self.args.output_path)
 
     def train_epoch(self, epoch):
         self.model.train()
