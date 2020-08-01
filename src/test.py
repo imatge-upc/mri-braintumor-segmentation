@@ -19,11 +19,13 @@ if __name__ == "__main__":
 
     images = data_test[0].load_mri_volumes(normalize=True)
     new_size = (160, 192, 128)
-    x_1 = int((240-new_size[0])/2)
-    x_2 = int(240-(240-new_size[0])/2)
+    x_1 = int((240 - new_size[0])/2)
+    x_2 = int(240 - (240-new_size[0])/2)
     y_1 = int((240 - new_size[1])/2)
     y_2 = int(240 - (240 - new_size[1])/2)
-    new_images = images[:, x_1:x_2, y_1:y_2, :new_size[2]]
+    z_1 = int(155 - new_size[2]/2)
+    z_2 = int(155 - (155 - new_size[2]) / 2)
+    new_images = images[:, x_1:x_2, y_1:y_2, z_1:z_2]
 
     ouput = np.zeros((4, 240, 240, 155))
 

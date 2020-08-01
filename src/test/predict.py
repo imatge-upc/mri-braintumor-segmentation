@@ -13,18 +13,13 @@ def enable_dropout(model):
         if m.__class__.__name__.startswith('Dropout'):
             m.train()
 
-def predict(model, images: np.ndarray, add_padding: bool, device: torch.device, monte_carlo: bool=True) -> Tuple[np.ndarray, np.ndarray]:
+def predict(model, images: np.ndarray, device: torch.device, monte_carlo: bool=True) -> Tuple[np.ndarray, np.ndarray]:
 
     model.eval()
     if monte_carlo:
         enable_dropout(model)
 
     with torch.no_grad():
-
-        if add_padding:
-            new_array = np.zeros((4, 240, 240, 240))
-            new_array[:,  :images.shape[1], :images.shape[2], :images.shape[3]] = images
-            images = new_array
 
         images = torch.from_numpy(images).unsqueeze(0)
         inputs = images.float().to(device)
