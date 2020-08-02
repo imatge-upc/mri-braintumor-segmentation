@@ -12,6 +12,7 @@ from src.models.io_model import load_model
 from src.models.vnet import vnet
 from src.test import predict
 from src.uncertainty.uncertainty import get_variation_uncertainty, ttd_uncertainty_loop
+from src.post_processing import post_process
 
 
 def load_network(device, model_config, dataset_config):
@@ -33,7 +34,6 @@ def load_network(device, model_config, dataset_config):
 
 
 
-
 if __name__ == "__main__":
 
     config = BratsConfiguration(sys.argv[1])
@@ -43,23 +43,31 @@ if __name__ == "__main__":
     unc_config = config.get_uncertainty_config()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 0
-    compute_metrics = True
 
+    compute_metrics = True
+    flag_post_process = True
 
     model, model_path = load_network(device, model_config, dataset_config)
 
 
     data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
-    # patch_size = (240, 240, 240) if add_padding else  data_test[idx].size
     patch_size =  data_test[idx].size
 
     sampling = dataset_config.get("sampling_method").split(".")[-1]
 
     ttd = unc_config.getboolean("monte_carlo")
+    task = "uncertainty_task" if ttd else "segmentation_task"
     K = unc_config.getint("n_iterations")
 
 
-    images = data_test[idx].load_mri_volumes(normalize=False)
+    images = data_test[idx].load_mri_volumes(normalize=True)
+
+    # from src.dataset.augmentations.brats_augmentations import zero_mean_unit_variance_normalization
+    # images[0,:,:,:] = zero_mean_unit_variance_normalization(images[0,:,:,:])
+    # images[1, :, :, :] = zero_mean_unit_variance_normalization(images[1, :, :, :])
+    # images[2, :, :, :] = zero_mean_unit_variance_normalization(images[2, :, :, :])
+    # images[3, :, :, :] = zero_mean_unit_variance_normalization(images[3, :, :, :])
+
     if  sampling == "no_patch":
 
         new_size = (160, 192, 128)
@@ -105,9 +113,14 @@ if __name__ == "__main__":
         prediction_map = output
         patch_size = output.shape
 
-    results["prediction"] = prediction_map
 
-    task = "uncertainty_task" if ttd else "segmentation_task"
+    if flag_post_process:
+        prediction_map_clean = post_process.opening(prediction_map)
+        results["prediction"] = prediction_map_clean
+        task = f"{task}_post_processed"
+        predict.save_predictions(data_test[idx], results, model_path, task)
+
+    results["prediction"] = prediction_map
     predict.save_predictions(data_test[idx], results, model_path, task)
 
 

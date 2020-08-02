@@ -1,23 +1,14 @@
 import os
 from typing import Tuple
 
-from skimage.morphology import remove_small_objects
 from src.compute_metric_results import compute_wt_tc_et
-
 from src.dataset.utils.nifi_volume import load_nifi_volume_return_nib, save_segmask_as_nifi_volume
+from src.post_processing import post_process
+from tqdm import tqdm
 
 
 def load_volume(path) -> Tuple:
     return load_nifi_volume_return_nib(path, normalize=False)
-
-
-def remove_small_elements(segmentation_mask, min_size=1000):
-
-    pred_mask = segmentation_mask > 0
-    mask = remove_small_objects(pred_mask, min_size=min_size)
-    clean_segmentation = segmentation * mask
-    return clean_segmentation
-
 
 
 
@@ -37,29 +28,31 @@ def compute_metrics(ground_truth_path, subject, segmentation, clean_segmentation
 
 if __name__ == "__main__":
 
-    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/no_patch"
+    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/validation/no_patch"
 
-    model_path =  "results/checkpoints/segmentation_task/"
+    model_path =  "results/checkpoints/model_1596122500/"
+    input_dir = os.path.join(model_path, "segmentation_task/validation/")
     output_dir = os.path.join(model_path, "segmentation_task_clean")
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    for i, filename in enumerate(os.listdir(model_path)):
+    file_list = os.listdir(input_dir)
+    for filename in tqdm(file_list, total=len(file_list)):
         if "BraTS20" not in filename:
             continue
 
         subject = filename.split(".")[0]
         output_path = os.path.join(output_dir, f"{subject}.nii.gz")
-        prediction_path = os.path.join(model_path, f"{subject}.nii.gz")
+        prediction_path = os.path.join(input_dir, f"{subject}.nii.gz")
+        volume_path = os.path.join(ground_truth_path, subject , f"{subject}_flair.nii.gz")
 
 
         segmentation, segmentation_nib = load_volume(prediction_path)
 
-        clean_segmentation = remove_small_elements(segmentation)
-        save_segmask_as_nifi_volume(clean_segmentation, segmentation_nib.affine, output_path)
+        clean_segmentation_open = post_process.opening(segmentation)
 
-        compute_metrics(ground_truth_path, subject, segmentation, clean_segmentation)
+        compute_metrics(ground_truth_path, subject, segmentation, clean_segmentation_open)
 
-        if i > 50:
-            break
+        affine_func = segmentation_nib.affine
+        save_segmask_as_nifi_volume(clean_segmentation_open, affine_func, output_path)
