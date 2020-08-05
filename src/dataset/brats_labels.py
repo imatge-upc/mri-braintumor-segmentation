@@ -9,14 +9,14 @@ def get_ncr_net(segmentation_map: np.ndarray) -> np.ndarray:
     regions = brats_segmentation_regions()
     copied_segmentation = _copy_input(segmentation_map)
     copied_segmentation[copied_segmentation != regions["NCR-NET"]] = 0
-    return copied_segmentation
+    return copied_segmentation.astype(np.uint8)
 
 
 def get_ed(segmentation_map: np.ndarray) -> np.ndarray:
     regions = brats_segmentation_regions()
     copied_segmentation = _copy_input(segmentation_map)
     copied_segmentation[copied_segmentation != regions["ED"]] = 0
-    return copied_segmentation
+    return copied_segmentation.astype(np.uint8)
 
 
 def get_et(segmentation_map: np.ndarray) -> np.ndarray:
@@ -33,14 +33,14 @@ def get_et(segmentation_map: np.ndarray) -> np.ndarray:
     else:
         copied_segmentation[copied_segmentation != regions["ET_brats"]] = 0
 
-    return copied_segmentation
+    return copied_segmentation.astype(np.uint8)
 
 
 def get_wt(segmentation_map: np.ndarray) -> np.ndarray:
     """ WT : entails all regions 4 (ET, NCR, ED ) """
     copied_segmentation = _copy_input(segmentation_map)
     copied_segmentation[copied_segmentation != 0] = 1
-    return copied_segmentation
+    return copied_segmentation.astype(np.uint8)
 
 
 def get_tc(segmentation_map: np.ndarray) -> np.ndarray:
@@ -51,7 +51,7 @@ def get_tc(segmentation_map: np.ndarray) -> np.ndarray:
     copied_segmentation[copied_segmentation == regions["ED"]] = 0  # remove edema
     copied_segmentation[copied_segmentation > 0] = 1
 
-    return copied_segmentation
+    return copied_segmentation.astype(np.uint8)
 
 def convert_from_brats_labels(segmentation_map: np.ndarray) -> np.ndarray:
     """Method to convert brats labels as models need consecutive values"""

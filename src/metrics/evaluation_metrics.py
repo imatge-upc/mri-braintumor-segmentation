@@ -35,7 +35,7 @@ def hausdorff(prediction: np.ndarray, reference: np.ndarray) -> float:
     except:
         print(f"Prediction does not contain the same label as gt. "
               f"Pred labels {np.unique(prediction)} GT labels {np.unique(reference)}")
-        return None
+        return 373
 
 
 # Sensitivity: recall

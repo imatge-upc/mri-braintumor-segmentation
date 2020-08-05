@@ -70,7 +70,7 @@ class DiceLoss(nn.Module):
 
         :param input: NxCxSpatial input tensor
         :param target:  NxCxSpatial target tensor
-        :param weight: Cx1 tensor of weight per channel/class
+        :param weight: Cx1 tensor of weight per channel. Channels represent the class
         :param epsilon: prevents division by zero
         :return: dice loss, dice score
 
