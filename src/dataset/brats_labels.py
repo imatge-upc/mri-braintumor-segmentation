@@ -33,6 +33,7 @@ def get_et(segmentation_map: np.ndarray) -> np.ndarray:
     else:
         copied_segmentation[copied_segmentation != regions["ET_brats"]] = 0
 
+    copied_segmentation[copied_segmentation != 0] = 1
     return copied_segmentation.astype(np.uint8)
 
 

@@ -10,10 +10,17 @@ from tqdm import tqdm
 
 
 def compute(volume_pred, volume_gt, roi_mask):
-    tp, fp, tn, fn = eval.get_confusion_matrix(volume_pred, volume_gt, roi_mask)
-    dc = eval.dice(tp, fp, fn)
 
-    hd = eval.hausdorff(volume_pred, volume_gt)
+    tp, fp, tn, fn = eval.get_confusion_matrix(volume_pred, volume_gt, roi_mask)
+
+    if len(np.unique(volume_pred)) == 1 and len(np.unique(volume_gt)) == 1 and np.unique(volume_pred)[0] == 0 and np.unique(volume_gt)[0] == 0:
+        print("There is no tumor for this region")
+        dc = 1.0
+        hd = 0.0
+    else:
+        dc = eval.dice(tp, fp, fn)
+        hd = eval.hausdorff(volume_pred, volume_gt)
+
     recall  = eval.recall(tp, fn)
     precision = eval.precision(tp, fp)
     acc = eval.accuracy(tp, fp, tn, fn)

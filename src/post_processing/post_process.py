@@ -2,15 +2,16 @@ import numpy as np
 from scipy import ndimage
 from skimage.morphology import remove_small_objects
 from skimage.measure import label, regionprops
+from src.dataset import brats_labels
 
 
-def opening(segmentation_mask: np.ndarray, kernel_size: tuple=(8,8,8)):
+def opening(segmentation_mask: np.ndarray, kernel_size: tuple=(8,8,8)) ->  np.ndarray:
 
     kernel =  np.ones(kernel_size)
     mask =  ndimage.binary_opening(segmentation_mask, structure=kernel).astype(int)
     return segmentation_mask * mask
 
-def remove_small_elements(segmentation_mask, min_size=1000):
+def remove_small_elements(segmentation_mask: np.ndarray, min_size: int=1000) ->  np.ndarray:
 
     pred_mask = segmentation_mask > 0
 
@@ -21,7 +22,7 @@ def remove_small_elements(segmentation_mask, min_size=1000):
     return clean_segmentation
 
 
-def keep_bigger_connected_component(segmentation_mask):
+def keep_bigger_connected_component(segmentation_mask:  np.ndarray) ->  np.ndarray:
     labels = label(segmentation_mask)
 
     maxArea = 0
@@ -34,7 +35,8 @@ def keep_bigger_connected_component(segmentation_mask):
     return np.asarray(mask > 0, np.uint8)
 
 
-def keep_conn_component_bigger_than_th(segmentation_mask, th=8):
+
+def keep_conn_component_bigger_than_th(segmentation_mask: np.ndarray, th: int=8) -> np.ndarray:
     labels = label(segmentation_mask)
 
     areas = sorted([region.area for region in regionprops(labels)], reverse=True) # big to small
@@ -47,6 +49,26 @@ def keep_conn_component_bigger_than_th(segmentation_mask, th=8):
     mask = remove_small_objects(labels, area - 1)
 
     return np.asarray(mask > 0, np.uint8)
+
+
+def proportion_tc_et(prediction: np.ndarray, th: float=0.10) -> np.ndarray:
+
+    """
+    Mean prop for tc et in LGG in 0.08 with std 0.13 --> test th=10
+    :param tc_mask:
+    :param et_mask:
+    :param th:
+    :return:
+    """
+    et_mask = brats_labels.get_et(prediction)
+    tc_mask = brats_labels.get_tc(prediction)
+
+    et_tc_prop = np.count_nonzero(et_mask) / np.count_nonzero(tc_mask)
+
+    if et_tc_prop <= th:
+        prediction[prediction == 4] = 1 # convert to NCR/NET
+
+    return prediction
 
 
 if __name__ == "__main__":

@@ -26,13 +26,16 @@ def dice(tp: int, fp:int, fn:int) -> float:
     denominator = 2*tp + fp + fn
     if denominator <= 0:
         return 0
+
     return (2 * tp / denominator)
 
 # Hausdorff
 def hausdorff(prediction: np.ndarray, reference: np.ndarray) -> float:
     try:
         return metric.hd95(prediction, reference)
-    except:
+
+    except Exception as e:
+        print("Error: ", e)
         print(f"Prediction does not contain the same label as gt. "
               f"Pred labels {np.unique(prediction)} GT labels {np.unique(reference)}")
         return 373
