@@ -5,6 +5,7 @@ from typing import Tuple
 from src.compute_metric_results import compute_wt_tc_et
 from src.dataset import brats_labels
 from src.dataset.utils.nifi_volume import load_nifi_volume_return_nib, save_segmask_as_nifi_volume
+from src.dataset.utils.visualization import plot_3_view
 from src.post_processing import post_process
 from tqdm import tqdm
 import numpy as np
@@ -39,30 +40,44 @@ if __name__ == "__main__":
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    file_list = [file for file in os.listdir(input_dir) if "BraTS20" in file]
+    file_list = sorted([file for file in os.listdir(input_dir) if "BraTS20" in file])
+    idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 299
 
-    for filename in tqdm(file_list, total=len(file_list)):
+    # for filename in tqdm(file_list, total=len(file_list)):
+    filename = file_list[idx]
 
-        subject = filename.split(".")[0]
-        output_path = os.path.join(output_dir, f"{subject}.nii.gz")
-        prediction_path = os.path.join(input_dir, f"{subject}.nii.gz")
-        segmentation, segmentation_nib = load_volume(prediction_path)
+    subject = filename.split(".")[0]
+    output_path = os.path.join(output_dir, f"{subject}.nii.gz")
+    prediction_path = os.path.join(input_dir, f"{subject}.nii.gz")
+    segmentation, segmentation_nib = load_volume(prediction_path)
+    segmentation_post = segmentation.copy()
 
-        # Keep One ET
-        pred_mask_et = brats_labels.get_et(segmentation)
-        et_clean_segmentation = segmentation * post_process.keep_bigger_connected_component(pred_mask_et)
+    print("Post processing")
 
-        # Keep One TC
-        pred_mask_tc = brats_labels.get_tc(et_clean_segmentation)
-        tc_clean_segmentation = segmentation * post_process.keep_bigger_connected_component(pred_mask_tc)
+    pred_mask_wt = brats_labels.get_wt(segmentation_post)
+    mask_removed_regions_wt = post_process.keep_bigger_connected_component(pred_mask_wt)
+    elements_to_remove = pred_mask_wt - mask_removed_regions_wt
+    segmentation_post[elements_to_remove == 1] = 0
 
-        # Keep One WT
-        pred_mask = brats_labels.get_wt(tc_clean_segmentation)
-        mask_removed_regions = post_process.keep_bigger_connected_component(pred_mask)
-        clean_segmentation = segmentation * mask_removed_regions
+    # Keep ONE TC
+    pred_mask_tc = brats_labels.get_tc(segmentation_post)
+    mask_removed_regions_tc = post_process.keep_bigger_connected_component(pred_mask_tc)
+    elements_to_remove = pred_mask_tc - mask_removed_regions_tc
+    segmentation_post[elements_to_remove == 1] = 2 # ED
+
+    # ET keep everything or change completly
+    segmentation_post = post_process.proportion_tc_et(segmentation_post, th=0.10)
+
+    # pred_mask_et = brats_labels.get_et(segmentation_post)
+    # mask_removed_regions_et = post_process.keep_bigger_connected_component(pred_mask_et)
+    # elements_to_remove = pred_mask_et - mask_removed_regions_et
+    # segmentation_post[elements_to_remove == 1] = 1 # NCR
 
 
-        compute_metrics(ground_truth_path, subject, segmentation, clean_segmentation)
 
-        affine_func = segmentation_nib.affine
-        save_segmask_as_nifi_volume(clean_segmentation, affine_func, output_path)
+    print("Computing metrics..")
+    compute_metrics(ground_truth_path, subject, segmentation, segmentation_post)
+
+    affine_func = segmentation_nib.affine
+    save_segmask_as_nifi_volume(segmentation_post, affine_func, output_path)
+    print("Result Saved!")
