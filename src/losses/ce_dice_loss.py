@@ -1,7 +1,7 @@
 from torch import  nn
 import torch
 
-from src.losses.dice_loss import DiceLoss
+from src.losses.dice_loss_eval_regions import DiceLoss
 
 
 
@@ -12,8 +12,10 @@ class CrossEntropyDiceLoss3D(nn.Module):
         self.cross_entropy_loss = nn.CrossEntropyLoss(weight=weight)
         self.dice_loss = DiceLoss(classes=classes)
 
-    def forward(self, input: torch.tensor, target: torch.tensor, weight: torch.tensor=None):
+    def forward(self, input: torch.tensor, target: torch.tensor, weight_ce: int=1, weight_dice: int=1):
         """
+        Weights for CE and Dice do not need to sum to one. You can set whatever you want.
+
         Forward pass
 
         :param input: torch.tensor (NxCxDxHxW) Network output
@@ -25,6 +27,6 @@ class CrossEntropyDiceLoss3D(nn.Module):
 
         ce_loss = self.cross_entropy_loss(input, target.long())
 
-        total_loss = dice_loss + ce_loss
+        total_loss = weight_dice*dice_loss + weight_ce*ce_loss
 
         return total_loss, dice_loss, ce_loss, dice_score

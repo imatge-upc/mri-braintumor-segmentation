@@ -95,3 +95,8 @@ if __name__ == "__main__":
 
     mask_removed_regions = keep_conn_component_bigger_than_th(pred_mask)
     final_segmentation_two_big = arr_pred * mask_removed_regions
+
+
+
+
+

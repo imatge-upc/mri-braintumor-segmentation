@@ -31,17 +31,21 @@ def compute_metrics(ground_truth_path, subject, segmentation, clean_segmentation
 
 if __name__ == "__main__":
 
-    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/no_patch"
+    # ground_truth_path = "/mnt/gpid07/users/laura.mora/datasets/2020/train/no_patch"
+    # model_path = "/mnt/gpid07/users/laura.mora/results/checkpoints/model_1596122500/"
+    # input_dir = os.path.join(model_path, "segmentation_task/")
 
+    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/no_patch"
     model_path =  "results/checkpoints/model_1596122500/"
     input_dir = os.path.join(model_path, "segmentation_task/train_no_post/")
+
     output_dir = os.path.join(model_path, "segmentation_task_clean_keep_one_connected_each_subregion")
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     file_list = sorted([file for file in os.listdir(input_dir) if "BraTS20" in file])
-    idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 299
+    idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 0
 
     # for filename in tqdm(file_list, total=len(file_list)):
     filename = file_list[idx]
@@ -54,6 +58,7 @@ if __name__ == "__main__":
 
     print("Post processing")
 
+    # Keep ONE TC
     pred_mask_wt = brats_labels.get_wt(segmentation_post)
     mask_removed_regions_wt = post_process.keep_bigger_connected_component(pred_mask_wt)
     elements_to_remove = pred_mask_wt - mask_removed_regions_wt

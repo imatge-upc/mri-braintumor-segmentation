@@ -82,7 +82,8 @@ class Trainer:
 
                 predictions, _ = trainer.model(inputs)
 
-                if trainer.args.loss == "dice":
+                print("Output shape: ", predictions.shape)
+                if trainer.args.loss == "dice" or trainer.args.loss == "dice_eval":
                     dice_loss, mean_dice = trainer.criterion(predictions, targets)
                     dice_loss.backward()
                     trainer.optimizer.step()
@@ -120,7 +121,7 @@ class Trainer:
 
 
             i += 1
-        if self.args.loss == "dice":
+        if self.args.loss == "dice" or self.args.loss == "dice_eval":
             return dice_loss_global.avg(), dice_score.avg(), 0, 0
         else:
             return dice_loss_global.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
@@ -147,7 +148,7 @@ class Trainer:
                 with torch.no_grad():
                     outputs, _ = trainer.model(inputs)
 
-                    if trainer.args.loss == "dice":
+                    if trainer.args.loss == "dice" or  trainer.args.loss == "dice_eval":
                         loss_dice, mean_dice = trainer.criterion(outputs, targets)
 
                     else:
@@ -176,14 +177,14 @@ class Trainer:
 
             i += 1
 
-        if self.args.loss == "dice":
+        if  self.args.loss == "dice" or  self.args.loss == "dice_eval":
             return losses.avg(), dice_score.avg(), 0, 0
         else:
             return losses.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
 
     def _epoch_summary(self, epoch, train_loss, val_loss, train_dice_score, val_dice_score, train_combined_loss, train_ce_loss, val_combined_loss, val_ce_loss):
 
-        if self.args.loss == "dice":
+        if self.args.loss == "dice" or  self.args.loss == "dice_eval":
             logger.info(f'epoch: {epoch}\n '
                         f'** Dice Loss **  : train_loss: {train_loss:.2f} | val_loss {val_loss:.2f} \n'
                         f'** Dice Score ** : train_dice_score {train_dice_score:.2f} | val_dice_score {val_dice_score:.2f}')

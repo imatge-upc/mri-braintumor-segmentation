@@ -4,7 +4,8 @@ import torch
 from src.dataset.train_val_split import train_val_split
 from src.losses.ce_dice_loss import CrossEntropyDiceLoss3D
 
-from src.losses.dice_loss import DiceLoss
+# from src.losses.dice_loss import DiceLoss
+from src.losses import dice_loss_eval_regions, dice_loss
 from src.models.io_model import load_model
 from src.train.trainer import Trainer, TrainerArgs
 from torch.optim import lr_scheduler
@@ -46,10 +47,12 @@ logger.info("Creating Dataset...")
 
 data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
 data.extend(data_test)
-data_train, data_val = train_val_split(data, val_size=0.1)
-data_train = data_train * n_patches
-data_val = data_val * n_patches
+# data_train, data_val = train_val_split(data, val_size=0.1)
+# data_train = data_train * n_patches
+# data_val = data_val * n_patches
 
+data_train = data_test[:2]
+data_val = data_test[:2]
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
 
@@ -64,7 +67,7 @@ val_dataset = BratsDataset(data_val, sampling_method, patch_size, compute_patch=
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if basic_config.getboolean("plot"):
-    i, x, y = next(iter(train_loader))
+    x, y = next(iter(train_loader))
     print(x.shape)
     logger.info('Plotting images')
     # visualization.plot_batch_cubes(i, x, y)
@@ -106,10 +109,13 @@ if basic_config.getboolean("train_flag"):
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"), patience=model_config.getint("patience"))
 
     if loss == "dice":
-        criterion = DiceLoss(classes=n_classes)
-    else:
+        criterion = dice_loss.DiceLoss(classes=n_classes)
+    elif loss == "dice_eval":
+        criterion = dice_loss_eval_regions.DiceLoss(classes=n_classes, eval_regions=True, sigmoid_normalization=True)
+    elif loss == "combined":
         criterion = CrossEntropyDiceLoss3D(weight=None, classes=n_classes)
-
+    else:
+        raise ValueError(f"Bad loss value {loss}. Expected ['dice', 'dice_eval', combined]")
 
     args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"), loss)
     trainer = Trainer(args, network, optimizer, criterion, start_epoch, train_loader, val_loader, scheduler, writer)
