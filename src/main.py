@@ -68,7 +68,7 @@ if basic_config.getboolean("plot"):
     print(x.shape)
     logger.info('Plotting images')
     # visualization.plot_batch_cubes(i, x, y)
-    visualization.plot_brain_batch_per_patient(i, train_dataset.data)
+    visualization.plot_brain_batch_per_patient(0, train_dataset.data)
 
 
 ######## MODEL

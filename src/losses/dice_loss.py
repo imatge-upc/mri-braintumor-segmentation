@@ -66,10 +66,10 @@ class DiceLoss(nn.Module):
 
     def _reformat_labels(self, seg_mask):
 
-        wt = torch.sum(seg_mask[..., [1, 2, 3]], dim=-1)
-        tc = torch.sum(seg_mask[..., [1, 3]], dim=-1)
-        et = seg_mask[..., 3]
-        return torch.stack([seg_mask[..., 0], wt, tc, et], dim=-1)
+        wt = torch.stack([ seg_mask[..., 0], torch.sum(seg_mask[..., [1, 2, 3]], dim=-1)])
+        tc = torch.stack([ seg_mask[..., 0], torch.sum(seg_mask[..., [1, 3]], dim=-1)])
+        et = torch.stack([ seg_mask[..., 0], seg_mask[..., 3]])
+        return wt, tc, et
 
     def dice(self, input: torch.tensor, target: torch.tensor, weight: float, epsilon=1e-6) -> float:
         """
@@ -98,7 +98,8 @@ class DiceLoss(nn.Module):
         return 2 * (intersect / union.clamp(min=epsilon))
 
 
-    def forward(self, input: torch.tensor, target: torch.tensor) -> Tuple[float, float]:
+    def forward(self, input: torch.tensor, target: torch.tensor) -> Tuple[float, float, list]:
+
         target = torch.nn.functional.one_hot(target.long(), self.classes)
 
         assert input.dim() == target.dim() == 5, f"'input' {input.dim()} and 'target' {target.dim()} have different number of dims "
@@ -106,13 +107,24 @@ class DiceLoss(nn.Module):
         input = self.normalization(input.float())
 
         if self.eval_regions:
-            input = self._reformat_labels(input.permute((0,2,3,4,1)))
-            target = self._reformat_labels(target)
+            input_wt, input_tc, input_et = self._reformat_labels(input.permute((0,2,3,4,1)))
+            target_wt, target_tc, target_et = self._reformat_labels(target)
 
+            wt_dice = self.dice(input_wt, target_wt, weight=self.weight)
+            tc_dice = self.dice(input_tc, target_tc, weight=self.weight)
+            et_dice = self.dice(input_et, target_et, weight=self.weight)
 
-        per_channel_dice = self.dice(input, target, weight=self.weight) # compute per channel Dice coefficient
-        mean = torch.mean(per_channel_dice)
-        loss = (1. - mean)
+            wt_loss = 1 - wt_dice
+            tc_loss = 1 - tc_dice
+            et_loss = 1 - et_dice
 
-        # average Dice score across all channels/classes
-        return loss, mean
+            loss = 1/3 * (wt_loss + tc_loss + et_loss)
+            score = 1/3 * (wt_dice + tc_dice + et_dice)
+            return loss, score, [wt_loss, tc_loss, et_loss]
+
+        else:
+            per_channel_dice = self.dice(input, target, weight=self.weight) # compute per channel Dice coefficient
+            mean = torch.mean(per_channel_dice)
+            loss = (1. - mean)
+            # average Dice score across all channels/classes
+            return loss, mean, []

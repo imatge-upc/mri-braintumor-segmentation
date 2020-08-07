@@ -28,7 +28,7 @@ def test_dice_loss(volume):
     target = seg_mask.unsqueeze(0).to("cpu")
     input = torch.nn.functional.one_hot(target.long(), classes)
     input = input.permute((0, 4, 1, 2, 3))
-    loss, score = my_loss(input, target)
+    loss, score, _ = my_loss(input, target)
 
     print(loss)
     print(score)
