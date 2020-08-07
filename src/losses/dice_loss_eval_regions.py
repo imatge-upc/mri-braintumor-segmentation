@@ -75,10 +75,6 @@ class DiceLoss(nn.Module):
             input = self.reformat_labels(input.permute((0,2,3,4,1)))
             target = self.reformat_labels(target)
 
-
-        print("Input size: ", input.shape)
-        print("Target size: ", target.shape)
-
         per_channel_dice = self.dice(input, target, weight=self.weight) # compute per channel Dice coefficient
         mean = torch.mean(per_channel_dice)
         loss = (1. - mean)

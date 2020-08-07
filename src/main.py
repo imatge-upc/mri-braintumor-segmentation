@@ -47,12 +47,9 @@ logger.info("Creating Dataset...")
 
 data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
 data.extend(data_test)
-# data_train, data_val = train_val_split(data, val_size=0.1)
-# data_train = data_train * n_patches
-# data_val = data_val * n_patches
-
-data_train = data_test[:2]
-data_val = data_test[:2]
+data_train, data_val = train_val_split(data, val_size=0.1)
+data_train = data_train * n_patches
+data_val = data_val * n_patches
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
 

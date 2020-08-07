@@ -82,7 +82,6 @@ class Trainer:
 
                 predictions, _ = trainer.model(inputs)
 
-                print("Output shape: ", predictions.shape)
                 if trainer.args.loss == "dice" or trainer.args.loss == "dice_eval":
                     dice_loss, mean_dice = trainer.criterion(predictions, targets)
                     dice_loss.backward()
