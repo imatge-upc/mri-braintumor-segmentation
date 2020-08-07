@@ -106,13 +106,13 @@ if basic_config.getboolean("train_flag"):
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"), patience=model_config.getint("patience"))
 
     if loss == "dice":
-        criterion = dice_loss.DiceLoss(classes=n_classes)
-    elif loss == "dice_eval":
-        criterion = dice_loss_eval_regions.DiceLoss(classes=n_classes, eval_regions=True, sigmoid_normalization=True)
+        criterion = dice_loss.DiceLoss(classes=n_classes, eval_regions=model_config.getboolean("eval_regions"), sigmoid_normalization=True)
+
     elif loss == "combined":
         criterion = CrossEntropyDiceLoss3D(weight=None, classes=n_classes)
+
     else:
-        raise ValueError(f"Bad loss value {loss}. Expected ['dice', 'dice_eval', combined]")
+        raise ValueError(f"Bad loss value {loss}. Expected ['dice', combined]")
 
     args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"), loss)
     trainer = Trainer(args, network, optimizer, criterion, start_epoch, train_loader, val_loader, scheduler, writer)

@@ -1,10 +1,9 @@
 import os
-import numpy as np
 import pytest
 import torch
 from src.dataset.utils import nifi_volume
 from src.losses.ce_dice_loss import CrossEntropyDiceLoss3D
-from src.losses.dice_loss_eval_regions import DiceLoss
+from src.losses.dice_loss import DiceLoss
 
 
 @pytest.fixture(scope="function")
@@ -16,25 +15,26 @@ def volume():
 
 
 def test_dice_loss(volume):
+
     volume = volume[:, :, :128]
     volume[volume == 4] = 3
     classes = 4
 
-    my_loss = DiceLoss(classes=classes, weight=None, sigmoid_normalization=False)
-
+    my_loss = DiceLoss(classes=classes, weight=None, sigmoid_normalization=False, eval_regions=True)
 
     seg_mask = torch.from_numpy(volume.astype(int))
 
 
     target = seg_mask.unsqueeze(0).to("cpu")
     input = torch.nn.functional.one_hot(target.long(), classes)
-
-
+    input = input.permute((0, 4, 1, 2, 3))
     loss, score = my_loss(input, target)
+
     print(loss)
     print(score)
 
 
+@pytest.mark.skip
 def test_combined_ce_dice(volume):
     volume = volume[:, :, :128]
     volume[volume == 4] = 3

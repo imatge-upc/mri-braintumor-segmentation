@@ -45,12 +45,13 @@ class DiceLoss(nn.Module):
     Computes Dice Loss according to https://arxiv.org/abs/1606.04797.
     For multi-class segmentation `weight` parameter can be used to assign different weights per class.
     """
-    def __init__(self, classes=4, weight=None, sigmoid_normalization=True ):
+    def __init__(self, classes=4, weight=None, sigmoid_normalization=True, eval_regions: bool=False):
         super(DiceLoss, self).__init__()
 
         self.register_buffer('weight', weight)
         self.normalization = nn.Sigmoid() if sigmoid_normalization else nn.Softmax(dim=1)
         self.classes = classes
+        self.eval_regions = eval_regions
 
     def _flatten(self, tensor: torch.tensor) -> torch.tensor:
         """
@@ -62,6 +63,13 @@ class DiceLoss(nn.Module):
         axis_order = (1, 0) + tuple(range(2, tensor.dim())) # new axis order
         transposed = tensor.permute(axis_order) # Transpose: (N, C, D, H, W) -> (C, N, D, H, W)
         return transposed.contiguous().view(C, -1) # Flatten: (C, N, D, H, W) -> (C, N * D * H * W)
+
+    def _reformat_labels(self, seg_mask):
+
+        wt = torch.sum(seg_mask[..., [1, 2, 3]], dim=-1)
+        tc = torch.sum(seg_mask[..., [1, 3]], dim=-1)
+        et = seg_mask[..., 3]
+        return torch.stack([seg_mask[..., 0], wt, tc, et], dim=-1)
 
     def dice(self, input: torch.tensor, target: torch.tensor, weight: float, epsilon=1e-6) -> float:
         """
@@ -91,11 +99,16 @@ class DiceLoss(nn.Module):
 
 
     def forward(self, input: torch.tensor, target: torch.tensor) -> Tuple[float, float]:
-        target = expand_as_one_hot(target.long(), self.classes)
+        target = torch.nn.functional.one_hot(target.long(), self.classes)
 
         assert input.dim() == target.dim() == 5, f"'input' {input.dim()} and 'target' {target.dim()} have different number of dims "
 
-        input = self.normalization(input)
+        input = self.normalization(input.float())
+
+        if self.eval_regions:
+            input = self._reformat_labels(input.permute((0,2,3,4,1)))
+            target = self._reformat_labels(target)
+
 
         per_channel_dice = self.dice(input, target, weight=self.weight) # compute per channel Dice coefficient
         mean = torch.mean(per_channel_dice)

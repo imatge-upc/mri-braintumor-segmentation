@@ -66,7 +66,9 @@ class Trainer:
                 'val_dice_score': val_dice_score
             }, self.args.output_path)
 
+
     def train_epoch(self, epoch):
+
         self.model.train()
         dice_loss_global, ce_loss_global, combined_loss_global = AverageMeter(),  AverageMeter(), AverageMeter()
         dice_score = AverageMeter()
@@ -82,7 +84,7 @@ class Trainer:
 
                 predictions, _ = trainer.model(inputs)
 
-                if trainer.args.loss == "dice" or trainer.args.loss == "dice_eval":
+                if trainer.args.loss == "dice":
                     dice_loss, mean_dice = trainer.criterion(predictions, targets)
                     dice_loss.backward()
                     trainer.optimizer.step()
@@ -120,7 +122,7 @@ class Trainer:
 
 
             i += 1
-        if self.args.loss == "dice" or self.args.loss == "dice_eval":
+        if self.args.loss == "dice":
             return dice_loss_global.avg(), dice_score.avg(), 0, 0
         else:
             return dice_loss_global.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
@@ -131,6 +133,7 @@ class Trainer:
         im = Image.open(plot_buf)
         image = T.ToTensor()(im)
         self.writer.add_image(title, image)
+
 
     def val_epoch(self, epoch):
         self.model.eval()
@@ -147,7 +150,7 @@ class Trainer:
                 with torch.no_grad():
                     outputs, _ = trainer.model(inputs)
 
-                    if trainer.args.loss == "dice" or  trainer.args.loss == "dice_eval":
+                    if trainer.args.loss == "dice":
                         loss_dice, mean_dice = trainer.criterion(outputs, targets)
 
                     else:
@@ -176,7 +179,7 @@ class Trainer:
 
             i += 1
 
-        if  self.args.loss == "dice" or  self.args.loss == "dice_eval":
+        if  self.args.loss == "dice":
             return losses.avg(), dice_score.avg(), 0, 0
         else:
             return losses.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
