@@ -65,9 +65,14 @@ class DiceLoss(nn.Module):
         return transposed.contiguous().view(C, -1) # Flatten: (C, N, D, H, W) -> (C, N * D * H * W)
 
     def _reformat_labels(self, seg_mask):
-        wt = torch.stack([ seg_mask[..., 0], torch.sum(seg_mask[..., [1, 2, 3]], dim=-1)])
-        tc = torch.stack([ seg_mask[..., 0], torch.sum(seg_mask[..., [1, 3]], dim=-1)])
-        et = torch.stack([ seg_mask[..., 0], seg_mask[..., 3]])
+        """
+        Input format: (batch_size, channels, D, H, W)
+        :param seg_mask:
+        :return:
+        """
+        wt = torch.stack([ seg_mask[:, 0, ...], torch.sum(seg_mask[:, [1, 2, 3], ...], dim=1)], dim=1)
+        tc = torch.stack([ seg_mask[:, 0, ...], torch.sum(seg_mask[:, [1, 3], ...], dim=1)], dim=1)
+        et = torch.stack([ seg_mask[:, 0, ...], seg_mask[:, 3, ...]], dim=1)
         return wt, tc, et
 
     def dice(self, input: torch.tensor, target: torch.tensor, weight: float, epsilon=1e-6) -> float:
@@ -99,12 +104,11 @@ class DiceLoss(nn.Module):
 
     def forward(self, input: torch.tensor, target: torch.tensor) -> Tuple[float, float, list]:
 
-        target = torch.nn.functional.one_hot(target.long(), self.classes)
+        target = expand_as_one_hot(target.long(), self.classes)
 
         assert input.dim() == target.dim() == 5, f"'input' {input.dim()} and 'target' {target.dim()} have different number of dims "
 
         input = self.normalization(input.float())
-        input = input.permute((0, 2, 3, 4, 1))
 
         if self.eval_regions:
             input_wt, input_tc, input_et = self._reformat_labels(input)
