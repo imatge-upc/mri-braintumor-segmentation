@@ -4,15 +4,12 @@ import torch
 from src.dataset.train_val_split import train_val_split
 from src.losses.ce_dice_loss import CrossEntropyDiceLoss3D
 
-# from src.losses.dice_loss import DiceLoss
-from src.losses import dice_loss_eval_regions, dice_loss
+from src.losses import dice_loss
 from src.models.io_model import load_model
 from src.train.trainer import Trainer, TrainerArgs
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torchvision import transforms as T
-from torch import nn
 from src.config import BratsConfiguration
 from src.dataset.loaders.brats_dataset import BratsDataset
 
@@ -106,10 +103,12 @@ if basic_config.getboolean("train_flag"):
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"), patience=model_config.getint("patience"))
 
     if loss == "dice":
-        criterion = dice_loss.DiceLoss(classes=n_classes, eval_regions=model_config.getboolean("eval_regions"), sigmoid_normalization=True)
+        criterion = dice_loss.DiceLoss(classes=n_classes, eval_regions=model_config.getboolean("eval_regions"),
+                                       sigmoid_normalization=True)
 
     elif loss == "combined":
-        criterion = CrossEntropyDiceLoss3D(weight=None, classes=n_classes)
+        criterion = CrossEntropyDiceLoss3D(weight=None, classes=n_classes,
+                                           eval_regions=model_config.getboolean("eval_regions"), sigmoid_normalization=True)
 
     else:
         raise ValueError(f"Bad loss value {loss}. Expected ['dice', combined]")

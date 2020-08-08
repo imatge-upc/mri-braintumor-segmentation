@@ -65,7 +65,6 @@ class DiceLoss(nn.Module):
         return transposed.contiguous().view(C, -1) # Flatten: (C, N, D, H, W) -> (C, N * D * H * W)
 
     def _reformat_labels(self, seg_mask):
-
         wt = torch.stack([ seg_mask[..., 0], torch.sum(seg_mask[..., [1, 2, 3]], dim=-1)])
         tc = torch.stack([ seg_mask[..., 0], torch.sum(seg_mask[..., [1, 3]], dim=-1)])
         et = torch.stack([ seg_mask[..., 0], seg_mask[..., 3]])
@@ -105,14 +104,15 @@ class DiceLoss(nn.Module):
         assert input.dim() == target.dim() == 5, f"'input' {input.dim()} and 'target' {target.dim()} have different number of dims "
 
         input = self.normalization(input.float())
+        input = input.permute((0, 2, 3, 4, 1))
 
         if self.eval_regions:
-            input_wt, input_tc, input_et = self._reformat_labels(input.permute((0,2,3,4,1)))
+            input_wt, input_tc, input_et = self._reformat_labels(input)
             target_wt, target_tc, target_et = self._reformat_labels(target)
 
-            wt_dice = self.dice(input_wt, target_wt, weight=self.weight)
-            tc_dice = self.dice(input_tc, target_tc, weight=self.weight)
-            et_dice = self.dice(input_et, target_et, weight=self.weight)
+            wt_dice = torch.mean(self.dice(input_wt, target_wt, weight=self.weight))
+            tc_dice = torch.mean(self.dice(input_tc, target_tc, weight=self.weight))
+            et_dice = torch.mean(self.dice(input_et, target_et, weight=self.weight))
 
             wt_loss = 1 - wt_dice
             tc_loss = 1 - tc_dice
@@ -120,6 +120,7 @@ class DiceLoss(nn.Module):
 
             loss = 1/3 * (wt_loss + tc_loss + et_loss)
             score = 1/3 * (wt_dice + tc_dice + et_dice)
+
             return loss, score, [wt_loss, tc_loss, et_loss]
 
         else:

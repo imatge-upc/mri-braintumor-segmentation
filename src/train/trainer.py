@@ -89,17 +89,9 @@ class Trainer:
                     dice_loss.backward()
                     trainer.optimizer.step()
 
-                    print(subregion_loss, dice_loss)
-                    if subregion_loss:
-                        trainer.writer.add_scalar('Training Dice Loss WT', subregion_loss[0].detach().item(),
-                                                  epoch * trainer.number_train_data + i)
-                        trainer.writer.add_scalar('Training Dice Loss TC', subregion_loss[1].detach().item(),
-                                                  epoch * trainer.number_train_data + i)
-                        trainer.writer.add_scalar('Training Dice Loss ET', subregion_loss[2].detach().item(),
-                                                  epoch * trainer.number_train_data + i)
 
                 else:
-                    combined_loss, dice_loss, ce_loss, mean_dice = trainer.criterion(predictions, targets)
+                    combined_loss, dice_loss, ce_loss, mean_dice, subregion_loss = trainer.criterion(predictions, targets)
                     combined_loss.backward()
                     trainer.optimizer.step()
 
@@ -118,6 +110,13 @@ class Trainer:
                 dice_loss_global.update(dice_loss, data_batch.size(0))
                 dice_score.update(mean_dice, data_batch.size(0))
 
+                if subregion_loss:
+                    trainer.writer.add_scalar('Training Dice Loss WT', subregion_loss[0].detach().item(),
+                                              epoch * trainer.number_train_data + i)
+                    trainer.writer.add_scalar('Training Dice Loss TC', subregion_loss[1].detach().item(),
+                                              epoch * trainer.number_train_data + i)
+                    trainer.writer.add_scalar('Training Dice Loss ET', subregion_loss[2].detach().item(),
+                                              epoch * trainer.number_train_data + i)
 
                 trainer.writer.add_scalar('Training Dice Loss', dice_loss, epoch * trainer.number_train_data + i)
                 trainer.writer.add_scalar('Training Dice Score', mean_dice, epoch * trainer.number_train_data + i)
@@ -153,6 +152,7 @@ class Trainer:
         for data_batch, labels_batch in tqdm(self.valid_data_loader, desc="Validation epoch"):
 
             def step(trainer):
+
                 inputs = data_batch.float().to(trainer.args.device)
                 targets = labels_batch.float().to(trainer.args.device)
 
@@ -162,16 +162,8 @@ class Trainer:
                     if trainer.args.loss == "dice":
                         loss_dice, mean_dice, subregion_loss = trainer.criterion(outputs, targets)
 
-                        if subregion_loss:
-                            trainer.writer.add_scalar('Training Dice Loss WT', subregion_loss[0].detach().item(),
-                                                      epoch * trainer.number_train_data + i)
-                            trainer.writer.add_scalar('Training Dice Loss TC', subregion_loss[1].detach().item(),
-                                                      epoch * trainer.number_train_data + i)
-                            trainer.writer.add_scalar('Training Dice Loss ET', subregion_loss[2].detach().item(),
-                                                      epoch * trainer.number_train_data + i)
-
                     else:
-                        combined_loss, loss_dice, ce_loss, mean_dice = trainer.criterion(outputs, targets)
+                        combined_loss, loss_dice, ce_loss, mean_dice, subregion_loss = trainer.criterion(outputs, targets)
                         combined_loss = combined_loss.detach().item()
                         ce_loss = ce_loss.detach().item()
                         combined_loss_global.update(combined_loss, data_batch.size(0))
@@ -180,10 +172,20 @@ class Trainer:
                         trainer.writer.add_scalar('Validation Combined CE-Dice Loss', combined_loss,epoch * trainer.number_val_data + i)
                         trainer.writer.add_scalar('Validation Cross Entropy Loss', ce_loss, epoch * trainer.number_val_data + i)
 
+
                     loss_dice = loss_dice.detach().item()
                     mean_dice = mean_dice.detach().item()
                     losses.update(loss_dice, data_batch.size(0))
                     dice_score.update(mean_dice, data_batch.size(0))
+
+
+                if subregion_loss:
+                    trainer.writer.add_scalar('Validation Dice Loss WT', subregion_loss[0].detach().item(),
+                                              epoch * trainer.number_train_data + i)
+                    trainer.writer.add_scalar('Validation Dice Loss TC', subregion_loss[1].detach().item(),
+                                              epoch * trainer.number_train_data + i)
+                    trainer.writer.add_scalar('Validation Dice Loss ET', subregion_loss[2].detach().item(),
+                                              epoch * trainer.number_train_data + i)
 
                 trainer.writer.add_scalar('Validation Dice Loss', loss_dice, epoch * trainer.number_val_data + i)
                 trainer.writer.add_scalar('Validation Dice Score', mean_dice, epoch * trainer.number_val_data + i)
