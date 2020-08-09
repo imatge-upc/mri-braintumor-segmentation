@@ -3,7 +3,7 @@ from typing import Tuple
 from src.dataset.patching.commons import select_patch_by_label_distribution
 
 
-def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple) -> Tuple[np.ndarray, np.ndarray]:
+def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple,  mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
     Patches with equal probability from each label
     """

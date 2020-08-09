@@ -15,7 +15,7 @@ def _select_random_center_axis(volume_axis_value, crop_axis_value, axis="x"):
     return axis_center
 
 
-def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple):
+def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple,  mask: np.ndarray):
     """
     Random sample patches. Patch size should be big
     """

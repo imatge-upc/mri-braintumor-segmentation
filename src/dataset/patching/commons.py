@@ -48,7 +48,7 @@ def crop_volume_margin(volume, patch_size):
     return array3d_center_crop(volume, crop_shape)
 
 
-def select_patch_by_label_distribution(volume, segmentation_mask, patch_size, function):
+def select_patch_by_label_distribution(volume, segmentation_mask, patch_size, function, brain_mask=None):
 
     labels = list(np.unique(segmentation_mask))
     labels = list(set(map(function, labels)))
@@ -60,7 +60,7 @@ def select_patch_by_label_distribution(volume, segmentation_mask, patch_size, fu
     segmentation_mask_new = crop_volume_margin(segmentation_mask_new, patch_size)
 
     if selected_label == 0:
-        volume_new = crop_volume_margin(volume[0, :, :, :], patch_size)
+        volume_new = crop_volume_margin(brain_mask, patch_size)
         seg_eq_0 = segmentation_mask_new == selected_label
         volume_gt_0 = volume_new > 0
         positions = np.argwhere(seg_eq_0*volume_gt_0)

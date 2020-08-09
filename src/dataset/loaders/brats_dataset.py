@@ -41,12 +41,11 @@ class BratsDataset(Dataset):
 
         segmentation_mask = brats_labels.convert_from_brats_labels(segmentation_mask)
 
-        if self.compute_patch:
-            modalities, segmentation_mask = self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
-
-
-
         modalities, _ = self.transform((modalities, brain_mask)) if self.transform else modalities
+
+        if self.compute_patch:
+            modalities, segmentation_mask = self.sampling_method.patching(modalities, segmentation_mask,
+                                                                          self.patch_size, brain_mask)
 
         modalities = torch.from_numpy(modalities.astype(float))
         segmentation_mask = torch.from_numpy(segmentation_mask.astype(int))

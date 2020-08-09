@@ -11,7 +11,7 @@ def _select_random_start_in_tumor(segmentation_mask, patch_size):
     return fix_crop_center_3d(segmentation_mask, patch_size, center_coord)
 
 
-def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple):
+def patching(volume: np.ndarray, labels: np.ndarray, patch_size: tuple,  mask: np.ndarray):
     """
     Randomly chosen inside the tumor region
     """

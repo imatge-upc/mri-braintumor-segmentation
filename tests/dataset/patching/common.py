@@ -26,10 +26,13 @@ def load_patient() -> Tuple[np.ndarray, np.ndarray]:
 
     return modalities, masks
 
+def get_brain_mask():
+    return load_nifi_volume(os.path.join(dataset_path, patient, f"{patient}_flair.nii.gz"), normalize=False)
 
 def patching_strategy(patching_method, size: tuple) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     volume, seg = load_patient()
-    volume_patches, seg_patches = patching_method(volume, seg, size)
+    brain_mask = get_brain_mask()
+    volume_patches, seg_patches = patching_method(volume, seg, size, brain_mask)
     return volume, volume_patches, seg_patches
 
 
