@@ -117,7 +117,7 @@ def plot_batch_slice(images, gt, slice = 10, save=True):
         for i, mod_id in enumerate(images):
             patient_mod = images[i][element_index]
 
-            plot_3_view(str(i), patient_mod, slice, save=save)
+            plot_3_view(f"batch_element_{i}", patient_mod, slice, save=save)
 
         patient_seg = gt[element_index]
         plot_3_view('seg', patient_seg, slice, save=save)

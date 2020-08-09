@@ -36,10 +36,12 @@ if __name__ == "__main__":
     # input_dir = os.path.join(model_path, "segmentation_task/")
 
     ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/no_patch"
-    model_path =  "results/checkpoints/model_1596122500/"
-    input_dir = os.path.join(model_path, "segmentation_task/train_no_post/")
+    # model_path =  "results/checkpoints/model_1596122500/"
+    model_path = "results/checkpoints/model_1596921374/"
+#     input_dir = os.path.join(model_path, "segmentation_task/train_no_post/")
+    input_dir = model_path
 
-    output_dir = os.path.join(model_path, "segmentation_task_clean_keep_one_connected_each_subregion")
+    output_dir = os.path.join(model_path, "segmentation_task_clean_keep_one_connected")
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -58,27 +60,25 @@ if __name__ == "__main__":
 
     print("Post processing")
 
-    # Keep ONE TC
+    # Keep ONE WT
     pred_mask_wt = brats_labels.get_wt(segmentation_post)
     mask_removed_regions_wt = post_process.keep_bigger_connected_component(pred_mask_wt)
     elements_to_remove = pred_mask_wt - mask_removed_regions_wt
     segmentation_post[elements_to_remove == 1] = 0
 
     # Keep ONE TC
-    pred_mask_tc = brats_labels.get_tc(segmentation_post)
-    mask_removed_regions_tc = post_process.keep_bigger_connected_component(pred_mask_tc)
-    elements_to_remove = pred_mask_tc - mask_removed_regions_tc
-    segmentation_post[elements_to_remove == 1] = 2 # ED
+    # pred_mask_tc = brats_labels.get_tc(segmentation_post)
+    # mask_removed_regions_tc = post_process.keep_bigger_connected_component(pred_mask_tc)
+    # elements_to_remove = pred_mask_tc - mask_removed_regions_tc
+    # segmentation_post[elements_to_remove == 1] = 2 # ED
 
     # ET keep everything or change completly
-    segmentation_post = post_process.proportion_tc_et(segmentation_post, th=0.10)
+    # segmentation_post = post_process.proportion_tc_et(segmentation_post, th=0.10)
 
     # pred_mask_et = brats_labels.get_et(segmentation_post)
     # mask_removed_regions_et = post_process.keep_bigger_connected_component(pred_mask_et)
     # elements_to_remove = pred_mask_et - mask_removed_regions_et
     # segmentation_post[elements_to_remove == 1] = 1 # NCR
-
-
 
     print("Computing metrics..")
     compute_metrics(ground_truth_path, subject, segmentation, segmentation_post)

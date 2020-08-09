@@ -1,6 +1,9 @@
 import importlib
 import sys
 import torch
+from torchvision import transforms
+
+
 from src.dataset.train_val_split import train_val_split
 from src.losses.ce_dice_loss import CrossEntropyDiceLoss3D
 
@@ -12,7 +15,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from src.config import BratsConfiguration
 from src.dataset.loaders.brats_dataset import BratsDataset
-
+from src.dataset.augmentations import brats_augmentations
 
 from src.dataset.utils import dataset, visualization as visualization
 from src.models.vnet import vnet
@@ -53,19 +56,23 @@ n_modalities = dataset_config.getint("n_modalities") # like color channels
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
 
+transform = transforms.Compose([brats_augmentations.RandomIntensityShift(),
+                                brats_augmentations.RandomIntensityScale(),
+                                brats_augmentations.RandomMirrorFlip()])
+
+
 compute_patch = basic_config.getboolean("compute_patches")
-train_dataset = BratsDataset(data_train, sampling_method, patch_size, compute_patch=compute_patch)
+train_dataset = BratsDataset(data_train, sampling_method, patch_size, compute_patch=compute_patch, transform=transform)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-val_dataset = BratsDataset(data_val, sampling_method, patch_size, compute_patch=compute_patch)
+val_dataset = BratsDataset(data_val, sampling_method, patch_size, compute_patch=compute_patch, transform=None)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if basic_config.getboolean("plot"):
     x, y = next(iter(train_loader))
     print(x.shape)
     logger.info('Plotting images')
-    # visualization.plot_batch_cubes(i, x, y)
-    visualization.plot_brain_batch_per_patient(0, train_dataset.data)
+    visualization.plot_batch_slice(x, y, slice = 100, save=True)
 
 
 ######## MODEL
@@ -84,13 +91,23 @@ else:
     raise ValueError("Bad parameter for network {}".format(model_config.get("network")))
 
 
+
 if basic_config.getboolean("train_flag"):
     ##### TRAIN
     logger.info("Start Training")
     network.to(device)
 
-    optimizer = torch.optim.SGD(network.parameters(), lr=model_config.getfloat("learning_rate"),
-                                momentum=model_config.getfloat("momentum"), weight_decay=model_config.getfloat("weight_decay"))
+    optim = model_config.get("optimizer")
+
+    if optim == "SGD":
+        optimizer = torch.optim.SGD(network.parameters(), lr=model_config.getfloat("learning_rate"),
+                                    momentum=model_config.getfloat("momentum"), weight_decay=model_config.getfloat("weight_decay"))
+    elif optim == "ADAM":
+        torch.optim.Adam(network.parameters(), lr=model_config.getfloat("learning_rate"),
+                         weight_decay=model_config.getfloat("weight_decay"), amsgrad=False)
+    else:
+        raise ValueError("Bad optimizer. Current options: [SGD, ADAM]")
+
 
     if basic_config.getboolean("resume"):
         logger.info("Loading model from checkpoint..")
@@ -98,6 +115,7 @@ if basic_config.getboolean("train_flag"):
         logger.info(f"Loaded model with starting epoch {start_epoch}")
     else:
         start_epoch = 0
+
 
     writer = SummaryWriter(tensorboard_logdir)
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"), patience=model_config.getint("patience"))

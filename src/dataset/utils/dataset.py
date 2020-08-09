@@ -24,6 +24,6 @@ def read_brats(csv_path: str) -> Tuple[List, List]:
 
 def create_roi_mask(data: np.ndarray) -> np.ndarray:
     # filter values bigger than 0
-    data[data > 0.0] = 1
-    data[data <= 0.0] = 0
-    return data
+    brain_mask = np.zeros(data.shape, np.float)
+    brain_mask[data > 0] = 1
+    return brain_mask

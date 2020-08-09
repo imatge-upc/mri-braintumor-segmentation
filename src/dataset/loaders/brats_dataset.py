@@ -11,7 +11,7 @@ class BratsDataset(Dataset):
 
     flair_idx, t1_idx, t2_idx, t1ce_idx = 0, 1, 2, 3
 
-    def __init__(self, data: list, sampling_method, patch_size: tuple, compute_patch: bool=False):
+    def __init__(self, data: list, sampling_method, patch_size: tuple, compute_patch: bool=False, transform=None):
         """
 
         :param data:
@@ -24,6 +24,7 @@ class BratsDataset(Dataset):
         self.sampling_method = sampling_method
         self.patch_size = patch_size
         self.compute_patch = compute_patch
+        self.transform = transform
 
     def __len__(self):
         return len(self.data)
@@ -34,6 +35,8 @@ class BratsDataset(Dataset):
             idx = idx.tolist()
 
         modalities = self.data[idx].load_mri_volumes(normalize=True)
+        brain_mask = self.data[idx].get_brain_mask()
+
         segmentation_mask = self.data[idx].load_gt_mask()
 
         segmentation_mask = brats_labels.convert_from_brats_labels(segmentation_mask)
@@ -41,6 +44,9 @@ class BratsDataset(Dataset):
         if self.compute_patch:
             modalities, segmentation_mask = self.sampling_method.patching(modalities, segmentation_mask, self.patch_size)
 
+
+
+        modalities, _ = self.transform((modalities, brain_mask)) if self.transform else modalities
 
         modalities = torch.from_numpy(modalities.astype(float))
         segmentation_mask = torch.from_numpy(segmentation_mask.astype(int))
