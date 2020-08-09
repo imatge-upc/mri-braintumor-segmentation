@@ -51,6 +51,8 @@ if __name__ == "__main__":
 
 
     data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
+    data_test.extend(data)
+
     patch_size =  data_test[idx].size
 
     sampling = dataset_config.get("sampling_method").split(".")[-1]
