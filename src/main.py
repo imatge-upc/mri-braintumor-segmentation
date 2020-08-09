@@ -7,7 +7,7 @@ from torchvision import transforms
 from src.dataset.train_val_split import train_val_split
 from src.losses.ce_dice_loss import CrossEntropyDiceLoss3D
 
-from src.losses import dice_loss
+from src.losses import dice_loss, region_based_loss
 from src.models.io_model import load_model
 from src.train.trainer import Trainer, TrainerArgs
 from torch.optim import lr_scheduler
@@ -103,7 +103,7 @@ if basic_config.getboolean("train_flag"):
         optimizer = torch.optim.SGD(network.parameters(), lr=model_config.getfloat("learning_rate"),
                                     momentum=model_config.getfloat("momentum"), weight_decay=model_config.getfloat("weight_decay"))
     elif optim == "ADAM":
-        torch.optim.Adam(network.parameters(), lr=model_config.getfloat("learning_rate"),
+        optimizer = torch.optim.Adam(network.parameters(), lr=model_config.getfloat("learning_rate"),
                          weight_decay=model_config.getfloat("weight_decay"), amsgrad=False)
     else:
         raise ValueError("Bad optimizer. Current options: [SGD, ADAM]")
@@ -127,6 +127,8 @@ if basic_config.getboolean("train_flag"):
     elif loss == "combined":
         criterion = CrossEntropyDiceLoss3D(weight=None, classes=n_classes,
                                            eval_regions=model_config.getboolean("eval_regions"), sigmoid_normalization=True)
+    elif loss == "both_dice":
+        criterion = region_based_loss.RegionBasedDiceLoss3D(classes=n_classes, sigmoid_normalization=True)
 
     else:
         raise ValueError(f"Bad loss value {loss}. Expected ['dice', combined]")

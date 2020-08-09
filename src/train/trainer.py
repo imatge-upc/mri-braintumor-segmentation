@@ -75,6 +75,7 @@ class Trainer:
 
         i = 0
         for data_batch, labels_batch in tqdm(self.train_data_loader, desc="Training epoch"):
+
             def step(trainer):
                 trainer.optimizer.zero_grad()
 
@@ -84,11 +85,21 @@ class Trainer:
 
                 predictions, _ = trainer.model(inputs)
 
+
                 if trainer.args.loss == "dice":
                     dice_loss, mean_dice, subregion_loss = trainer.criterion(predictions, targets)
                     dice_loss.backward()
                     trainer.optimizer.step()
 
+                elif trainer.args.loss == "both_dice":
+                    total_loss, dice_loss, mean_dice, dice_loss_reg, subregion_loss = trainer.criterion(predictions, targets)
+                    total_loss.backward()
+                    trainer.optimizer.step()
+
+                    trainer.writer.add_scalar('Train combined Region-Dice Loss', total_loss,
+                                              epoch * trainer.number_train_data + i)
+                    trainer.writer.add_scalar('Train region dice loss', dice_loss_reg,
+                                              epoch * trainer.number_train_data + i)
 
                 else:
                     combined_loss, dice_loss, ce_loss, mean_dice, subregion_loss = trainer.criterion(predictions, targets)
@@ -162,6 +173,19 @@ class Trainer:
                     if trainer.args.loss == "dice":
                         loss_dice, mean_dice, subregion_loss = trainer.criterion(outputs, targets)
 
+
+                    elif trainer.args.loss == "both_dice":
+                        total_loss, dice_loss, mean_dice, dice_loss_reg, subregion_loss = trainer.criterion(outputs,
+                                                                                                            targets)
+                        total_loss.backward()
+                        trainer.optimizer.step()
+
+                        trainer.writer.add_scalar('Validation combined Region-Dice Loss', total_loss,
+                                                  epoch * trainer.number_train_data + i)
+                        trainer.writer.add_scalar('Validation region dice loss', dice_loss_reg,
+                                                  epoch * trainer.number_train_data + i)
+
+
                     else:
                         combined_loss, loss_dice, ce_loss, mean_dice, subregion_loss = trainer.criterion(outputs, targets)
                         combined_loss = combined_loss.detach().item()
@@ -198,7 +222,7 @@ class Trainer:
 
             i += 1
 
-        if  self.args.loss == "dice":
+        if  self.args.loss == "dice" or self.args.loss == "both_dice":
             return losses.avg(), dice_score.avg(), 0, 0
         else:
             return losses.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
