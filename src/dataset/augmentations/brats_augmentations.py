@@ -23,18 +23,21 @@ class RandomIntensityScale(object):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, img_and_mask: Tuple[np.ndarray, np.ndarray])  -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, img_and_mask: Tuple[np.ndarray, np.ndarray, np.ndarray])  -> Tuple[np.ndarray, np.ndarray,  np.ndarray]:
         """
         Args:
-            img: data with  all channels [C, W, H, D]
+            img_and_mask[0]: data with  all channels [C, W, H, D]
+            img_and_mask[1]: segmentation mask [ W, H, D]
+            img_and_mask[2]:binary mas [ W, H, D]
         Returns:
-            numpy array
+            Tuple with modalities mask and binary mask
+
         """
-        modalities, mask = img_and_mask
+        modalities, _,  mask = img_and_mask
         scale = random.uniform(0.9, 1.1)
         modalities = modalities * scale
 
-        return modalities, mask
+        return modalities, img_and_mask[1], img_and_mask[2]
 
 
 
@@ -43,13 +46,15 @@ class RandomIntensityShift(object):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, img_and_mask: Tuple[np.ndarray, np.ndarray])  -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, img_and_mask: Tuple[np.ndarray, np.ndarray,  np.ndarray])  -> Tuple[np.ndarray, np.ndarray,  np.ndarray]:
         """
         Args:
-            img: data with  all channels [C, W, H, D]
+            img_and_mask[0]: data with  all channels [C, W, H, D]
+            img_and_mask[1]: segmentation mask [ W, H, D]
+            img_and_mask[2]:binary mas [ W, H, D]
         Returns:
         """
-        modalities, mask = img_and_mask
+        modalities, _, mask = img_and_mask
         assert len(modalities.shape) == 4
 
         for i, modality in enumerate(modalities):
@@ -58,7 +63,7 @@ class RandomIntensityShift(object):
             std = np.std(modality[mask == 1])
             modalities[i, ...] = modality + std * shift
 
-        return modalities, mask
+        return modalities, img_and_mask[1], mask
 
 
 
@@ -68,18 +73,22 @@ class RandomMirrorFlip(object):
         super().__init__()
         self.p = p
 
-    def __call__(self, img_and_mask: Tuple[np.ndarray, np.ndarray])  -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, img_and_mask: Tuple[np.ndarray, np.ndarray,  np.ndarray])  -> Tuple[np.ndarray, np.ndarray,  np.ndarray]:
         """
         Args:
-            img: numpy array to be flipped with all channels [C, W, H, D]
+           img_and_mask[0]: data with  all channels [C, W, H, D]
+            img_and_mask[1]: segmentation mask [ W, H, D]
+            img_and_mask[2]:binary mas [ W, H, D]
 
         Returns:
             numpy array or Tensor: Randomly flipped image.
         """
-        modalities, mask = img_and_mask
+        modalities, seg_mask, mask = img_and_mask
         assert len(modalities.shape) == 4
+        assert len(seg_mask.shape) == 3
 
         if torch.rand(1) < self.p:
             modalities = np.flip(modalities, axis=[1, 2, 3])
+            seg_mask = np.flip(seg_mask, axis=[0,1,2])
 
-        return modalities, mask
+        return modalities, seg_mask, mask

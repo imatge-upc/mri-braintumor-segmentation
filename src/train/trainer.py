@@ -39,10 +39,11 @@ class Trainer:
         val_dice_score = 0
 
         for epoch in range(self.start_epoch, self.args.n_epochs):
+
             train_dice_loss, train_dice_score, train_combined_loss, train_ce_loss = self.train_epoch(epoch)
             val_dice_loss, val_dice_score, val_combined_loss, val_ce_loss = self.val_epoch(epoch)
 
-            val_loss = val_dice_loss if self.args.loss == "dice" else val_combined_loss
+            val_loss = val_combined_loss if  self.args.loss == "combined" else val_dice_loss
             if self.lr_scheduler:
                 self.lr_scheduler.step(val_loss)
 
@@ -51,7 +52,7 @@ class Trainer:
             is_best = bool(val_loss < best_loss)
             best_loss = val_loss if is_best else best_loss
             save_checkpoint({
-                'epoch': epoch + 1,
+                'epoch': epoch,
                 'model_state_dict': self.model.state_dict(),
                 'optimizer_state_dict': self.optimizer.state_dict(),
                 'val_loss': best_loss,
@@ -91,11 +92,15 @@ class Trainer:
                     dice_loss.backward()
                     trainer.optimizer.step()
 
+
                 elif trainer.args.loss == "both_dice":
                     total_loss, dice_loss, mean_dice, dice_loss_reg, subregion_loss = trainer.criterion(predictions, targets)
+
                     total_loss.backward()
                     trainer.optimizer.step()
 
+                    total_loss = total_loss.detach().item()
+                    dice_loss_reg = dice_loss_reg.detach().item()
                     trainer.writer.add_scalar('Train combined Region-Dice Loss', total_loss,
                                               epoch * trainer.number_train_data + i)
                     trainer.writer.add_scalar('Train region dice loss', dice_loss_reg,
@@ -141,11 +146,11 @@ class Trainer:
 
 
             i += 1
-        if self.args.loss == "dice":
-            return dice_loss_global.avg(), dice_score.avg(), 0, 0
-        else:
-            return dice_loss_global.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
 
+        if self.args.loss == "combined":
+            return dice_loss_global.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
+        else:
+            return dice_loss_global.avg(), dice_score.avg(), 0, 0
 
     def _add_image(self, batch, seg=False, title=""):
         plot_buf = plot_batch(batch, seg=seg, slice=32, batch_size=len(batch))
@@ -177,13 +182,13 @@ class Trainer:
                     elif trainer.args.loss == "both_dice":
                         total_loss, dice_loss, mean_dice, dice_loss_reg, subregion_loss = trainer.criterion(outputs,
                                                                                                             targets)
-                        total_loss.backward()
-                        trainer.optimizer.step()
+                        total_loss = total_loss.detach().item()
+                        dice_loss_reg = dice_loss_reg.detach().item()
 
                         trainer.writer.add_scalar('Validation combined Region-Dice Loss', total_loss,
-                                                  epoch * trainer.number_train_data + i)
+                                                  epoch * trainer.number_val_data + i)
                         trainer.writer.add_scalar('Validation region dice loss', dice_loss_reg,
-                                                  epoch * trainer.number_train_data + i)
+                                                  epoch * trainer.number_val_data + i)
 
 
                     else:
@@ -222,14 +227,15 @@ class Trainer:
 
             i += 1
 
-        if  self.args.loss == "dice" or self.args.loss == "both_dice":
-            return losses.avg(), dice_score.avg(), 0, 0
-        else:
+        if self.args.loss == "combined":
             return losses.avg(), dice_score.avg(), combined_loss_global.avg(), ce_loss_global.avg()
+        else:
+            return losses.avg(), dice_score.avg(), 0, 0
+
 
     def _epoch_summary(self, epoch, train_loss, val_loss, train_dice_score, val_dice_score, train_combined_loss, train_ce_loss, val_combined_loss, val_ce_loss):
 
-        if self.args.loss == "dice" or  self.args.loss == "dice_eval":
+        if self.args.loss == "dice" or self.args.loss == "both_dice":
             logger.info(f'epoch: {epoch}\n '
                         f'** Dice Loss **  : train_loss: {train_loss:.2f} | val_loss {val_loss:.2f} \n'
                         f'** Dice Score ** : train_dice_score {train_dice_score:.2f} | val_dice_score {val_dice_score:.2f}')

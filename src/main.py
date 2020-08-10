@@ -58,7 +58,7 @@ sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
 transform = transforms.Compose([brats_augmentations.RandomIntensityShift(),
                                 brats_augmentations.RandomIntensityScale(),
-                                brats_augmentations.RandomMirrorFlip()])
+                                brats_augmentations.RandomMirrorFlip(p=0.5)])
 
 
 compute_patch = basic_config.getboolean("compute_patches")
@@ -72,7 +72,7 @@ if basic_config.getboolean("plot"):
     x, y = next(iter(train_loader))
     print(x.shape)
     logger.info('Plotting images')
-    visualization.plot_batch_slice(x, y, slice = 100, save=True)
+    visualization.plot_batch_slice(x, y, slice=30, save=True)
 
 
 ######## MODEL
