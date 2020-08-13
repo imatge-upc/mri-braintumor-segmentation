@@ -107,10 +107,10 @@ if basic_config.getboolean("train_flag"):
     else:
         raise ValueError("Bad optimizer. Current options: [SGD, ADAM]")
 
-
+    best_loss = 1000
     if basic_config.getboolean("resume"):
         logger.info("Loading model from checkpoint..")
-        model, optimizer, start_epoch ,_  = load_model(network, checkpoint_path, device, optimizer, True)
+        model, optimizer, start_epoch, best_loss = load_model(network, checkpoint_path, device, optimizer, True)
         logger.info(f"Loaded model with starting epoch {start_epoch}")
     else:
         start_epoch = 0
@@ -136,5 +136,7 @@ if basic_config.getboolean("train_flag"):
 
     args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"), loss)
     trainer = Trainer(args, network, optimizer, criterion, start_epoch, train_loader, val_loader, scheduler, writer)
-    trainer.start()
+    trainer.start(best_loss=best_loss)
+
+
     print("Finished!")

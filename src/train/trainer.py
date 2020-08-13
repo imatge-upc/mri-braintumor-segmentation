@@ -34,8 +34,7 @@ class Trainer:
         self.start_epoch = start_epoch
         self.args = args
 
-    def start(self):
-        best_loss = 1000
+    def start(self, best_loss=1000):
         val_dice_score = 0
 
         for epoch in range(self.start_epoch, self.args.n_epochs):
