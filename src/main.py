@@ -125,7 +125,9 @@ if basic_config.getboolean("train_flag"):
                                        sigmoid_normalization=True)
 
     elif loss == "combined":
-        criterion = CrossEntropyDiceLoss3D(weight=None, classes=n_classes,
+        # 0. back, 1: ncr, 2: ed, 3: et
+        ce_weigh = torch.tensor([0.1, 0.35, 0.2 , 0.35])
+        criterion = CrossEntropyDiceLoss3D(weight=ce_weigh, classes=n_classes,
                                            eval_regions=model_config.getboolean("eval_regions"), sigmoid_normalization=True)
     elif loss == "both_dice":
         criterion = region_based_loss.RegionBasedDiceLoss3D(classes=n_classes, sigmoid_normalization=True)

@@ -32,3 +32,18 @@ def ttd_uncertainty_loop(model, images, device, K=2):
         prediction_score_vectors.append(vector_prediction_scores)
 
     return prediction_labels_maps, prediction_score_vectors
+
+
+def brats_normalize(uncertainty_map: np.ndarray, max_unc: int, min_unc: int) -> np.ndarray:
+    minimum = 0
+    maximum = 100
+
+    step = (maximum - minimum) / (max_unc - min_unc)
+
+    vfunc = np.vectorize(lambda x: (x - min_unc) * step if x != 0 else 0)
+
+    return vfunc(uncertainty_map).astype(np.uint8)
+
+
+
+
