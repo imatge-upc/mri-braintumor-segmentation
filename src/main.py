@@ -45,8 +45,7 @@ logger.info(f"Device: {device}")
 ######## DATASET
 logger.info("Creating Dataset...")
 
-data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
-data.extend(data_test)
+data, _ = dataset.read_brats(dataset_config.get("train_csv"), lgg_only=dataset_config.getboolean("lgg_only"))
 data_train, data_val = train_val_split(data, val_size=0.1)
 data_train = data_train * n_patches
 data_val = data_val * n_patches

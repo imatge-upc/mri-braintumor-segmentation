@@ -4,21 +4,18 @@ import numpy as np
 import csv
 from src.dataset.patient import Patient
 
-def read_brats(csv_path: str) -> Tuple[List, List]:
+def read_brats(csv_path: str, lgg_only: bool=False) -> Tuple[List, List]:
     patients_test = []
     patients_train = []
     with open(csv_path, 'r') as csvfile:
         reader = csv.reader(csvfile, skipinitialspace=True)
         next(reader, None)
         for row in reader:
-            if row[6] == "train":
-                patients_train.append(Patient(idx=row[0], center=row[3], grade=row[1], patient=row[2], patch_name=row[4],
-                                              size=list(map(int, row[5].split("x"))), data_path=os.path.dirname(csv_path),
-                                              train=True))
-            else:
-                patients_test.append(Patient(idx=row[0], center=row[3], grade=row[1], patient=row[2], patch_name=row[4],
-                                              size=list(map(int, row[5].split("x"))), data_path=os.path.dirname(csv_path),
-                                              train=False))
+            if lgg_only and row[1] == "HGG":
+                continue
+            patients_train.append(Patient(idx=row[0], center=row[3], grade=row[1], patient=row[2], patch_name=row[4],
+                                          size=list(map(int, row[5].split("x"))), data_path=os.path.dirname(csv_path),
+                                          train=True))
     return patients_train, patients_test
 
 
