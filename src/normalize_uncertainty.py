@@ -7,10 +7,10 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
 
-    model_path = "/Users/lauramora/Documents/MASTER/TFM/Code/BrainTumorSegmentation/results/checkpoints/model_1597063224/lgg/"
-    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/no_patch"
-    input_dir = os.path.join(model_path, "uncertainty_task")
-    output_dir = os.path.join(model_path, "uncertainty_task_normalized")
+    model_path = "/Users/lauramora/Documents/MASTER/TFM/Code/BrainTumorSegmentation/results/checkpoints/model_1597063224/101_epch"
+    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/validation/no_patch"
+    input_dir = os.path.join(model_path, "val_uncertainty_task")
+    output_dir = os.path.join(model_path, "val_uncertainty_task_normalized")
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -53,6 +53,6 @@ if __name__ == "__main__":
         if "unc" in uncertainty_map_path:
             uncertainty_map_normalized = brats_normalize(unc_map, max_unc=max_uncertainty, min_unc=min_uncertainty)
             print(f"Saving to: {output_path}")
-            save_segmask_as_nifi_volume(uncertainty_map_normalized,  nib_data.get_affine(), output_path)
+            save_segmask_as_nifi_volume(uncertainty_map_normalized,  nib_data.affine, output_path)
         else:
-            save_segmask_as_nifi_volume(unc_map, nib_data.get_affine(), output_path)
+            save_segmask_as_nifi_volume(unc_map, nib_data.affine, output_path)

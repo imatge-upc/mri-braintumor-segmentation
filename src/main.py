@@ -1,13 +1,15 @@
 import importlib
 import sys
 import torch
+from src.models.unet3d import unet3d
 from torchvision import transforms
 
 
 from src.dataset.train_val_split import train_val_split
 from src.losses.ce_dice_loss import CrossEntropyDiceLoss3D
 
-from src.losses import dice_loss, region_based_loss
+from src.losses import dice_loss, region_based_loss, new_losses
+
 from src.models.io_model import load_model
 from src.train.trainer import Trainer, TrainerArgs
 from torch.optim import lr_scheduler
@@ -94,6 +96,27 @@ if model_config["network"] == "vnet":
 
     n_params = sum([p.data.nelement() for p in network.parameters()])
     logger.info("Number of params: {}".format(n_params))
+
+elif model_config["network"] == "3dunet_residual":
+
+    network = unet3d.ResidualUNet3D(in_channels=n_modalities, out_channels=n_classes, final_sigmoid=False,
+                                    f_maps=model_config.getint("init_features_maps"), layer_order="crg",
+                                    num_levels=4, num_groups=4,conv_padding=1)
+
+    n_params = sum([p.data.nelement() for p in network.parameters()])
+    logger.info("Number of params: {}".format(n_params))
+
+
+elif model_config["network"] == "3dunet":
+
+    network = unet3d.UNet3D(in_channels=n_modalities, out_channels=n_classes, final_sigmoid=False,
+                                    f_maps=model_config.getint("init_features_maps"), layer_order="crg",
+                                    num_levels=4, num_groups=4,conv_padding=1)
+
+    n_params = sum([p.data.nelement() for p in network.parameters()])
+    logger.info("Number of params: {}".format(n_params))
+
+
 else:
     raise ValueError("Bad parameter for network {}".format(model_config.get("network")))
 
@@ -138,6 +161,9 @@ if basic_config.getboolean("train_flag"):
                                            eval_regions=model_config.getboolean("eval_regions"), sigmoid_normalization=True)
     elif loss == "both_dice":
         criterion = region_based_loss.RegionBasedDiceLoss3D(classes=n_classes, sigmoid_normalization=True)
+
+    elif loss == "gdl":
+        criterion = new_losses.GeneralizedDiceLoss()
 
     else:
         raise ValueError(f"Bad loss value {loss}. Expected ['dice', combined]")

@@ -1,11 +1,8 @@
 import os
 import pytest
 import torch
-from mock import MagicMock
 from src.dataset.utils import nifi_volume
-from src.losses.ce_dice_loss import CrossEntropyDiceLoss3D
-from src.losses import dice_loss
-from src.models.vnet import vnet
+from src.losses import dice_loss, utils
 from torch import nn
 
 
@@ -34,7 +31,7 @@ def test_dice_loss(volume):
 
     target = seg_mask.unsqueeze(0).to("cpu")
 
-    input = dice_loss.expand_as_one_hot(target.long(), classes)
+    input = utils.expand_as_one_hot(target.long(), classes)
 
     my_loss.normalization = Identity()
     loss, score, _ = my_loss(input, target)

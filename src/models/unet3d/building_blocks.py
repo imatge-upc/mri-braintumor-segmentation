@@ -69,6 +69,7 @@ def create_conv(in_channels, out_channels, kernel_size, order, num_groups, paddi
     return modules
 
 
+
 class SingleConv(nn.Sequential):
     """
     Basic convolutional module consisting of a Conv3d, non-linearity and optional batchnorm/groupnorm. The order
@@ -92,6 +93,7 @@ class SingleConv(nn.Sequential):
 
         for name, module in create_conv(in_channels, out_channels, kernel_size, order, num_groups, padding=padding):
             self.add_module(name, module)
+
 
 
 class DoubleConv(nn.Sequential):
@@ -139,6 +141,7 @@ class DoubleConv(nn.Sequential):
         self.add_module('SingleConv2',
                         SingleConv(conv2_in_channels, conv2_out_channels, kernel_size, order, num_groups,
                                    padding=padding))
+
 
 
 class ExtResNetBlock(nn.Module):
@@ -189,6 +192,7 @@ class ExtResNetBlock(nn.Module):
         return out
 
 
+
 class Encoder(nn.Module):
     """
     A single module from the encoder path consisting of the optional max
@@ -235,6 +239,7 @@ class Encoder(nn.Module):
             x = self.pooling(x)
         x = self.basic_module(x)
         return x
+
 
 
 class Decoder(nn.Module):
@@ -292,6 +297,7 @@ class Decoder(nn.Module):
             return torch.cat((encoder_features, x), dim=1)
         else:
             return encoder_features + x
+
 
 
 class Upsampling(nn.Module):

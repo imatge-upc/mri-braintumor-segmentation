@@ -1,9 +1,12 @@
-import importlib
-
+import torch
 import torch.nn as nn
 
-from pytorch3dunet.unet3d.buildingblocks import Encoder, Decoder, DoubleConv, ExtResNetBlock
-from pytorch3dunet.unet3d.utils import number_of_features_per_level
+from src.models.unet3d.building_blocks import Encoder, Decoder, DoubleConv, ExtResNetBlock
+from torchsummary import summary
+
+
+def number_of_features_per_level(init_channel_number, num_levels):
+    return [init_channel_number * 2 ** k for k in range(num_levels)]
 
 
 
@@ -27,23 +30,23 @@ class Abstract3DUNet(nn.Module):
         layer_order (string): determines the order of layers
             in `SingleConv` module. e.g. 'crg' stands for Conv3d+ReLU+GroupNorm3d.
             See `SingleConv` for more info
-        f_maps (int, tuple): if int: number of feature maps in the first conv layer of the encoder (default: 64);
-            if tuple: number of feature maps at each level
+
         num_groups (int): number of groups for the GroupNorm
         num_levels (int): number of levels in the encoder/decoder path (applied only if f_maps is an int)
-        is_segmentation (bool): if True (semantic segmentation problem) Sigmoid/Softmax normalization is applied
-            after the final convolution; if False (regression problem) the normalization layer is skipped at the end
+
         testing (bool): if True (testing mode) the `final_activation` (if present, i.e. `is_segmentation=true`)
             will be applied as the last operation during the forward pass; if False the model is in training mode
             and the `final_activation` (even if present) won't be applied; default: False
+
         conv_kernel_size (int or tuple): size of the convolving kernel in the basic_module
         pool_kernel_size (int or tuple): the size of the window
         conv_padding (int or tuple): add zero-padding added to all three sides of the input
     """
 
     def __init__(self, in_channels, out_channels, final_sigmoid, basic_module, f_maps=64, layer_order='gcr',
-                 num_groups=8, num_levels=4, is_segmentation=True, testing=False,
+                 num_groups=8, num_levels=4, testing=False,
                  conv_kernel_size=3, pool_kernel_size=2, conv_padding=1, **kwargs):
+
         super(Abstract3DUNet, self).__init__()
 
         self.testing = testing
@@ -63,7 +66,6 @@ class Abstract3DUNet(nn.Module):
                                   num_groups=num_groups,
                                   padding=conv_padding)
             else:
-                # TODO: adapt for anisotropy in the data, i.e. use proper pooling kernel to make the data isotropic after 1-2 pooling operations
                 encoder = Encoder(f_maps[i - 1], out_feature_num,
                                   basic_module=basic_module,
                                   conv_layer_order=layer_order,
@@ -102,15 +104,11 @@ class Abstract3DUNet(nn.Module):
         # channels to the number of labels
         self.final_conv = nn.Conv3d(f_maps[0], out_channels, 1)
 
-        if is_segmentation:
-            # semantic segmentation problem
-            if final_sigmoid:
-                self.final_activation = nn.Sigmoid()
-            else:
-                self.final_activation = nn.Softmax(dim=1)
+        if final_sigmoid:
+            self.final_activation = nn.Sigmoid()
         else:
-            # regression problem
-            self.final_activation = None
+            self.final_activation = nn.Softmax(dim=1)
+
 
     def forward(self, x):
         # encoder part
@@ -132,12 +130,14 @@ class Abstract3DUNet(nn.Module):
 
         x = self.final_conv(x)
 
+        scores = []
         # apply final_activation (i.e. Sigmoid or Softmax) only during prediction. During training the network outputs
         # logits and it's up to the user to normalize it before visualising with tensorboard or computing validation metric
         if self.testing and self.final_activation is not None:
-            x = self.final_activation(x)
+            scores = self.final_activation(x)
 
-        return x
+        return x, scores
+
 
 
 class UNet3D(Abstract3DUNet):
@@ -149,11 +149,22 @@ class UNet3D(Abstract3DUNet):
     """
 
     def __init__(self, in_channels, out_channels, final_sigmoid=True, f_maps=64, layer_order='gcr',
-                 num_groups=8, num_levels=4, is_segmentation=True, conv_padding=1, **kwargs):
+                 num_groups=8, num_levels=4, conv_padding=1, **kwargs):
+
         super(UNet3D, self).__init__(in_channels=in_channels, out_channels=out_channels, final_sigmoid=final_sigmoid,
                                      basic_module=DoubleConv, f_maps=f_maps, layer_order=layer_order,
-                                     num_groups=num_groups, num_levels=num_levels, is_segmentation=is_segmentation,
+                                     num_groups=num_groups, num_levels=num_levels,
                                      conv_padding=conv_padding, **kwargs)
+
+
+    def test(self, device='cpu'):
+        input_tensor = torch.rand(1, self.in_channels, 32, 32, 32)
+        ideal_out = torch.rand(1, self.classes, 32, 32, 32)
+        out_pred = self.forward(input_tensor)
+        assert ideal_out.shape == out_pred.shape
+        summary(self.to(torch.device(device)), (self.in_channels, 32, 32, 32), device=device)
+        print("UNet3D test is complete")
+
 
 
 class ResidualUNet3D(Abstract3DUNet):
@@ -165,10 +176,25 @@ class ResidualUNet3D(Abstract3DUNet):
     """
 
     def __init__(self, in_channels, out_channels, final_sigmoid=True, f_maps=64, layer_order='gcr',
-                 num_groups=8, num_levels=5, is_segmentation=True, conv_padding=1, **kwargs):
+                 num_groups=8, num_levels=5, conv_padding=1, **kwargs):
         super(ResidualUNet3D, self).__init__(in_channels=in_channels, out_channels=out_channels,
                                              final_sigmoid=final_sigmoid,
                                              basic_module=ExtResNetBlock, f_maps=f_maps, layer_order=layer_order,
-                                             num_groups=num_groups, num_levels=num_levels,
-                                             is_segmentation=is_segmentation, conv_padding=conv_padding,
+                                             num_groups=num_groups, num_levels=num_levels, conv_padding=conv_padding,
                                              **kwargs)
+
+    def test(self, device='cpu'):
+        classes = 4
+        in_channels = 4
+        input_tensor = torch.rand(1, in_channels, 32, 32, 32)
+        ideal_out = torch.rand(1, classes, 32, 32, 32)
+
+        out_pred = self.forward(input_tensor)
+        assert ideal_out.shape == out_pred.shape
+        print("ResidualUNet3D test is complete")
+
+
+
+if __name__ == "__main__":
+    net = ResidualUNet3D(in_channels=4, out_channels=4, f_maps=16)
+    net.test()

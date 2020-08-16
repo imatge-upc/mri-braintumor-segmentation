@@ -1,5 +1,6 @@
 import torch
 from PIL import Image
+from src.losses import utils
 from torchvision import transforms as T
 from tqdm import tqdm
 
@@ -93,6 +94,7 @@ class Trainer:
                     subregion_loss = []
                     dice_loss.backward()
                     trainer.optimizer.step()
+
                     trainer.writer.add_scalar('Training Dice Loss NCR', per_channel_dice[0].detach().item(),
                                              epoch * trainer.number_train_data + i)
                     trainer.writer.add_scalar('Training Dice Loss ED', per_channel_dice[1].detach().item(),
@@ -113,6 +115,14 @@ class Trainer:
                                               epoch * trainer.number_train_data + i)
                     trainer.writer.add_scalar('Train region dice loss', dice_loss_reg,
                                               epoch * trainer.number_train_data + i)
+
+                elif trainer.args.loss == "gdl":
+
+                    targets = utils.expand_as_one_hot(targets, num_classes=4)
+                    dice_loss, mean_dice = trainer.criterion(predictions, targets)
+                    subregion_loss = []
+                    dice_loss.backward()
+                    trainer.optimizer.step()
 
                 else:
                     combined_loss, dice_loss, ce_loss, mean_dice, subregion_loss = trainer.criterion(predictions, targets)
@@ -185,6 +195,10 @@ class Trainer:
 
                     if trainer.args.loss == "dice":
                         dice_loss, mean_dice, subregion_loss = trainer.criterion(outputs, targets)
+
+                    elif trainer.args.loss == "gdl":
+                        dice_loss, mean_dice = trainer.criterion(outputs, targets)
+                        subregion_loss = []
 
 
                     elif trainer.args.loss == "both_dice":
