@@ -14,12 +14,13 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from src.config import BratsConfiguration
-from src.dataset.loaders.brats_dataset import BratsDataset
 from src.dataset.augmentations import brats_augmentations
 
 from src.dataset.utils import dataset, visualization as visualization
 from src.models.vnet import vnet
 from src.logging_conf import logger
+
+from src.dataset.loaders.brats_dataset import BratsDataset
 
 
 ######## PARAMS
@@ -46,9 +47,11 @@ logger.info(f"Device: {device}")
 logger.info("Creating Dataset...")
 
 data, _ = dataset.read_brats(dataset_config.get("train_csv"), lgg_only=dataset_config.getboolean("lgg_only"))
-data_train, data_val = train_val_split(data, val_size=0.1)
+data_train, data_val = train_val_split(data, val_size=0.3)
 data_train = data_train * n_patches
 data_val = data_val * n_patches
+
+
 
 n_modalities = dataset_config.getint("n_modalities") # like color channels
 
@@ -68,10 +71,15 @@ val_dataset = BratsDataset(data_val, sampling_method, patch_size, compute_patch=
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if basic_config.getboolean("plot"):
-    x, y = next(iter(train_loader))
-    print(x.shape)
+    data_batch, labels_batch = next(iter(train_loader))
+    data_batch.reshape(data_batch.shape[0] * data_batch.shape[1], data_batch.shape[2], data_batch.shape[3],
+                       data_batch.shape[4], data_batch.shape[5])
+    labels_batch.reshape(labels_batch.shape[0] * labels_batch.shape[1], labels_batch.shape[2], labels_batch.shape[3],
+                         labels_batch.shape[4])
+
+    print(data_batch.shape)
     logger.info('Plotting images')
-    visualization.plot_batch_slice(x, y, slice=30, save=True)
+    visualization.plot_batch_slice(data_batch, labels_batch, slice=30, save=True)
 
 
 ######## MODEL

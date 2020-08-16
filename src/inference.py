@@ -32,6 +32,34 @@ def load_network(device, model_config, dataset_config):
     return model, model_path
 
 
+def crop_no_patch(patch_size, images, sampling):
+
+    if sampling == "no_patch":
+        new_size = (160, 192, 128)
+        x_1 = int((patch_size[0] - new_size[0]) / 2)
+        x_2 = int(patch_size[0] - (patch_size[0] - new_size[0]) / 2)
+        y_1 = int((patch_size[1] - new_size[1]) / 2)
+        y_2 = int(patch_size[1] - (patch_size[1] - new_size[1]) / 2)
+        z_1 = int((patch_size[2] - new_size[2]) / 2)
+        z_2 = int(patch_size[2] - (patch_size[2] - new_size[2]) / 2)
+        new_images = images[:, x_1:x_2, y_1:y_2, z_1:z_2]
+        return x_1, x_2, y_1, y_2, z_1, z_2, new_images, new_size
+
+    else:
+        x_1, x_2 = 0, patch_size[0]
+        y_1, y_2 = 0, patch_size[1]
+        z_1, z_2 = 0, patch_size[2]
+        return x_1, x_2, y_1, y_2, z_1, z_2, images, patch_size
+
+def return_to_size(volume, sampling, x_1, x_2, y_1, y_2, z_1, z_2, final_size=(240, 240,155)):
+
+    if sampling == "no_patch":
+        output = np.zeros(final_size)
+        output[x_1:x_2, y_1:y_2, z_1:z_2] = volume
+        return output
+
+    else:
+        return volume
 
 
 if __name__ == "__main__":
@@ -44,8 +72,8 @@ if __name__ == "__main__":
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     # idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 0
 
-    compute_metrics = True
-    flag_post_process = False
+    compute_metrics = False
+    flag_post_process = True
 
     model, model_path = load_network(device, model_config, dataset_config)
 
@@ -66,19 +94,7 @@ if __name__ == "__main__":
 
         images = data_test[idx].load_mri_volumes(normalize=True)
 
-
-        if  sampling == "no_patch":
-
-            new_size = (160, 192, 128)
-            x_1 = int((patch_size[0] - new_size[0]) / 2)
-            x_2 = int(patch_size[0] - (patch_size[0] - new_size[0]) / 2)
-            y_1 = int((patch_size[1] - new_size[1]) / 2)
-            y_2 = int(patch_size[1] - (patch_size[1] - new_size[1]) / 2)
-            z_1 = int((patch_size[2] - new_size[2]) / 2)
-            z_2 = int(patch_size[2] - (patch_size[2] - new_size[2]) / 2)
-            new_images = images[:, x_1:x_2, y_1:y_2, z_1:z_2]
-            images = new_images
-            patch_size = new_size
+        x_1, x_2, y_1, y_2, z_1, z_2, images, patch_size = crop_no_patch(patch_size, images, sampling)
 
         results = {}
 
@@ -91,10 +107,9 @@ if __name__ == "__main__":
             pred_scores_mean = np.mean(pred_scores, axis=0)
             prediction_map = np.argmax(pred_scores_mean, axis=1).reshape(patch_size)
 
-            if sampling == "no_patch":
-                wt_var = wt_var[:, :, :155]
-                tc_var = tc_var[:, :, :155]
-                et_var = et_var[:, :, :155]
+            wt_var = return_to_size(wt_var, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
+            tc_var = return_to_size(tc_var, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
+            et_var = return_to_size(et_var, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
 
             results = {"whole": wt_var, "core": tc_var, "enhance": et_var}
 
@@ -106,18 +121,19 @@ if __name__ == "__main__":
 
         prediction_map = brats_labels.convert_to_brats_labels(prediction_map)
 
-        if sampling == "no_patch":
-            output = np.zeros((240, 240, 155))
-            output[x_1:x_2, y_1:y_2, z_1:z_2] = prediction_map
-            prediction_map = output
-            patch_size = output.shape
+        prediction_map = return_to_size(prediction_map, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
 
 
         if flag_post_process:
-            prediction_map_clean = post_process.opening(prediction_map)
-            results["prediction"] = prediction_map_clean
+            segmentation_post = prediction_map.copy()
+            pred_mask_wt = brats_labels.get_wt(segmentation_post)
+            mask_removed_regions_wt = post_process.keep_conn_component_bigger_than_th(pred_mask_wt, th=4)
+            elements_to_remove = pred_mask_wt - mask_removed_regions_wt
+            segmentation_post[elements_to_remove == 1] = 0
+            results["prediction"] = segmentation_post
             task = f"{task}_post_processed"
             predict.save_predictions(data_test[idx], results, model_path, task)
+
 
         results["prediction"] = prediction_map
         predict.save_predictions(data_test[idx], results, model_path, task)

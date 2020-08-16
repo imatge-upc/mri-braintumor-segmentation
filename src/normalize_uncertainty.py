@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
 
-    model_path = "/Users/lauramora/Documents/MASTER/TFM/Code/BrainTumorSegmentation/results/checkpoints/model_1594151267"
-    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/validation/no_patch"
+    model_path = "/Users/lauramora/Documents/MASTER/TFM/Code/BrainTumorSegmentation/results/checkpoints/model_1597063224/lgg/"
+    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/no_patch"
     input_dir = os.path.join(model_path, "uncertainty_task")
     output_dir = os.path.join(model_path, "uncertainty_task_normalized")
 

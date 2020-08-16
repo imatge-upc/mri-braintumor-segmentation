@@ -16,6 +16,7 @@ def volume():
     volume_path  = os.path.join(gen_path, patient, f"{patient}_seg.nii.gz")
     return nifi_volume.load_nifi_volume(volume_path, normalize=False)
 
+
 class Identity(nn.Module):
 
     def forward(self, input):
@@ -26,7 +27,7 @@ def test_dice_loss(volume):
     volume[volume == 4] = 3
     classes = 4
 
-    my_loss = dice_loss.DiceLoss(classes=classes, weight=None, sigmoid_normalization=True, eval_regions=True)
+    my_loss = dice_loss.DiceLoss(classes=classes, weight=None, sigmoid_normalization=True, eval_regions=False)
 
 
     seg_mask = torch.from_numpy(volume.astype(int))

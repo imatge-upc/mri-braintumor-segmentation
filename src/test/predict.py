@@ -40,7 +40,7 @@ def get_scores_map_from_vector(vector_prediction_scores: np.ndarray, path_size: 
 
 
 def save_predictions(patient: Patient, results: dict, model_path: str, task: str):
-    assert task in ["segmentation_task", "uncertainty_task"], 'task must be on of ["segmentation_task", "uncertainty_task"] '
+    # assert task in ["segmentation_task", "uncertainty_task"], 'task must be on of ["segmentation_task", "uncertainty_task"] '
 
     output_dir = os.path.join(model_path, task)
     if not os.path.exists(output_dir):
