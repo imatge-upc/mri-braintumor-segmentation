@@ -76,9 +76,6 @@ class Trainer:
 
         i = 0
         for data_batch, labels_batch in tqdm(self.train_data_loader, desc="Training epoch"):
-            data_batch.reshape(data_batch.shape[0] * data_batch.shape[1], data_batch.shape[2],data_batch.shape[3], data_batch.shape[4], data_batch.shape[5])
-            labels_batch.reshape(labels_batch.shape[0] * labels_batch.shape[1], labels_batch.shape[2] ,labels_batch.shape[3], labels_batch.shape[4])
-
             def step(trainer):
                 trainer.optimizer.zero_grad()
 
@@ -118,7 +115,7 @@ class Trainer:
 
                 elif trainer.args.loss == "gdl":
 
-                    targets = utils.expand_as_one_hot(targets, num_classes=4)
+                    targets = utils.expand_as_one_hot(targets.long(), num_classes=4)
                     dice_loss, mean_dice = trainer.criterion(predictions, targets)
                     subregion_loss = []
                     dice_loss.backward()
