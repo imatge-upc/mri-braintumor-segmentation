@@ -9,11 +9,11 @@ if __name__ == "__main__":
 
     model_path = "/Users/lauramora/Documents/MASTER/TFM/Code/BrainTumorSegmentation/results/checkpoints/model_1597063224/101_epch"
     ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/validation/no_patch"
-    input_dir = os.path.join(model_path, "val_uncertainty_task")
+    input_dir = os.path.join(model_path, "val_uncertainty_task_normalized")
     output_dir = os.path.join(model_path, "val_uncertainty_task_normalized")
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+   #  if not os.path.exists(output_dir):
+    #    os.makedirs(output_dir)
 
     file_list = sorted([file for file in os.listdir(input_dir) if "unc" in file])
     file_list_all = sorted([file for file in os.listdir(input_dir)])

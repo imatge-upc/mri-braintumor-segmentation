@@ -9,19 +9,33 @@ from src.compute_metric_results import compute_wt_tc_et
 from src.config import BratsConfiguration
 from src.dataset.utils import dataset, visualization
 from src.models.io_model import load_model
+from src.models.unet3d import unet3d
 from src.models.vnet import vnet
 from src.test import predict
 from src.uncertainty.uncertainty import get_variation_uncertainty, ttd_uncertainty_loop
 from src.post_processing import post_process
 
 
-def load_network(device, model_config, dataset_config):
+def load_network(device, model_config, dataset_config, which_net):
 
     n_modalities = dataset_config.getint("n_modalities")
     n_classes = dataset_config.getint("classes")
 
-    network = vnet.VNet(elu=model_config.getboolean("use_elu"), in_channels=n_modalities, classes=n_classes,
-                        init_features_maps=model_config.getint("init_features_maps"))
+    if which_net == "vnet":
+        network = vnet.VNet(elu=model_config.getboolean("use_elu"), in_channels=n_modalities, classes=n_classes,
+                            init_features_maps=model_config.getint("init_features_maps"))
+    elif which_net == "3dunet_residual":
+        network = unet3d.ResidualUNet3D(in_channels=n_modalities, out_channels=n_classes, final_sigmoid=False, # so i get a softmax
+                                    f_maps=model_config.getint("init_features_maps"), layer_order="crg",
+                                    num_levels=4, num_groups=4,conv_padding=1)
+
+    elif which_net == "3dunet":
+         network = unet3d.UNet3D(in_channels=n_modalities, out_channels=n_classes, final_sigmoid=False,
+                                    f_maps=model_config.getint("init_features_maps"), layer_order="crg",
+                                    num_levels=4, num_groups=4,conv_padding=1)
+
+    else:
+        raise ValueError(f"bad network {which_net}")
     network.to(device)
 
     checkpoint_path = os.path.join(model_config.get("model_path"), model_config.get("checkpoint"))
@@ -72,10 +86,10 @@ if __name__ == "__main__":
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     # idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 0
 
-    compute_metrics = False
-    flag_post_process = True
+    compute_metrics = True
+    flag_post_process = False
 
-    model, model_path = load_network(device, model_config, dataset_config)
+    model, model_path = load_network(device, model_config, dataset_config, model_config["network"])
 
 
     data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
@@ -115,7 +129,10 @@ if __name__ == "__main__":
 
         else:
             prediction_four_channels, vector_prediction_scores = predict.predict(model, images, device, monte_carlo=ttd)
-            best_scores_map = predict.get_scores_map_from_vector(vector_prediction_scores, patch_size)
+            if model_config["network"] == "vnet":
+                best_scores_map = predict.get_scores_map_from_vector(vector_prediction_scores, patch_size)
+            else:
+                best_scores_map = vector_prediction_scores
             prediction_map = predict.get_prediction_map(prediction_four_channels)
 
 

@@ -10,6 +10,7 @@ def number_of_features_per_level(init_channel_number, num_levels):
 
 
 
+
 class Abstract3DUNet(nn.Module):
     """
     Base class for standard and residual UNet.
@@ -44,12 +45,11 @@ class Abstract3DUNet(nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, final_sigmoid, basic_module, f_maps=64, layer_order='gcr',
-                 num_groups=8, num_levels=4, testing=False,
-                 conv_kernel_size=3, pool_kernel_size=2, conv_padding=1, **kwargs):
+                 num_groups=8, num_levels=4,
+                 conv_kernel_size=3, pool_kernel_size=2, conv_padding=1, dropout=False, **kwargs):
 
         super(Abstract3DUNet, self).__init__()
 
-        self.testing = testing
 
         if isinstance(f_maps, int):
             f_maps = number_of_features_per_level(f_maps, num_levels=num_levels)
@@ -57,6 +57,7 @@ class Abstract3DUNet(nn.Module):
         # create encoder path consisting of Encoder modules. Depth of the encoder is equal to `len(f_maps)`
         encoders = []
         for i, out_feature_num in enumerate(f_maps):
+
             if i == 0:
                 encoder = Encoder(in_channels, out_feature_num,
                                   apply_pooling=False,  # skip pooling in the firs encoder
@@ -64,7 +65,8 @@ class Abstract3DUNet(nn.Module):
                                   conv_layer_order=layer_order,
                                   conv_kernel_size=conv_kernel_size,
                                   num_groups=num_groups,
-                                  padding=conv_padding)
+                                  padding=conv_padding,
+                                  apply_dropout=False)
             else:
                 encoder = Encoder(f_maps[i - 1], out_feature_num,
                                   basic_module=basic_module,
@@ -72,7 +74,8 @@ class Abstract3DUNet(nn.Module):
                                   conv_kernel_size=conv_kernel_size,
                                   num_groups=num_groups,
                                   pool_kernel_size=pool_kernel_size,
-                                  padding=conv_padding)
+                                  padding=conv_padding,
+                                  apply_dropout=True)
 
             encoders.append(encoder)
 
@@ -95,7 +98,9 @@ class Abstract3DUNet(nn.Module):
                               conv_layer_order=layer_order,
                               conv_kernel_size=conv_kernel_size,
                               num_groups=num_groups,
-                              padding=conv_padding)
+                              padding=conv_padding,
+                              apply_dropout=True)
+
             decoders.append(decoder)
 
         self.decoders = nn.ModuleList(decoders)
@@ -130,11 +135,8 @@ class Abstract3DUNet(nn.Module):
 
         x = self.final_conv(x)
 
-        scores = []
-        # apply final_activation (i.e. Sigmoid or Softmax) only during prediction. During training the network outputs
-        # logits and it's up to the user to normalize it before visualising with tensorboard or computing validation metric
-        if self.testing and self.final_activation is not None:
-            scores = self.final_activation(x)
+
+        scores = self.final_activation(x)
 
         return x, scores
 
@@ -176,12 +178,12 @@ class ResidualUNet3D(Abstract3DUNet):
     """
 
     def __init__(self, in_channels, out_channels, final_sigmoid=True, f_maps=64, layer_order='gcr',
-                 num_groups=8, num_levels=5, conv_padding=1, **kwargs):
+                 num_groups=8, num_levels=5, conv_padding=1, dropout=False, **kwargs):
         super(ResidualUNet3D, self).__init__(in_channels=in_channels, out_channels=out_channels,
                                              final_sigmoid=final_sigmoid,
                                              basic_module=ExtResNetBlock, f_maps=f_maps, layer_order=layer_order,
                                              num_groups=num_groups, num_levels=num_levels, conv_padding=conv_padding,
-                                             **kwargs)
+                                             dropout=dropout, **kwargs)
 
     def test(self, device='cpu'):
         classes = 4

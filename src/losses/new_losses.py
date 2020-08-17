@@ -1,4 +1,5 @@
 import torch
+from src.losses import utils
 from torch import nn
 
 
@@ -104,6 +105,8 @@ class GeneralizedDiceLoss(_AbstractDiceLoss):
         self.epsilon = epsilon
 
     def dice(self, input, target, weight):
+        target = utils.expand_as_one_hot(target.long(), num_classes=4)
+
         assert input.size() == target.size(), "'input' and 'target' must have the same shape"
 
         input = flatten(input)

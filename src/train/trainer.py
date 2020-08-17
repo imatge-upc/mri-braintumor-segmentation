@@ -115,7 +115,6 @@ class Trainer:
 
                 elif trainer.args.loss == "gdl":
 
-                    targets = utils.expand_as_one_hot(targets.long(), num_classes=4)
                     dice_loss, mean_dice = trainer.criterion(predictions, targets)
                     subregion_loss = []
                     dice_loss.backward()

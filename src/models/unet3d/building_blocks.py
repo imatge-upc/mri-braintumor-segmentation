@@ -8,6 +8,11 @@ def conv3d(in_channels, out_channels, kernel_size, bias, padding):
     return nn.Conv3d(in_channels, out_channels, kernel_size, padding=padding, bias=bias)
 
 
+def passthrough(x, **kwargs):
+    return x
+
+
+
 def create_conv(in_channels, out_channels, kernel_size, order, num_groups, padding):
     """
     Create a list of modules with together constitute a single conv layer with non-linearity
@@ -216,16 +221,20 @@ class Encoder(nn.Module):
 
     def __init__(self, in_channels, out_channels, conv_kernel_size=3, apply_pooling=True,
                  pool_kernel_size=2, pool_type='max', basic_module=DoubleConv, conv_layer_order='gcr',
-                 num_groups=8, padding=1):
+                 num_groups=8, padding=1, apply_dropout=False):
         super(Encoder, self).__init__()
         assert pool_type in ['max', 'avg']
+
         if apply_pooling:
+
             if pool_type == 'max':
                 self.pooling = nn.MaxPool3d(kernel_size=pool_kernel_size)
             else:
                 self.pooling = nn.AvgPool3d(kernel_size=pool_kernel_size)
         else:
             self.pooling = None
+
+        self.dropout = nn.Dropout3d() if apply_dropout else None
 
         self.basic_module = basic_module(in_channels, out_channels,
                                          encoder=True,
@@ -235,9 +244,14 @@ class Encoder(nn.Module):
                                          padding=padding)
 
     def forward(self, x):
+
         if self.pooling is not None:
             x = self.pooling(x)
+
         x = self.basic_module(x)
+        if self.dropout is not None:
+            x = self.dropout(x)
+
         return x
 
 
@@ -261,7 +275,7 @@ class Decoder(nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, conv_kernel_size=3, scale_factor=(2, 2, 2), basic_module=DoubleConv,
-                 conv_layer_order='gcr', num_groups=8, mode='nearest', padding=1):
+                 conv_layer_order='gcr', num_groups=8, mode='nearest', padding=1, apply_dropout=False):
         super(Decoder, self).__init__()
         if basic_module == DoubleConv:
             # if DoubleConv is the basic_module use interpolation for upsampling and concatenation joining
@@ -285,10 +299,15 @@ class Decoder(nn.Module):
                                          num_groups=num_groups,
                                          padding=padding)
 
+        self.dropout = nn.Dropout3d() if apply_dropout else None
+
     def forward(self, encoder_features, x):
         x = self.upsampling(encoder_features=encoder_features, x=x)
         x = self.joining(encoder_features, x)
         x = self.basic_module(x)
+        if self.dropout is not None:
+            x = self.dropout(x)
+
         return x
 
     @staticmethod
