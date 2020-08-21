@@ -7,13 +7,14 @@ import numpy as np
 from src.dataset import brats_labels
 from src.compute_metric_results import compute_wt_tc_et
 from src.config import BratsConfiguration
-from src.dataset.utils import dataset, visualization
+from src.dataset.utils import dataset
 from src.models.io_model import load_model
 from src.models.unet3d import unet3d
 from src.models.vnet import vnet
 from src.test import predict
 from src.uncertainty.uncertainty import get_variation_uncertainty, ttd_uncertainty_loop
 from src.post_processing import post_process
+from src.logging_conf import logger
 
 
 def load_network(device, model_config, dataset_config, which_net):
@@ -84,8 +85,6 @@ if __name__ == "__main__":
     basic_config = config.get_basic_config()
     unc_config = config.get_uncertainty_config()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    # idx = int(os.environ.get("SLURM_ARRAY_TASK_ID")) if os.environ.get("SLURM_ARRAY_TASK_ID") else 0
-
     compute_metrics = True
     flag_post_process = False
 
@@ -164,4 +163,4 @@ if __name__ == "__main__":
                 volume_gt = data_test[idx].load_gt_mask()
                 volume = nifi_volume.load_nifi_volume(data_path)
                 metrics = compute_wt_tc_et(prediction_map, volume_gt, volume)
-                print(metrics)
+                logger.info(f"{data_test[idx].patient} | {metrics}")

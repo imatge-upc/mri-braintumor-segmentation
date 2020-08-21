@@ -54,6 +54,9 @@ class Abstract3DUNet(nn.Module):
         if isinstance(f_maps, int):
             f_maps = number_of_features_per_level(f_maps, num_levels=num_levels)
 
+        drops_encoder = [False, False, True, True] if dropout else [False]*num_levels
+        drops_decoder = reversed(drops_encoder)
+
         # create encoder path consisting of Encoder modules. Depth of the encoder is equal to `len(f_maps)`
         encoders = []
         for i, out_feature_num in enumerate(f_maps):
@@ -75,7 +78,7 @@ class Abstract3DUNet(nn.Module):
                                   num_groups=num_groups,
                                   pool_kernel_size=pool_kernel_size,
                                   padding=conv_padding,
-                                  apply_dropout=True)
+                                  apply_dropout=drops_encoder[i-1])
 
             encoders.append(encoder)
 
@@ -91,15 +94,14 @@ class Abstract3DUNet(nn.Module):
                 in_feature_num = reversed_f_maps[i]
 
             out_feature_num = reversed_f_maps[i + 1]
-            # TODO: if non-standard pooling was used, make sure to use correct striding for transpose conv
-            # currently strides with a constant stride: (2, 2, 2)
+
             decoder = Decoder(in_feature_num, out_feature_num,
                               basic_module=basic_module,
                               conv_layer_order=layer_order,
                               conv_kernel_size=conv_kernel_size,
                               num_groups=num_groups,
                               padding=conv_padding,
-                              apply_dropout=True)
+                              apply_dropout=drops_decoder[i-1])
 
             decoders.append(decoder)
 

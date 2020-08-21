@@ -62,7 +62,8 @@ sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
 transform = transforms.Compose([brats_augmentations.RandomIntensityShift(),
                                 brats_augmentations.RandomIntensityScale(),
-                                brats_augmentations.RandomMirrorFlip(p=0.5)])
+                                brats_augmentations.RandomMirrorFlip(p=0.5),
+                                brats_augmentations.RandomRotation90(p=0.5)])
 
 
 compute_patch = basic_config.getboolean("compute_patches")

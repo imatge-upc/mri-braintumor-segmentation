@@ -42,13 +42,15 @@ def create_conv(in_channels, out_channels, kernel_size, order, num_groups, paddi
         if char == 'r':
             modules.append(('ReLU', nn.ReLU(inplace=True)))
         elif char == 'l':
-            modules.append(('LeakyReLU', nn.LeakyReLU(negative_slope=0.1, inplace=True)))
+            modules.append(('LeakyReLU', nn.LeakyReLU(negative_slope=1e-2, inplace=True)))
         elif char == 'e':
             modules.append(('ELU', nn.ELU(inplace=True)))
+
         elif char == 'c':
             # add learnable bias only in the absence of batchnorm/groupnorm
             bias = not ('g' in order or 'b' in order)
             modules.append(('conv', conv3d(in_channels, out_channels, kernel_size, bias, padding=padding)))
+
         elif char == 'g':
             is_before_conv = i < order.index('c')
             if is_before_conv:
@@ -62,12 +64,21 @@ def create_conv(in_channels, out_channels, kernel_size, order, num_groups, paddi
 
             assert num_channels % num_groups == 0, f'Expected number of channels in input to be divisible by num_groups. num_channels={num_channels}, num_groups={num_groups}'
             modules.append(('groupnorm', nn.GroupNorm(num_groups=num_groups, num_channels=num_channels)))
+
         elif char == 'b':
             is_before_conv = i < order.index('c')
             if is_before_conv:
                 modules.append(('batchnorm', nn.BatchNorm3d(in_channels)))
             else:
                 modules.append(('batchnorm', nn.BatchNorm3d(out_channels)))
+
+        elif char == 'i':
+            is_before_conv = i < order.index('c')
+            if is_before_conv:
+                modules.append(('instancenorm', nn.InstanceNorm3d(in_channels)))
+            else:
+                modules.append(('instancenorm', nn.InstanceNorm3d(out_channels)))
+
         else:
             raise ValueError(f"Unsupported layer type '{char}'. MUST be one of ['b', 'g', 'r', 'l', 'e', 'c']")
 
@@ -176,7 +187,7 @@ class ExtResNetBlock(nn.Module):
 
         # create non-linearity separately
         if 'l' in order:
-            self.non_linearity = nn.LeakyReLU(negative_slope=0.1, inplace=True)
+            self.non_linearity = nn.LeakyReLU(negative_slope=1e-2, inplace=True)
         elif 'e' in order:
             self.non_linearity = nn.ELU(inplace=True)
         else:
