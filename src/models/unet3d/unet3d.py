@@ -46,7 +46,7 @@ class Abstract3DUNet(nn.Module):
 
     def __init__(self, in_channels, out_channels, final_sigmoid, basic_module, f_maps=64, layer_order='gcr',
                  num_groups=8, num_levels=4,
-                 conv_kernel_size=3, pool_kernel_size=2, conv_padding=1, dropout=False, **kwargs):
+                 conv_kernel_size=3, pool_kernel_size=2, conv_padding=1, **kwargs):
 
         super(Abstract3DUNet, self).__init__()
 
@@ -54,8 +54,6 @@ class Abstract3DUNet(nn.Module):
         if isinstance(f_maps, int):
             f_maps = number_of_features_per_level(f_maps, num_levels=num_levels)
 
-        drops_encoder = [False, False, True, True] if dropout else [False]*num_levels
-        drops_decoder = reversed(drops_encoder)
 
         # create encoder path consisting of Encoder modules. Depth of the encoder is equal to `len(f_maps)`
         encoders = []
@@ -68,8 +66,7 @@ class Abstract3DUNet(nn.Module):
                                   conv_layer_order=layer_order,
                                   conv_kernel_size=conv_kernel_size,
                                   num_groups=num_groups,
-                                  padding=conv_padding,
-                                  apply_dropout=False)
+                                  padding=conv_padding)
             else:
                 encoder = Encoder(f_maps[i - 1], out_feature_num,
                                   basic_module=basic_module,
@@ -77,8 +74,7 @@ class Abstract3DUNet(nn.Module):
                                   conv_kernel_size=conv_kernel_size,
                                   num_groups=num_groups,
                                   pool_kernel_size=pool_kernel_size,
-                                  padding=conv_padding,
-                                  apply_dropout=drops_encoder[i-1])
+                                  padding=conv_padding)
 
             encoders.append(encoder)
 
@@ -100,8 +96,7 @@ class Abstract3DUNet(nn.Module):
                               conv_layer_order=layer_order,
                               conv_kernel_size=conv_kernel_size,
                               num_groups=num_groups,
-                              padding=conv_padding,
-                              apply_dropout=drops_decoder[i-1])
+                              padding=conv_padding)
 
             decoders.append(decoder)
 
@@ -180,12 +175,11 @@ class ResidualUNet3D(Abstract3DUNet):
     """
 
     def __init__(self, in_channels, out_channels, final_sigmoid=True, f_maps=64, layer_order='gcr',
-                 num_groups=8, num_levels=5, conv_padding=1, dropout=False, **kwargs):
+                 num_groups=8, num_levels=5, conv_padding=1, **kwargs):
         super(ResidualUNet3D, self).__init__(in_channels=in_channels, out_channels=out_channels,
                                              final_sigmoid=final_sigmoid,
                                              basic_module=ExtResNetBlock, f_maps=f_maps, layer_order=layer_order,
-                                             num_groups=num_groups, num_levels=num_levels, conv_padding=conv_padding,
-                                             dropout=dropout, **kwargs)
+                                             num_groups=num_groups, num_levels=num_levels, conv_padding=conv_padding, **kwargs)
 
     def test(self, device='cpu'):
         classes = 4
