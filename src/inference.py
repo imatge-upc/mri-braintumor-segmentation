@@ -12,7 +12,7 @@ from src.models.io_model import load_model
 from src.models.unet3d import unet3d
 from src.models.vnet import vnet
 from src.test import predict
-from src.uncertainty.uncertainty import get_variation_uncertainty, ttd_uncertainty_loop
+from src.uncertainty.uncertainty import get_variation_uncertainty, ttd_uncertainty_loop, get_entropy_uncertainty
 from src.post_processing import post_process
 from src.logging_conf import logger
 
@@ -85,11 +85,11 @@ if __name__ == "__main__":
     basic_config = config.get_basic_config()
     unc_config = config.get_uncertainty_config()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    compute_metrics = True
+
+    compute_metrics = False
     flag_post_process = False
 
     model, model_path = load_network(device, model_config, dataset_config, model_config["network"])
-
 
     data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
     data_test.extend(data)
@@ -113,18 +113,21 @@ if __name__ == "__main__":
 
         if ttd:
             prediction_labels_maps, prediction_score_vectors = ttd_uncertainty_loop(model, images, device, K)
-            wt_var, tc_var, et_var = get_variation_uncertainty(prediction_score_vectors, patch_size)
-
             # Get segmentation map by computing the mean of the prediction scores and selecting bigger one
             pred_scores = torch.stack(tuple(prediction_score_vectors)).cpu().numpy()
             pred_scores_mean = np.mean(pred_scores, axis=0)
             prediction_map = np.argmax(pred_scores_mean, axis=1).reshape(patch_size)
 
+            wt_var, tc_var, et_var = get_variation_uncertainty(prediction_score_vectors, patch_size)
+            global_unc = get_entropy_uncertainty(prediction_score_vectors, patch_size)
+
+
             wt_var = return_to_size(wt_var, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
             tc_var = return_to_size(tc_var, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
             et_var = return_to_size(et_var, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
+            global_unc = return_to_size(global_unc, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
 
-            results = {"whole": wt_var, "core": tc_var, "enhance": et_var}
+            results = {"whole": wt_var, "core": tc_var, "enhance": et_var, "entropy": global_unc}
 
         else:
             prediction_four_channels, vector_prediction_scores = predict.predict(model, images, device, monte_carlo=ttd)
@@ -132,13 +135,11 @@ if __name__ == "__main__":
                 best_scores_map = predict.get_scores_map_from_vector(vector_prediction_scores, patch_size)
             else:
                 best_scores_map = vector_prediction_scores
+
             prediction_map = predict.get_prediction_map(prediction_four_channels)
 
-
         prediction_map = brats_labels.convert_to_brats_labels(prediction_map)
-
         prediction_map = return_to_size(prediction_map, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
-
 
         if flag_post_process:
             segmentation_post = prediction_map.copy()
@@ -149,7 +150,6 @@ if __name__ == "__main__":
             results["prediction"] = segmentation_post
             task = f"{task}_post_processed"
             predict.save_predictions(data_test[idx], results, model_path, task)
-
 
         results["prediction"] = prediction_map
         predict.save_predictions(data_test[idx], results, model_path, task)

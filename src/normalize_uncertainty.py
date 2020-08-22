@@ -7,16 +7,16 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
 
-    model_path = "/Users/lauramora/Documents/MASTER/TFM/Code/BrainTumorSegmentation/results/checkpoints/model_1597063224/101_epch"
-    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/validation/no_patch"
-    input_dir = os.path.join(model_path, "val_uncertainty_task_normalized")
-    output_dir = os.path.join(model_path, "val_uncertainty_task_normalized")
+    model_path = "/Users/lauramora/Documents/MASTER/TFM/Code/BrainTumorSegmentation/results/checkpoints/model_1597063224/"
+    ground_truth_path = "/Users/lauramora/Documents/MASTER/TFM/Data/2020/train/random_tumor_distribution"
+    input_dir = os.path.join(model_path, "uncertainty_task/entropy")
+    output_dir = os.path.join(model_path, "uncertainty_task/entropy")
 
    #  if not os.path.exists(output_dir):
     #    os.makedirs(output_dir)
 
-    file_list = sorted([file for file in os.listdir(input_dir) if "unc" in file])
-    file_list_all = sorted([file for file in os.listdir(input_dir)])
+    file_list = sorted([file for file in os.listdir(input_dir) if "unc" in file and "nii.gz"])
+    file_list_all = sorted([file for file in os.listdir(input_dir) if "nii.gz" in file])
 
     max_uncertainty = 0
     min_uncertainty = 10000

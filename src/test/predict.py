@@ -40,15 +40,20 @@ def get_scores_map_from_vector(vector_prediction_scores: np.ndarray, path_size: 
 
 
 def save_predictions(patient: Patient, results: dict, model_path: str, task: str):
-    # assert task in ["segmentation_task", "uncertainty_task"], 'task must be on of ["segmentation_task", "uncertainty_task"] '
 
     output_dir = os.path.join(model_path, task)
+    output_dir_entropy = os.path.join(output_dir, "entropy")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+    if not os.path.exists(output_dir_entropy):
+        os.makedirs(output_dir_entropy)
 
     for name, volume in results.items():
         file_name = f"{patient.patch_name}.nii.gz" if name == "prediction" else f"{patient.patch_name}_unc_{name}.nii.gz"
-        output_path = os.path.join(output_dir, file_name)
+
+        directory = output_dir_entropy if "entropy" in file_name else output_dir
+        output_path = os.path.join(directory, file_name)
+
 
         affine_func = patient.get_affine()
         logger.info(f"Saving to: {output_path}")
