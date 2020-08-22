@@ -16,7 +16,7 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from src.config import BratsConfiguration
-from src.dataset.augmentations import brats_augmentations
+from src.dataset.augmentations import color_augmentations, spatial_augmentations
 
 from src.dataset.utils import dataset, visualization as visualization
 from src.models.vnet import vnet
@@ -53,17 +53,15 @@ data_train, data_val = train_val_split(data, val_size=0.3)
 data_train = data_train * n_patches
 data_val = data_val * n_patches
 
-
-
-n_modalities = dataset_config.getint("n_modalities") # like color channels
+n_modalities = dataset_config.getint("n_modalities")  # like color channels
 
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
 
-transform = transforms.Compose([brats_augmentations.RandomIntensityShift(),
-                                brats_augmentations.RandomIntensityScale(),
-                                brats_augmentations.RandomMirrorFlip(p=0.5),
-                                brats_augmentations.RandomRotation90(p=0.5)])
+transform = transforms.Compose([color_augmentations.RandomIntensityShift(),
+                                color_augmentations.RandomIntensityScale(),
+                                spatial_augmentations.RandomMirrorFlip(p=0.5),
+                                spatial_augmentations.RandomRotation90(p=0.5)])
 
 
 compute_patch = basic_config.getboolean("compute_patches")

@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from src.dataset.augmentations.brats_augmentations import zero_mean_unit_variance_normalization
+from src.dataset.augmentations.data_normalization import zero_mean_unit_variance_normalization
 
 
 @pytest.fixture(scope="function")

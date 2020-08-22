@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from src.dataset.augmentations.brats_augmentations import zero_mean_unit_variance_normalization
+from src.dataset.augmentations.data_normalization import zero_mean_unit_variance_normalization
 
 
 def save_patch(patch: np.ndarray, path: str):
