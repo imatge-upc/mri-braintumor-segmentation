@@ -1,7 +1,6 @@
 from typing import Tuple
 import numpy as np
-import random
-import torch
+
 
 
 def zero_mean_unit_variance_normalization(data: np.ndarray, epsilon: float = 1e-8) -> np.ndarray:
@@ -15,9 +14,6 @@ def zero_mean_unit_variance_normalization(data: np.ndarray, epsilon: float = 1e-
     out = (data - mean) / std
     out[data == 0] = 0
     return out
-
-
-
 
 
 

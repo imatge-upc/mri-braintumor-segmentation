@@ -43,9 +43,6 @@ class Patient:
         brain_mask[data > 0] = 1
         return brain_mask
 
-
-
-
     def load_gt_mask(self) -> np.ndarray:
         patient_path = os.path.join(self.data_path, self.patch_name)
         volume = load_nifi_volume(os.path.join(patient_path, self.seg), normalize=False)

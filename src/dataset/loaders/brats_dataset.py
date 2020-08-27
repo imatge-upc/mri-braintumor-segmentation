@@ -9,11 +9,8 @@ from src.dataset.utils import nifi_volume as nifi_utils
 
 class BratsDataset(Dataset):
 
-    flair_idx, t1_idx, t2_idx, t1ce_idx = 0, 1, 2, 3
-
     def __init__(self, data: list, sampling_method, patch_size: tuple, compute_patch: bool=False, transform=None):
         """
-
         :param data:
         :param ground_truth:
         :param modalities_to_use:
@@ -53,14 +50,6 @@ class BratsDataset(Dataset):
 
         return modalities, segmentation_mask
 
-
-    def _load_volume_modality(self, modality_path: str):
-        volume = nifi_utils.load_nifi_volume(modality_path, True)
-        return  volume
-
-    def _load_volume_gt(self, seg_mask: str) -> np.ndarray:
-        segmentation = nifi_utils.load_nifi_volume(seg_mask, normalize=False)
-        return segmentation
 
     def get_patient_info(self, idx):
         return {attr[0]: attr[1] for attr in vars(self.data[idx]).items()}

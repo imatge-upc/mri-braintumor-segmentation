@@ -19,7 +19,7 @@ from src.config import BratsConfiguration
 from src.dataset.augmentations import color_augmentations, spatial_augmentations
 
 from src.dataset.utils import dataset, visualization as visualization
-from src.models.vnet import vnet
+from src.models.vnet import vnet, asymm_vnet
 from src.logging_conf import logger
 
 from src.dataset.loaders.brats_dataset import BratsDataset
@@ -49,12 +49,11 @@ logger.info(f"Device: {device}")
 logger.info("Creating Dataset...")
 
 data, _ = dataset.read_brats(dataset_config.get("train_csv"), lgg_only=dataset_config.getboolean("lgg_only"))
-data_train, data_val = train_val_split(data, val_size=0.3)
+data_train, data_val = train_val_split(data, val_size=0.2)
 data_train = data_train * n_patches
 data_val = data_val * n_patches
 
 n_modalities = dataset_config.getint("n_modalities")  # like color channels
-
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
 
 
@@ -68,7 +67,7 @@ compute_patch = basic_config.getboolean("compute_patches")
 train_dataset = BratsDataset(data_train, sampling_method, patch_size, compute_patch=compute_patch, transform=transform)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-val_dataset = BratsDataset(data_val, sampling_method, patch_size, compute_patch=compute_patch, transform=None)
+val_dataset = BratsDataset(data_val, sampling_method, patch_size, compute_patch=compute_patch, transform=transform)
 val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 if basic_config.getboolean("plot"):
@@ -95,6 +94,14 @@ if model_config["network"] == "vnet":
 
     n_params = sum([p.data.nelement() for p in network.parameters()])
     logger.info("Number of params: {}".format(n_params))
+
+
+elif model_config["network"] == "vnet_asymm":
+    network = asymm_vnet.VNet(non_linearity=model_config.get("non_linearity"), in_channels=n_modalities, classes=n_classes,
+                              init_features_maps=model_config.getint("init_features_maps"), kernel_size=model_config.get("kernel_size"))
+    n_params = sum([p.data.nelement() for p in network.parameters()])
+    logger.info("Number of params: {}".format(n_params))
+
 
 elif model_config["network"] == "3dunet_residual":
 
@@ -145,9 +152,9 @@ if basic_config.getboolean("train_flag"):
     else:
         start_epoch = 0
 
-
     writer = SummaryWriter(tensorboard_logdir)
-    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"), patience=model_config.getint("patience"))
+    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"),
+                                               patience=model_config.getint("patience"))
 
     if loss == "dice":
         criterion = dice_loss.DiceLoss(classes=n_classes, eval_regions=model_config.getboolean("eval_regions"),

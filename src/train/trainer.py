@@ -1,6 +1,5 @@
 import torch
 from PIL import Image
-from src.losses import utils
 from torchvision import transforms as T
 from tqdm import tqdm
 
@@ -83,6 +82,9 @@ class Trainer:
                 targets = labels_batch.float().to(trainer.args.device)
                 inputs.require_grad = True
 
+                if i == 0:
+                    self.writer.add_graph(self.model, inputs)
+
                 predictions, _ = trainer.model(inputs)
 
 
@@ -159,6 +161,7 @@ class Trainer:
             step(self)
 
 
+
             i += 1
 
         if self.args.loss == "combined":
@@ -167,7 +170,7 @@ class Trainer:
             return dice_loss_global.avg(), dice_score.avg(), 0, 0
 
     def _add_image(self, batch, seg=False, title=""):
-        plot_buf = plot_batch(batch, seg=seg, slice=32, batch_size=len(batch))
+        plot_buf = plot_batch(batch, seg=seg, slice=64, batch_size=len(batch))
         im = Image.open(plot_buf)
         image = T.ToTensor()(im)
         self.writer.add_image(title, image)

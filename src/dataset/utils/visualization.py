@@ -25,7 +25,7 @@ def plot_batch(batch, seg: bool = False, slice: int = 32, batch_size: int=4):
     for i, volume in enumerate(batch):
         plt.subplot(1, batch_size + 1, i + 1)
 
-        img = volume[:, slice, :].T if seg else volume[0, :, 32, :].T
+        img = volume[:, slice, :].T if seg else volume[0, :, slice, :].T
 
         npimg = img.cpu().detach().numpy()
         img = npimg if seg else unnorm(npimg)

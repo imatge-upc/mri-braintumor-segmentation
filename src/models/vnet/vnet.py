@@ -10,10 +10,14 @@ def passthrough(x, **kwargs):
 
 
 def ELUCons(elu, nchan):
-    if elu:
+    if elu == "elu":
         return nn.ELU(inplace=True)
-    else:
+    elif elu == "prelu":
         return nn.PReLU(nchan)
+    elif elu == "leaky":
+        return nn.LeakyReLU(negative_slope=1e-2, inplace=True)
+    else:
+        return nn.ELU(inplace=True)
 
 def normalization(num_channels, typee):
     if typee == "instance":
@@ -153,13 +157,14 @@ class VNet(nn.Module):
 
         self.in_tr = InputTransition(in_channels, init_features_maps, elu=elu)
         self.down_tr32 = DownTransition(init_features_maps, 1, elu)
-        self.down_tr64 = DownTransition(init_features_maps*2, 2, elu)
+        self.down_tr64 = DownTransition(init_features_maps*2, 2, elu, dropout=True)
         self.down_tr128 = DownTransition(init_features_maps*4, 3, elu, dropout=True)
-        self.down_tr256 = DownTransition(init_features_maps*8, 2, elu, dropout=True)
+        self.down_tr256 = DownTransition(init_features_maps*8, nConvs=2, elu=elu, dropout=True)
+
         self.up_tr256 = UpTransition(init_features_maps*16, init_features_maps*16, 2, elu, dropout=True)
         self.up_tr128 = UpTransition(init_features_maps*16, init_features_maps*8, 2, elu, dropout=True)
         # self.up_tr128 = UpTransition(128, 128, 2, elu, dropout=True)
-        self.up_tr64 = UpTransition(init_features_maps*8, init_features_maps*4, 1, elu)
+        self.up_tr64 = UpTransition(init_features_maps*8, init_features_maps*4, 1, elu, dropout=True)
         self.up_tr32 = UpTransition(init_features_maps*4, init_features_maps*2, 1, elu)
         self.out_tr = OutputTransition(init_features_maps*2, classes, elu)
 
@@ -180,7 +185,7 @@ class VNet(nn.Module):
     def test(self, device='cpu'):
         input_tensor = torch.rand(1, self.in_channels, 32, 32, 32)
         ideal_out = torch.rand(1, self.classes, 32, 32, 32)
-        out_pred = self.forward(input_tensor)
+        out_pred, _ = self.forward(input_tensor)
         assert ideal_out.shape == out_pred.shape
         summary(self.to(torch.device(device)), (self.in_channels, 32, 32, 32), device=device)
         print("Vnet test is complete")

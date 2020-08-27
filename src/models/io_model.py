@@ -7,10 +7,12 @@ def create_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
+
 def save_model(state, output_path):
     save_path = os.path.join(output_path, f"final_epoch_{state['epoch']}_val_loss_{state['val_loss']}_dice_{state['val_dice_score']}.pth")
     logger.info(f"Saving last to{save_path}")
     torch.save(state, save_path)
+
 
 def save_checkpoint(state, is_best, output_path):
     """Save checkpoint if a new best is achieved"""
@@ -20,6 +22,7 @@ def save_checkpoint(state, is_best, output_path):
         torch.save(state, save_path)
     else:
         logger.info("Validation loss did not improve")
+
 
 def load_model(model, path: str, device, optimizer=None, resume: bool=False):
     if resume:

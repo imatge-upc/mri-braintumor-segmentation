@@ -12,20 +12,18 @@ class RandomMirrorFlip(object):
     def __call__(self, img_and_mask: Tuple[np.ndarray, np.ndarray,  np.ndarray])  -> Tuple[np.ndarray, np.ndarray,  np.ndarray]:
         """
         Args:
-           img_and_mask[0]: data with  all channels [C, W, H, D]
+            img_and_mask[0]: data with  all channels [C, W, H, D]
             img_and_mask[1]: segmentation mask [ W, H, D]
             img_and_mask[2]:binary mas [ W, H, D]
-
         Returns:
             numpy array or Tensor: Randomly flipped image.
         """
         modalities, seg_mask, mask = img_and_mask
-        assert len(modalities.shape) == 4
-        assert len(seg_mask.shape) == 3
 
         if torch.rand(1) < self.p:
             modalities = np.flip(modalities, axis=[1, 2, 3])
-            seg_mask = np.flip(seg_mask, axis=[0, 1, 2])
+            if seg_mask is not None:
+                seg_mask = np.flip(seg_mask, axis=[0, 1, 2])
 
         return modalities, seg_mask, mask
 
@@ -51,7 +49,8 @@ class RandomRotation90(object):
 
         axes_data = [i + 1 for i in axes]
         sample_data = np.rot90(sample_data, num_rot, axes_data)
-        sample_seg = np.rot90(sample_seg, num_rot, axes)
+        if sample_seg is not None:
+            sample_seg = np.rot90(sample_seg, num_rot, axes)
         return sample_data, sample_seg
 
     def __call__(self, img_and_mask: Tuple[np.ndarray, np.ndarray,  np.ndarray])  -> Tuple[np.ndarray, np.ndarray,  np.ndarray]:
@@ -65,8 +64,5 @@ class RandomRotation90(object):
             numpy array or Tensor: Randomly flipped image.
         """
         modalities, seg_mask, mask = img_and_mask
-        assert len(modalities.shape) == 4
-        assert len(seg_mask.shape) == 3
-
         modalities, seg_mask = self._augment_rot90(modalities, seg_mask)
         return modalities, seg_mask, mask
