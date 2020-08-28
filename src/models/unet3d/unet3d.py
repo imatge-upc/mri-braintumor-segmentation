@@ -61,7 +61,7 @@ class Abstract3DUNet(nn.Module):
 
             if i == 0:
                 encoder = Encoder(in_channels, out_feature_num,
-                                  apply_pooling=False,  # skip pooling in the firs encoder
+                                  apply_pooling=False,  # skip pooling in the first encoder
                                   basic_module=basic_module,
                                   conv_layer_order=layer_order,
                                   conv_kernel_size=conv_kernel_size,
@@ -156,13 +156,18 @@ class UNet3D(Abstract3DUNet):
                                      conv_padding=conv_padding, **kwargs)
 
 
-    def test(self, device='cpu'):
-        input_tensor = torch.rand(1, self.in_channels, 32, 32, 32)
-        ideal_out = torch.rand(1, self.classes, 32, 32, 32)
-        out_pred = self.forward(input_tensor)
+    def test(self):
+        classes = 4
+        in_channels = 4
+        input_tensor = torch.rand(1, in_channels, 32, 32, 32)
+        ideal_out = torch.rand(1, classes, 32, 32, 32)
+
+        out_pred, out_scores = self.forward(input_tensor)
         assert ideal_out.shape == out_pred.shape
-        summary(self.to(torch.device(device)), (self.in_channels, 32, 32, 32), device=device)
+
         print("UNet3D test is complete")
+
+
 
 
 
@@ -181,13 +186,13 @@ class ResidualUNet3D(Abstract3DUNet):
                                              basic_module=ExtResNetBlock, f_maps=f_maps, layer_order=layer_order,
                                              num_groups=num_groups, num_levels=num_levels, conv_padding=conv_padding, **kwargs)
 
-    def test(self, device='cpu'):
+    def test(self):
         classes = 4
         in_channels = 4
         input_tensor = torch.rand(1, in_channels, 32, 32, 32)
         ideal_out = torch.rand(1, classes, 32, 32, 32)
 
-        out_pred = self.forward(input_tensor)
+        out_pred, out_scores = self.forward(input_tensor)
         assert ideal_out.shape == out_pred.shape
         print("ResidualUNet3D test is complete")
 
@@ -196,3 +201,7 @@ class ResidualUNet3D(Abstract3DUNet):
 if __name__ == "__main__":
     net = ResidualUNet3D(in_channels=4, out_channels=4, f_maps=16)
     net.test()
+
+    unet = UNet3D(in_channels=4, out_channels=4, f_maps=16, final_sigmoid=True, layer_order='crg',
+                 num_groups=8, num_levels=4, conv_padding=1)
+    unet.test()

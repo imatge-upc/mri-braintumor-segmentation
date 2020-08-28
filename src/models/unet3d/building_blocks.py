@@ -137,6 +137,7 @@ class DoubleConv(nn.Sequential):
 
     def __init__(self, in_channels, out_channels, encoder, kernel_size=3, order='gcr', num_groups=8, padding=1):
         super(DoubleConv, self).__init__()
+
         if encoder:
             # we're in the encoder path
             conv1_in_channels = in_channels
@@ -232,12 +233,12 @@ class Encoder(nn.Module):
 
     def __init__(self, in_channels, out_channels, conv_kernel_size=3, apply_pooling=True,
                  pool_kernel_size=2, pool_type='max', basic_module=DoubleConv, conv_layer_order='gcr',
-                 num_groups=8, padding=1, apply_dropout=False):
+                 num_groups=8, padding=1):
+
         super(Encoder, self).__init__()
         assert pool_type in ['max', 'avg']
 
         if apply_pooling:
-
             if pool_type == 'max':
                 self.pooling = nn.MaxPool3d(kernel_size=pool_kernel_size)
             else:
@@ -245,8 +246,7 @@ class Encoder(nn.Module):
         else:
             self.pooling = None
 
-        self.dropout = nn.Dropout3d() if apply_dropout else None
-
+        self.dropout = nn.Dropout3d()
         self.basic_module = basic_module(in_channels, out_channels,
                                          encoder=True,
                                          kernel_size=conv_kernel_size,
@@ -258,10 +258,9 @@ class Encoder(nn.Module):
 
         if self.pooling is not None:
             x = self.pooling(x)
+            x = self.dropout(x)
 
         x = self.basic_module(x)
-        if self.dropout is not None:
-            x = self.dropout(x)
 
         return x
 
@@ -286,23 +285,26 @@ class Decoder(nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, conv_kernel_size=3, scale_factor=(2, 2, 2), basic_module=DoubleConv,
-                 conv_layer_order='gcr', num_groups=8, mode='nearest', padding=1, apply_dropout=False):
+                 conv_layer_order='gcr', num_groups=8, mode='nearest', padding=1):
         super(Decoder, self).__init__()
+
         if basic_module == DoubleConv:
             # if DoubleConv is the basic_module use interpolation for upsampling and concatenation joining
             self.upsampling = Upsampling(transposed_conv=False, in_channels=in_channels, out_channels=out_channels,
                                          kernel_size=conv_kernel_size, scale_factor=scale_factor, mode=mode)
-            # concat joining
-            self.joining = partial(self._joining, concat=True)
+
+            self.joining = partial(self._joining, concat=True)  #  concat joining
         else:
             # if basic_module=ExtResNetBlock use transposed convolution upsampling and summation joining
             self.upsampling = Upsampling(transposed_conv=True, in_channels=in_channels, out_channels=out_channels,
                                          kernel_size=conv_kernel_size, scale_factor=scale_factor, mode=mode)
-            # sum joining
-            self.joining = partial(self._joining, concat=False)
-            # adapt the number of in_channels for the ExtResNetBlock
-            in_channels = out_channels
 
+            self.joining = partial(self._joining, concat=False)  # sum joining
+
+
+            in_channels = out_channels  # adapt the number of in_channels for the ExtResNetBlock
+
+        self.dropout = nn.Dropout3d()
         self.basic_module = basic_module(in_channels, out_channels,
                                          encoder=False,
                                          kernel_size=conv_kernel_size,
@@ -310,14 +312,12 @@ class Decoder(nn.Module):
                                          num_groups=num_groups,
                                          padding=padding)
 
-        self.dropout = nn.Dropout3d() if apply_dropout else None
 
     def forward(self, encoder_features, x):
         x = self.upsampling(encoder_features=encoder_features, x=x)
         x = self.joining(encoder_features, x)
+        x = self.dropout(x)
         x = self.basic_module(x)
-        if self.dropout is not None:
-            x = self.dropout(x)
 
         return x
 

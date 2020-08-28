@@ -83,7 +83,7 @@ class Trainer:
                 inputs.require_grad = True
 
                 if i == 0:
-                    self.writer.add_graph(self.model, inputs)
+                    self.writer.add_graph(trainer.model, inputs)
 
                 predictions, _ = trainer.model(inputs)
 
@@ -170,7 +170,7 @@ class Trainer:
             return dice_loss_global.avg(), dice_score.avg(), 0, 0
 
     def _add_image(self, batch, seg=False, title=""):
-        plot_buf = plot_batch(batch, seg=seg, slice=64, batch_size=len(batch))
+        plot_buf = plot_batch(batch, seg=seg, slice=16, batch_size=len(batch))
         im = Image.open(plot_buf)
         image = T.ToTensor()(im)
         self.writer.add_image(title, image)

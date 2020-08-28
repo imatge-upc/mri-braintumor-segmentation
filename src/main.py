@@ -24,6 +24,10 @@ from src.logging_conf import logger
 
 from src.dataset.loaders.brats_dataset import BratsDataset
 
+def num_params(net_params):
+    n_params = sum([p.data.nelement() for p in net_params])
+    logger.info(f"Number of params: {n_params}")
+
 
 ######## PARAMS
 logger.info("Processing Parameters...")
@@ -49,9 +53,11 @@ logger.info(f"Device: {device}")
 logger.info("Creating Dataset...")
 
 data, _ = dataset.read_brats(dataset_config.get("train_csv"), lgg_only=dataset_config.getboolean("lgg_only"))
-data_train, data_val = train_val_split(data, val_size=0.2)
-data_train = data_train * n_patches
-data_val = data_val * n_patches
+data_train = data[:1]
+data_val = data[:1]
+# data_train, data_val = train_val_split(data, val_size=0.2)
+# data_train = data_train * n_patches
+# data_val = data_val * n_patches
 
 n_modalities = dataset_config.getint("n_modalities")  # like color channels
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))
@@ -85,98 +91,84 @@ if basic_config.getboolean("plot"):
 ######## MODEL
 logger.info("Initiating Model...")
 
-if model_config["network"] == "vnet":
+config_network = model_config["network"]
+if  config_network== "vnet":
 
     network = vnet.VNet(elu=model_config.getboolean("use_elu"),
                         in_channels=n_modalities,
                         classes=n_classes,
                         init_features_maps=model_config.getint("init_features_maps"))
 
-    n_params = sum([p.data.nelement() for p in network.parameters()])
-    logger.info("Number of params: {}".format(n_params))
-
-
-elif model_config["network"] == "vnet_asymm":
+elif config_network == "vnet_asymm":
     network = asymm_vnet.VNet(non_linearity=model_config.get("non_linearity"), in_channels=n_modalities, classes=n_classes,
-                              init_features_maps=model_config.getint("init_features_maps"), kernel_size=model_config.get("kernel_size"))
-    n_params = sum([p.data.nelement() for p in network.parameters()])
-    logger.info("Number of params: {}".format(n_params))
+                              init_features_maps=model_config.getint("init_features_maps"), kernel_size=model_config.getint("kernel_size"),
+                              padding=model_config.getint("padding"))
 
-
-elif model_config["network"] == "3dunet_residual":
+elif config_network == "3dunet_residual":
 
     network = unet3d.ResidualUNet3D(in_channels=n_modalities, out_channels=n_classes, final_sigmoid=False,
                                     f_maps=model_config.getint("init_features_maps"), layer_order="crg",
                                     num_levels=4, num_groups=4,conv_padding=1)
 
-    n_params = sum([p.data.nelement() for p in network.parameters()])
-    logger.info("Number of params: {}".format(n_params))
-
-
-elif model_config["network"] == "3dunet":
+elif config_network == "3dunet":
 
     network = unet3d.UNet3D(in_channels=n_modalities, out_channels=n_classes, final_sigmoid=False,
                                     f_maps=model_config.getint("init_features_maps"), layer_order="crg",
                                     num_levels=4, num_groups=4,conv_padding=1)
-
-    n_params = sum([p.data.nelement() for p in network.parameters()])
-    logger.info("Number of params: {}".format(n_params))
-
-
 else:
     raise ValueError("Bad parameter for network {}".format(model_config.get("network")))
 
+num_params(network.parameters())
 
 
-if basic_config.getboolean("train_flag"):
-    ##### TRAIN
-    logger.info("Start Training")
-    network.to(device)
+##### TRAIN
+logger.info("Start Training")
+network.to(device)
 
-    optim = model_config.get("optimizer")
+optim = model_config.get("optimizer")
 
-    if optim == "SGD":
-        optimizer = torch.optim.SGD(network.parameters(), lr=model_config.getfloat("learning_rate"),
-                                    momentum=model_config.getfloat("momentum"), weight_decay=model_config.getfloat("weight_decay"))
-    elif optim == "ADAM":
-        optimizer = torch.optim.Adam(network.parameters(), lr=model_config.getfloat("learning_rate"),
-                         weight_decay=model_config.getfloat("weight_decay"), amsgrad=False)
-    else:
-        raise ValueError("Bad optimizer. Current options: [SGD, ADAM]")
+if optim == "SGD":
+    optimizer = torch.optim.SGD(network.parameters(), lr=model_config.getfloat("learning_rate"),
+                                momentum=model_config.getfloat("momentum"), weight_decay=model_config.getfloat("weight_decay"))
+elif optim == "ADAM":
+    optimizer = torch.optim.Adam(network.parameters(), lr=model_config.getfloat("learning_rate"), weight_decay=model_config.getfloat("weight_decay"), amsgrad=False)
 
-    best_loss = 1000
-    if basic_config.getboolean("resume"):
-        logger.info("Loading model from checkpoint..")
-        model, optimizer, start_epoch, best_loss = load_model(network, checkpoint_path, device, optimizer, True)
-        logger.info(f"Loaded model with starting epoch {start_epoch}")
-    else:
-        start_epoch = 0
+else:
+    raise ValueError("Bad optimizer. Current options: [SGD, ADAM]")
 
-    writer = SummaryWriter(tensorboard_logdir)
-    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"),
-                                               patience=model_config.getint("patience"))
+best_loss = 1000
+if basic_config.getboolean("resume"):
+    logger.info("Loading model from checkpoint..")
+    model, optimizer, start_epoch, best_loss = load_model(network, checkpoint_path, device, optimizer, True)
+    logger.info(f"Loaded model with starting epoch {start_epoch}")
+else:
+    start_epoch = 0
 
-    if loss == "dice":
-        criterion = dice_loss.DiceLoss(classes=n_classes, eval_regions=model_config.getboolean("eval_regions"),
-                                       sigmoid_normalization=True)
+writer = SummaryWriter(tensorboard_logdir)
+scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=model_config.getfloat("lr_decay"),
+                                           patience=model_config.getint("patience"))
 
-    elif loss == "combined":
-        # 0. back, 1: ncr, 2: ed, 3: et
-        ce_weigh = torch.tensor([0.1, 0.35, 0.2 , 0.35])
-        criterion = CrossEntropyDiceLoss3D(weight=ce_weigh, classes=n_classes,
-                                           eval_regions=model_config.getboolean("eval_regions"), sigmoid_normalization=True)
-    elif loss == "both_dice":
-        criterion = region_based_loss.RegionBasedDiceLoss3D(classes=n_classes, sigmoid_normalization=True)
+if loss == "dice":
+    criterion = dice_loss.DiceLoss(classes=n_classes, eval_regions=model_config.getboolean("eval_regions"),
+                                   sigmoid_normalization=True)
 
-    elif loss == "gdl":
-        criterion = new_losses.GeneralizedDiceLoss()
+elif loss == "combined":
+    # 0. back, 1: ncr, 2: ed, 3: et
+    ce_weigh = torch.tensor([0.1, 0.35, 0.2 , 0.35])
+    criterion = CrossEntropyDiceLoss3D(weight=ce_weigh, classes=n_classes,
+                                       eval_regions=model_config.getboolean("eval_regions"), sigmoid_normalization=True)
+elif loss == "both_dice":
+    criterion = region_based_loss.RegionBasedDiceLoss3D(classes=n_classes, sigmoid_normalization=True)
 
-    else:
-        raise ValueError(f"Bad loss value {loss}. Expected ['dice', combined]")
+elif loss == "gdl":
+    criterion = new_losses.GeneralizedDiceLoss()
 
-    args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"), loss)
-    trainer = Trainer(args, network, optimizer, criterion, start_epoch, train_loader, val_loader, scheduler, writer)
-    trainer.start(best_loss=best_loss)
+else:
+    raise ValueError(f"Bad loss value {loss}. Expected ['dice', combined]")
+
+args = TrainerArgs(model_config.getint("n_epochs"), device, model_config.get("model_path"), loss)
+trainer = Trainer(args, network, optimizer, criterion, start_epoch, train_loader, val_loader, scheduler, writer)
+trainer.start(best_loss=best_loss)
 
 
-    print("Finished!")
+print("Finished!")
