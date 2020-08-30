@@ -39,7 +39,7 @@ class BratsDataset(Dataset):
         segmentation_mask = brats_labels.convert_from_brats_labels(segmentation_mask)
 
         if self.transform:
-            modalities, segmentation_mask, _ = self.transform((modalities, segmentation_mask, brain_mask))
+            modalities, segmentation_mask, brain_mask = self.transform((modalities, segmentation_mask, brain_mask))
 
         if self.compute_patch:
             modalities, segmentation_mask = self.sampling_method.patching(modalities, segmentation_mask,

@@ -53,11 +53,9 @@ logger.info(f"Device: {device}")
 logger.info("Creating Dataset...")
 
 data, _ = dataset.read_brats(dataset_config.get("train_csv"), lgg_only=dataset_config.getboolean("lgg_only"))
-data_train = data[:1]
-data_val = data[:1]
-# data_train, data_val = train_val_split(data, val_size=0.2)
-# data_train = data_train * n_patches
-# data_val = data_val * n_patches
+data_train, data_val = train_val_split(data, val_size=0.2)
+data_train = data_train * n_patches
+data_val = data_val * n_patches
 
 n_modalities = dataset_config.getint("n_modalities")  # like color channels
 sampling_method = importlib.import_module(dataset_config.get("sampling_method"))

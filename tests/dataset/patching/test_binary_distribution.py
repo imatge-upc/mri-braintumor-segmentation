@@ -4,7 +4,7 @@ from src.dataset.utils.visualization import plot_3_view
 
 
 def test_assert_patch_shape():
-    volume, volume_patch, seg_patch = patching_strategy(patching, (80, 80, 80))
+    volume, volume_patch, seg_patch = patching_strategy(patching, (96, 96, 96))
     assert volume_patch.shape == (4, 80, 80, 80)
     assert seg_patch.shape == (80, 80, 80)
 

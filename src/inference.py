@@ -127,6 +127,7 @@ if __name__ == "__main__":
 
             prediction_labels_maps, prediction_score_vectors = uncertainty_loop(uncertainty_type, model, images, device,
                                                                                 K, brain_mask)
+
             # Get segmentation map by computing the mean of the prediction scores and selecting bigger one
             pred_scores = torch.stack(tuple(prediction_score_vectors)).cpu().numpy()
             pred_scores_mean = np.mean(pred_scores, axis=0)
@@ -140,6 +141,7 @@ if __name__ == "__main__":
             et_var = return_to_size(et_var, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
             global_unc = return_to_size(global_unc, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
 
+            task = f"uncertainty_task_{uncertainty_type}"
             results = {"whole": wt_var, "core": tc_var, "enhance": et_var, "entropy": global_unc}
 
         else:
@@ -159,12 +161,13 @@ if __name__ == "__main__":
         if flag_post_process:
             segmentation_post = prediction_map.copy()
             pred_mask_wt = brats_labels.get_wt(segmentation_post)
-            mask_removed_regions_wt = post_process.keep_conn_component_bigger_than_th(pred_mask_wt, th=4)
+            mask_removed_regions_wt = post_process.keep_conn_component_bigger_than_th(pred_mask_wt, th=1)
             elements_to_remove = pred_mask_wt - mask_removed_regions_wt
             segmentation_post[elements_to_remove == 1] = 0
-            results["prediction"] = segmentation_post
+
+            post_result = {"prediction" : segmentation_post}
             task = f"{task}_post_processed"
-            predict.save_predictions(data[idx], results, model_path, task)
+            predict.save_predictions(data[idx], post_result, model_path, task)
 
         results["prediction"] = prediction_map
         predict.save_predictions(data[idx], results, model_path, task)
@@ -178,4 +181,3 @@ if __name__ == "__main__":
                 volume = nifi_volume.load_nifi_volume(data_path)
                 metrics = compute_wt_tc_et(prediction_map, volume_gt, volume)
                 logger.info(f"{data[idx].patient} | {metrics}")
-        break

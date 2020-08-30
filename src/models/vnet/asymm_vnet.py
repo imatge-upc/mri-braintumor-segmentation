@@ -109,9 +109,9 @@ class UpTransition(nn.Module):
 
     def __init__(self, inChans, outChans, nConvs, non_linearity, kernel_size, padding, dropout=False):
         super(UpTransition, self).__init__()
+
         self.up_conv = nn.ConvTranspose3d(inChans, outChans // 2, kernel_size=2, stride=2)
         self.bn1 = torch.nn.InstanceNorm3d(outChans // 2)
-
         self.dropout_skip_connection = nn.Dropout3d()
         self.non_linearity_up_block = define_non_linearity(non_linearity, outChans // 2)
         self.non_linearity_cat_residual = define_non_linearity(non_linearity, outChans)
@@ -119,8 +119,7 @@ class UpTransition(nn.Module):
         self.do1 = nn.Dropout3d() if dropout else passthrough
 
         self.convolution_blocks = _make_nConv(outChans, nConvs, non_linearity, kernel_size, padding)
-
-        self.conv2 = nn.Conv3d(inChans, outChans, kernel_size=1)
+        self.conv_to_resize = nn.Conv3d(outChans+4, outChans, kernel_size=1)
 
     def forward(self, x, skipx, input_mod=None):
         out = self.do1(x)
@@ -130,9 +129,8 @@ class UpTransition(nn.Module):
         xcat = torch.cat((out, skipxdo), 1)
 
         if input_mod is not None:
-            xcat = torch.cat((xcat, input_mod), 1)
-            conv2 = nn.Conv3d(xcat.shape[1], 32, kernel_size=1)
-            xcat = conv2(xcat)
+            xcat_tmp = torch.cat((xcat, input_mod), 1)
+            xcat = self.conv_to_resize(xcat_tmp)
 
         out = self.convolution_blocks(xcat)
         out = self.non_linearity_cat_residual(torch.add(out, xcat))

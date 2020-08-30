@@ -3,6 +3,7 @@ import numpy as np
 import torch
 
 
+
 class RandomMirrorFlip(object):
 
     def __init__(self, p=0.5):
@@ -24,8 +25,11 @@ class RandomMirrorFlip(object):
             modalities = np.flip(modalities, axis=[1, 2, 3])
             if seg_mask is not None:
                 seg_mask = np.flip(seg_mask, axis=[0, 1, 2])
+            if mask is not None:
+                mask = np.flip(mask, axis=[0, 1, 2])
 
         return modalities, seg_mask, mask
+
 
 
 class RandomRotation90(object):
@@ -35,7 +39,7 @@ class RandomRotation90(object):
         self.p = p
 
     @staticmethod
-    def _augment_rot90(sample_data, sample_seg, num_rot=(1, 2, 3), axes=(0, 1, 2)):
+    def _augment_rot90(sample_data, sample_seg, brain_mask=None, num_rot=(1, 2, 3), axes=(0, 1, 2)):
         """
         :param sample_data:
         :param sample_seg:
@@ -49,9 +53,14 @@ class RandomRotation90(object):
 
         axes_data = [i + 1 for i in axes]
         sample_data = np.rot90(sample_data, num_rot, axes_data)
+
         if sample_seg is not None:
             sample_seg = np.rot90(sample_seg, num_rot, axes)
-        return sample_data, sample_seg
+
+        if brain_mask is not None:
+            brain_mask = np.rot90(brain_mask, num_rot, axes)
+
+        return sample_data, sample_seg, brain_mask
 
     def __call__(self, img_and_mask: Tuple[np.ndarray, np.ndarray,  np.ndarray])  -> Tuple[np.ndarray, np.ndarray,  np.ndarray]:
         """
@@ -64,5 +73,5 @@ class RandomRotation90(object):
             numpy array or Tensor: Randomly flipped image.
         """
         modalities, seg_mask, mask = img_and_mask
-        modalities, seg_mask = self._augment_rot90(modalities, seg_mask)
+        modalities, seg_mask, mask = self._augment_rot90(modalities, seg_mask, mask)
         return modalities, seg_mask, mask

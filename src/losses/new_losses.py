@@ -97,8 +97,7 @@ class DiceLoss(_AbstractDiceLoss):
 
 
 class GeneralizedDiceLoss(_AbstractDiceLoss):
-    """Computes Generalized Dice Loss (GDL) as described in https://arxiv.org/pdf/1707.03237.pdf.
-    """
+    """Computes Generalized Dice Loss (GDL) as described in https://arxiv.org/pdf/1707.03237.pdf."""
 
     def __init__(self, sigmoid_normalization=True, epsilon=1e-6):
         super().__init__(weight=None, sigmoid_normalization=sigmoid_normalization)
