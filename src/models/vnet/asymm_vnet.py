@@ -49,7 +49,6 @@ def _make_nConv(nchan, depth, non_linearity, kernel_size, padding):
     return nn.Sequential(*layers)
 
 
-
 class InputTransition(nn.Module):
     def __init__(self, in_channels, num_features, non_linearity, kernel_size, padding=1):
         super(InputTransition, self).__init__()
@@ -70,14 +69,12 @@ class InputTransition(nn.Module):
         return self.relu1(torch.add(out, x16))
 
 
-
 class DownTransition(nn.Module):
     def __init__(self, inChans, nConvs, non_linearity, kernel_size, padding, dropout=False, larger=False):
         super(DownTransition, self).__init__()
         outChans = 2 * inChans
         self.down_conv = nn.Conv3d(inChans, outChans, kernel_size=2, stride=2)
         self.bn1 = torch.nn.InstanceNorm3d(outChans)
-
 
         self.non_linearity_down_block = define_non_linearity(non_linearity, outChans)
         self.non_linearity_cat_residual = define_non_linearity(non_linearity, outChans)
@@ -119,7 +116,7 @@ class UpTransition(nn.Module):
         self.do1 = nn.Dropout3d() if dropout else passthrough
 
         self.convolution_blocks = _make_nConv(outChans, nConvs, non_linearity, kernel_size, padding)
-        self.conv_to_resize = nn.Conv3d(outChans+4, outChans, kernel_size=1)
+        self.conv2 = nn.Conv3d(outChans+4, outChans, kernel_size=1)
 
     def forward(self, x, skipx, input_mod=None):
         out = self.do1(x)
@@ -130,7 +127,7 @@ class UpTransition(nn.Module):
 
         if input_mod is not None:
             xcat_tmp = torch.cat((xcat, input_mod), 1)
-            xcat = self.conv_to_resize(xcat_tmp)
+            xcat = self.conv2(xcat_tmp)
 
         out = self.convolution_blocks(xcat)
         out = self.non_linearity_cat_residual(torch.add(out, xcat))
@@ -167,12 +164,12 @@ class OutputTransition(nn.Module):
         return out, out_scores
 
 
-
 class VNet(nn.Module):
     """
     Implementations based on the Vnet paper: https://arxiv.org/abs/1606.04797
     """
-    def __init__(self, non_linearity="elu", in_channels=1, classes=4, init_features_maps=16, kernel_size=5, padding=2): # input channels: the four modalities
+    def __init__(self, non_linearity="elu", in_channels=1, classes=4, init_features_maps=16, kernel_size=5, padding=2):
+        # input channels: the four modalities
         super(VNet, self).__init__()
         self.classes = classes
         self.in_channels = in_channels
@@ -180,12 +177,12 @@ class VNet(nn.Module):
         self.in_tr      = InputTransition(in_channels, init_features_maps, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding)
         self.down_tr32  = DownTransition(init_features_maps, nConvs=1, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding, dropout=True)
         self.down_tr64  = DownTransition(init_features_maps*2, nConvs=2, non_linearity=non_linearity, kernel_size=kernel_size,padding=padding, dropout=True)
-        self.down_tr128 = DownTransition(init_features_maps*4, nConvs=3, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding,dropout=True)
-        self.down_tr256 = DownTransition(init_features_maps*8, nConvs=2, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding,dropout=False, larger=True)
-        self.up_tr256   = UpTransition(init_features_maps*16, init_features_maps*16, nConvs=2, non_linearity=non_linearity, kernel_size=kernel_size,padding=padding, dropout=True)
-        self.up_tr128   = UpTransition(init_features_maps*16, init_features_maps*8, nConvs=2, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding,dropout=True)
-        self.up_tr64    = UpTransition(init_features_maps*8, init_features_maps*4, nConvs=1, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding,dropout=True)
-        self.up_tr32    = UpTransition(init_features_maps*4, init_features_maps*2, nConvs=1, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding,dropout=True)
+        self.down_tr128 = DownTransition(init_features_maps*4, nConvs=3, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding, dropout=True)
+        self.down_tr256 = DownTransition(init_features_maps*8, nConvs=2, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding, dropout=False, larger=True)
+        self.up_tr256   = UpTransition(init_features_maps*16, init_features_maps*16, nConvs=2, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding, dropout=True)
+        self.up_tr128   = UpTransition(init_features_maps*16, init_features_maps*8, nConvs=2, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding, dropout=True)
+        self.up_tr64    = UpTransition(init_features_maps*8, init_features_maps*4, nConvs=1, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding, dropout=True)
+        self.up_tr32    = UpTransition(init_features_maps*4, init_features_maps*2, nConvs=1, non_linearity=non_linearity, kernel_size=kernel_size, padding=padding, dropout=True)
         self.out_tr     = OutputTransition(init_features_maps*2, classes, non_linearity, kernel_size, padding=padding)
 
     def forward(self, x):
@@ -209,6 +206,7 @@ class VNet(nn.Module):
         assert ideal_out.shape == out_pred.shape
         summary(self.to(torch.device(device)), (self.in_channels, size, size, size), device=device)
         print("Vnet test is complete")
+
 
 if __name__ == "__main__":
     vnet = VNet(non_linearity="elu", in_channels=1, classes=4, init_features_maps=16, kernel_size=3, padding=1)

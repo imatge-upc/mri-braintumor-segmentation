@@ -29,8 +29,7 @@ def load_network(device, model_config, dataset_config, which_net):
         network = asymm_vnet.VNet(non_linearity=model_config.get("non_linearity"), in_channels=n_modalities,
                                   classes=n_classes,
                                   init_features_maps=model_config.getint("init_features_maps"),
-                                  kernel_size=model_config.get("kernel_size"))
-
+                                  kernel_size=model_config.getint("kernel_size"), padding=model_config.getint("padding"))
 
     elif which_net == "3dunet_residual":
         network = unet3d.ResidualUNet3D(in_channels=n_modalities, out_channels=n_classes, final_sigmoid=False,
@@ -53,7 +52,7 @@ def load_network(device, model_config, dataset_config, which_net):
     return model, model_path
 
 
-def crop_no_patch(patch_size, images, sampling):
+def crop_no_patch(patch_size, images, brain_mask, sampling):
     if sampling == "no_patch":
         new_size = (160, 192, 128)
         x_1 = int((patch_size[0] - new_size[0]) / 2)
@@ -63,13 +62,15 @@ def crop_no_patch(patch_size, images, sampling):
         z_1 = int((patch_size[2] - new_size[2]) / 2)
         z_2 = int(patch_size[2] - (patch_size[2] - new_size[2]) / 2)
         new_images = images[:, x_1:x_2, y_1:y_2, z_1:z_2]
-        return x_1, x_2, y_1, y_2, z_1, z_2, new_images, new_size
+        new_brain_mask = brain_mask[:, x_1:x_2, y_1:y_2, z_1:z_2]
+
+        return x_1, x_2, y_1, y_2, z_1, z_2, new_images, new_brain_mask, new_size
 
     else:
         x_1, x_2 = 0, patch_size[0]
         y_1, y_2 = 0, patch_size[1]
         z_1, z_2 = 0, patch_size[2]
-        return x_1, x_2, y_1, y_2, z_1, z_2, images, patch_size
+        return x_1, x_2, y_1, y_2, z_1, z_2, images, brain_mask, patch_size
 
 
 def return_to_size(volume, sampling, x_1, x_2, y_1, y_2, z_1, z_2, final_size=(240, 240, 155)):
@@ -112,7 +113,7 @@ if __name__ == "__main__":
         images = data[idx].load_mri_volumes(normalize=True)
         brain_mask = data[idx].get_brain_mask()
 
-        x_1, x_2, y_1, y_2, z_1, z_2, images, patch_size = crop_no_patch(patch_size, images, sampling)
+        x_1, x_2, y_1, y_2, z_1, z_2, images, brain_mask, patch_size = crop_no_patch(patch_size, images, brain_mask, sampling)
 
         results = {}
 
@@ -158,6 +159,7 @@ if __name__ == "__main__":
         prediction_map = brats_labels.convert_to_brats_labels(prediction_map)
         prediction_map = return_to_size(prediction_map, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
 
+
         if flag_post_process:
             segmentation_post = prediction_map.copy()
             pred_mask_wt = brats_labels.get_wt(segmentation_post)
@@ -165,7 +167,7 @@ if __name__ == "__main__":
             elements_to_remove = pred_mask_wt - mask_removed_regions_wt
             segmentation_post[elements_to_remove == 1] = 0
 
-            post_result = {"prediction" : segmentation_post}
+            post_result = {"prediction": segmentation_post}
             task = f"{task}_post_processed"
             predict.save_predictions(data[idx], post_result, model_path, task)
 
