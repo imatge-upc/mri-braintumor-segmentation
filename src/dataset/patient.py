@@ -3,6 +3,7 @@ import numpy as np
 import nibabel as nib
 from src.dataset.utils.nifi_volume import load_nifi_volume
 
+
 class Patient:
     def __init__(self, idx: str, center: str, grade: str, patient: str, patch_name: str,
                  size: list, data_path: str, train: bool):
@@ -22,7 +23,6 @@ class Patient:
         self.t2 = f"{self.patch_name}_t2.nii.gz"
         self.flair = f"{self.patch_name}_flair.{extension}"
         self.seg = f"{self.patch_name}_seg.{extension}"
-
 
     def load_mri_volumes(self, normalize) -> np.ndarray:
         patient_path = os.path.join(self.data_path, self.patch_name)

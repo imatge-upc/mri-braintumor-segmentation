@@ -13,6 +13,7 @@ def enable_dropout(model):
         if m.__class__.__name__.startswith('Dropout'):
             m.train()
 
+
 def predict(model, images: np.ndarray, device: torch.device, monte_carlo: bool=False) -> Tuple[np.ndarray, np.ndarray]:
 
     model.eval()
@@ -31,6 +32,7 @@ def predict(model, images: np.ndarray, device: torch.device, monte_carlo: bool=F
 def get_prediction_map(four_channel_prediction: torch.tensor) -> np.ndarray:
     assert len(four_channel_prediction.shape) == 5
     return np.asarray(four_channel_prediction[0].max(0)[1].byte().cpu().data)
+
 
 def get_scores_map_from_vector(vector_prediction_scores: np.ndarray, path_size: list) -> np.ndarray:
     assert len(vector_prediction_scores.shape) == 2, "Must be a 2d array with: (all_voxels, n_labels)"
@@ -52,7 +54,6 @@ def save_predictions(patient: Patient, results: dict, model_path: str, task: str
 
         directory = output_dir_entropy if "entropy" in file_name else output_dir
         output_path = os.path.join(directory, file_name)
-
 
         affine_func = patient.get_affine()
         logger.info(f"Saving to: {output_path}")

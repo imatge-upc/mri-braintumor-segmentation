@@ -1,20 +1,14 @@
-from torchvision import transforms
 from tqdm import tqdm
 from src.dataset.utils.visualization import plot_3_view
 from src.test import predict
 from src.dataset.augmentations import color_augmentations, spatial_augmentations
 import numpy as np
 
+
 def _get_transforms():
     return [color_augmentations.RandomIntensityShift(), color_augmentations.RandomIntensityScale(),
             color_augmentations.RandomGaussianNoise(p=1, noise_variance=(0, 0.5)),
             spatial_augmentations.RandomMirrorFlip(p=1)]
-
-    # return transforms.Compose([color_augmentations.RandomIntensityShift(),
-    #                            color_augmentations.RandomIntensityScale(),
-    #                            color_augmentations.RandomGaussianNoise(p=1, noise_variance=(0, 0.5)),
-    #                            spatial_augmentations.RandomMirrorFlip()
-    #                            ])
 
 
 def tta_uncertainty_loop(model, images, device, brain_mask, iterations=2):
@@ -29,10 +23,11 @@ def tta_uncertainty_loop(model, images, device, brain_mask, iterations=2):
 
         subject, _, _ = transform((images, None, brain_mask))
 
-        prediction_four_channels, vector_prediction_scores = predict.predict(model, subject.astype(float), device, monte_carlo=False)
+        prediction_four_channels, vector_prediction_scores = predict.predict(model, subject.astype(float), device,
+                                                                             monte_carlo=False)
         pred_map = predict.get_prediction_map(prediction_four_channels)
         if random_transform_idx == 3:  # its a random flip
-            pred_map = np.flip(pred_map, axis=[1, 2, 3])
+            pred_map = np.flip(pred_map, axis=[0, 1, 2])
 
         plot_3_view(f"Prediction {i}", pred_map[:, :, :], 40, save=True)
 

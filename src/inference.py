@@ -15,6 +15,7 @@ from src.test import predict
 from src.uncertainty import uncertainty, test_time_dropout, test_time_augmentation
 from src.post_processing import post_process
 from src.logging_conf import logger
+from src.uncertainty.uncertainty import compute_normalization
 
 
 def load_network(device, model_config, dataset_config, which_net):
@@ -62,7 +63,7 @@ def crop_no_patch(patch_size, images, brain_mask, sampling):
         z_1 = int((patch_size[2] - new_size[2]) / 2)
         z_2 = int(patch_size[2] - (patch_size[2] - new_size[2]) / 2)
         new_images = images[:, x_1:x_2, y_1:y_2, z_1:z_2]
-        new_brain_mask = brain_mask[:, x_1:x_2, y_1:y_2, z_1:z_2]
+        new_brain_mask = brain_mask[x_1:x_2, y_1:y_2, z_1:z_2]
 
         return x_1, x_2, y_1, y_2, z_1, z_2, new_images, new_brain_mask, new_size
 
@@ -159,17 +160,16 @@ if __name__ == "__main__":
         prediction_map = brats_labels.convert_to_brats_labels(prediction_map)
         prediction_map = return_to_size(prediction_map, sampling, x_1, x_2, y_1, y_2, z_1, z_2)
 
-
         if flag_post_process:
+            threshold = 1
             segmentation_post = prediction_map.copy()
             pred_mask_wt = brats_labels.get_wt(segmentation_post)
-            mask_removed_regions_wt = post_process.keep_conn_component_bigger_than_th(pred_mask_wt, th=1)
+            mask_removed_regions_wt = post_process.keep_conn_component_bigger_than_th(pred_mask_wt, th=threshold)
             elements_to_remove = pred_mask_wt - mask_removed_regions_wt
             segmentation_post[elements_to_remove == 1] = 0
 
             post_result = {"prediction": segmentation_post}
-            task = f"{task}_post_processed"
-            predict.save_predictions(data[idx], post_result, model_path, task)
+            predict.save_predictions(data[idx], post_result, model_path, f"{task}_post_processed")
 
         results["prediction"] = prediction_map
         predict.save_predictions(data[idx], results, model_path, task)
@@ -183,3 +183,10 @@ if __name__ == "__main__":
                 volume = nifi_volume.load_nifi_volume(data_path)
                 metrics = compute_wt_tc_et(prediction_map, volume_gt, volume)
                 logger.info(f"{data[idx].patient} | {metrics}")
+
+        print("Normalize for brats!")
+        if uncertainty_flag:
+            input_dir = os.path.join(model_path, task)
+            output_dir = os.path.join(model_path, task, "normalized")
+            gt_path = data[0].data_path
+            compute_normalization(input_dir=input_dir, output_dir=output_dir, ground_truth_path=gt_path)

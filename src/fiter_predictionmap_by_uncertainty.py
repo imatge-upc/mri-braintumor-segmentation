@@ -17,6 +17,7 @@ def read_niigz(volume_name, path_to_volume):
 
 
 if __name__ == "__main__":
+    compute_metrics = False
     setx = "train"
     model_id = "model_1597063224/101_epch"
 
@@ -27,7 +28,6 @@ if __name__ == "__main__":
     input_dir = os.path.join(model_path, task)
     output_dir = os.path.join(model_path, f"{task}/filtered/")
     create_dir(output_dir)
-
 
     data, _ = dataset.read_brats(dataset_csv_path, lgg_only=False)
     patient_names = [p.patient for p in data]
@@ -49,5 +49,3 @@ if __name__ == "__main__":
             filtered_map = filter_by_threshold_eval_regions(T, seg_map, wt_unc, tc_unc, et_unc)
 
             save_segmask_as_nifi_volume(filtered_map, seg_nib.affine, output_path_with_name)
-
-
