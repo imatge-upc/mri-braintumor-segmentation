@@ -7,8 +7,7 @@ import numpy as np
 
 def _get_transforms():
     return [color_augmentations.RandomIntensityShift(), color_augmentations.RandomIntensityScale(),
-            color_augmentations.RandomGaussianNoise(p=1, noise_variance=(0, 0.5)),
-            spatial_augmentations.RandomMirrorFlip(p=1)]
+            color_augmentations.RandomGaussianNoise(p=1, noise_variance=(0, 0.5))]
 
 
 def tta_uncertainty_loop(model, images, device, brain_mask, iterations=2):
@@ -26,10 +25,6 @@ def tta_uncertainty_loop(model, images, device, brain_mask, iterations=2):
         prediction_four_channels, vector_prediction_scores = predict.predict(model, subject.astype(float), device,
                                                                              monte_carlo=False)
         pred_map = predict.get_prediction_map(prediction_four_channels)
-        if random_transform_idx == 3:  # its a random flip
-            pred_map = np.flip(pred_map, axis=[0, 1, 2])
-
-        plot_3_view(f"Prediction {i}", pred_map[:, :, :], 40, save=True)
 
         prediction_labels_maps.append(pred_map)
         prediction_score_vectors.append(vector_prediction_scores)
