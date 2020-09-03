@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
 
-    setx = "train"
+    setx = "valid"
     task = "uncertainty_task_tta/"
     model_id = "model_1598640035"
 

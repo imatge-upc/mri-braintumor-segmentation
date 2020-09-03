@@ -132,8 +132,8 @@ if __name__ == "__main__":
                 else:
                     raise ValueError(f"Wrong uncertainty type {uncertainty_type}. Should be ttd or tta")
 
-            prediction_labels_maps, prediction_score_vectors = uncertainty_loop(uncertainty_type, model, images, device,
-                                                                                n_iterations, brain_mask, use_dropout)
+            _, prediction_score_vectors = uncertainty_loop(uncertainty_type, model, images, device,
+                                                           n_iterations, brain_mask, use_dropout)
 
             # Get segmentation map by computing the mean of the prediction scores and selecting bigger one
             pred_scores = torch.stack(tuple(prediction_score_vectors)).cpu().numpy()

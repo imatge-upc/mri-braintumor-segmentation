@@ -4,7 +4,6 @@ from torchsummary import summary
 import torch.nn.functional as F
 
 
-
 def passthrough(x, **kwargs):
     return x
 
@@ -21,13 +20,14 @@ def define_non_linearity(non_linearity, nchan):
     else:
         return nn.ReLU(nchan)
 
+
 def normalization(num_channels, typee):
     if typee == "instance":
         return torch.nn.InstanceNorm3d(num_channels)
     elif typee == "group":
-        return torch.nn.GroupNorm(2,num_channels)
+        return torch.nn.GroupNorm(2, num_channels)
     else:
-        return  torch.nn.BatchNorm3d(num_channels)
+        return torch.nn.BatchNorm3d(num_channels)
 
 
 class LUConv(nn.Module):
@@ -116,7 +116,7 @@ class UpTransition(nn.Module):
         self.do1 = nn.Dropout3d() if dropout else passthrough
 
         self.convolution_blocks = _make_nConv(outChans, nConvs, non_linearity, kernel_size, padding)
-        self.conv2 = nn.Conv3d(outChans+4, outChans, kernel_size=1)
+        # self.conv2 = nn.Conv3d(outChans+4, outChans, kernel_size=1)
 
     def forward(self, x, skipx, input_mod=None):
         out = self.do1(x)
@@ -125,14 +125,13 @@ class UpTransition(nn.Module):
         skipxdo = self.dropout_skip_connection(skipx)
         xcat = torch.cat((out, skipxdo), 1)
 
-        if input_mod is not None:
-            xcat_tmp = torch.cat((xcat, input_mod), 1)
-            xcat = self.conv2(xcat_tmp)
+        # if input_mod is not None:
+        #     xcat_tmp = torch.cat((xcat, input_mod), 1)
+        #     xcat = self.conv2(xcat_tmp)
 
         out = self.convolution_blocks(xcat)
         out = self.non_linearity_cat_residual(torch.add(out, xcat))
         return out
-
 
 
 class OutputTransition(nn.Module):
@@ -194,7 +193,7 @@ class VNet(nn.Module):
         out = self.up_tr256(out256, out128)
         out = self.up_tr128(out, out64)
         out = self.up_tr64(out, out32)
-        out = self.up_tr32(out, out16, x) # add modalities at the last step, concatenated
+        out = self.up_tr32(out, out16)  # x) # add modalities at the last step, concatenated
         out = self.out_tr(out)
         return out
 
