@@ -3,7 +3,6 @@ from tqdm import tqdm
 from src.test import predict
 
 
-
 def ttd_uncertainty_loop(model, images, device, K=2):
 
     prediction_labels_maps, prediction_score_vectors = [], []

@@ -30,7 +30,8 @@ def load_network(device, model_config, dataset_config, which_net):
         network = asymm_vnet.VNet(non_linearity=model_config.get("non_linearity"), in_channels=n_modalities,
                                   classes=n_classes,
                                   init_features_maps=model_config.getint("init_features_maps"),
-                                  kernel_size=model_config.getint("kernel_size"), padding=model_config.getint("padding"))
+                                  kernel_size=model_config.getint("kernel_size"),
+                                  padding=model_config.getint("padding"))
 
     elif which_net == "3dunet_residual":
         network = unet3d.ResidualUNet3D(in_channels=n_modalities, out_channels=n_classes, final_sigmoid=False,
@@ -98,6 +99,7 @@ if __name__ == "__main__":
 
     model, model_path = load_network(device, model_config, dataset_config, model_config["network"])
 
+    setx = "train"
     data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
     data.extend(data_test)
 
@@ -105,7 +107,8 @@ if __name__ == "__main__":
 
     uncertainty_flag = basic_config.getboolean("uncertainty_flag")
     uncertainty_type = unc_config.get("uncertainty_type")
-    K = unc_config.getint("n_iterations")
+    n_iterations = unc_config.getint("n_iterations")
+    use_dropout = unc_config.getboolean("use_dropout")
 
     for idx in range(0, len(data)):
 
@@ -114,21 +117,23 @@ if __name__ == "__main__":
         images = data[idx].load_mri_volumes(normalize=True)
         brain_mask = data[idx].get_brain_mask()
 
-        x_1, x_2, y_1, y_2, z_1, z_2, images, brain_mask, patch_size = crop_no_patch(patch_size, images, brain_mask, sampling)
+        x_1, x_2, y_1, y_2, z_1, z_2, images, brain_mask, patch_size = crop_no_patch(patch_size, images, brain_mask,
+                                                                                     sampling)
 
         results = {}
 
         if uncertainty_flag:
-            def uncertainty_loop(uncertainty_type, model, images, device, K, brain_mask):
+            def uncertainty_loop(uncertainty_type, model, images, device, n_iterations, brain_mask, use_dropout):
                 if uncertainty_type == "ttd":
-                    return test_time_dropout.ttd_uncertainty_loop(model, images, device, K)
+                    return test_time_dropout.ttd_uncertainty_loop(model, images, device, n_iterations)
                 elif uncertainty_type == "tta":
-                    return test_time_augmentation.tta_uncertainty_loop(model, images, device, brain_mask, K)
+                    return test_time_augmentation.tta_uncertainty_loop(model, images, device, brain_mask, n_iterations,
+                                                                       use_dropout)
                 else:
                     raise ValueError(f"Wrong uncertainty type {uncertainty_type}. Should be ttd or tta")
 
             prediction_labels_maps, prediction_score_vectors = uncertainty_loop(uncertainty_type, model, images, device,
-                                                                                K, brain_mask)
+                                                                                n_iterations, brain_mask, use_dropout)
 
             # Get segmentation map by computing the mean of the prediction scores and selecting bigger one
             pred_scores = torch.stack(tuple(prediction_score_vectors)).cpu().numpy()
@@ -184,9 +189,9 @@ if __name__ == "__main__":
                 metrics = compute_wt_tc_et(prediction_map, volume_gt, volume)
                 logger.info(f"{data[idx].patient} | {metrics}")
 
-        print("Normalize for brats!")
-        if uncertainty_flag:
-            input_dir = os.path.join(model_path, task)
-            output_dir = os.path.join(model_path, task, "normalized")
-            gt_path = data[0].data_path
-            compute_normalization(input_dir=input_dir, output_dir=output_dir, ground_truth_path=gt_path)
+    print("Normalize for brats!")
+    if uncertainty_flag:
+        input_dir = os.path.join(model_path, task)
+        output_dir = os.path.join(model_path, task, setx, "normalized")
+        gt_path = data[0].data_path
+        compute_normalization(input_dir=input_dir, output_dir=output_dir, ground_truth_path=gt_path)

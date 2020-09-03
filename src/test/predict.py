@@ -14,7 +14,7 @@ def enable_dropout(model):
             m.train()
 
 
-def predict(model, images: np.ndarray, device: torch.device, monte_carlo: bool=False) -> Tuple[np.ndarray, np.ndarray]:
+def predict(model, images: np.ndarray, device: torch.device, monte_carlo: bool = False) -> Tuple[np.ndarray, np.ndarray]:
 
     model.eval()
     if monte_carlo:
