@@ -94,13 +94,13 @@ if __name__ == "__main__":
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     task = "segmentation_task"
-    compute_metrics = True
-    flag_post_process = False
+    compute_metrics = False
+    flag_post_process = True
 
     model, model_path = load_network(device, model_config, dataset_config, model_config["network"])
 
-    setx = "train"
-    data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
+    setx = "test"
+    data, data_test = dataset.read_brats(dataset_config.get("test_csv"))
     data.extend(data_test)
 
     sampling = dataset_config.get("sampling_method").split(".")[-1]
@@ -189,9 +189,11 @@ if __name__ == "__main__":
                 metrics = compute_wt_tc_et(prediction_map, volume_gt, volume)
                 logger.info(f"{data[idx].patient} | {metrics}")
 
-    print("Normalize for brats!")
+    print("Normalize uncertainty for brats!")
     if uncertainty_flag:
         input_dir = os.path.join(model_path, task)
-        output_dir = os.path.join(model_path, task, setx, "normalized")
+        output_dir = os.path.join(model_path, task, "normalized")
         gt_path = data[0].data_path
         compute_normalization(input_dir=input_dir, output_dir=output_dir, ground_truth_path=gt_path)
+
+    print("All done!!!! Be happy!")
