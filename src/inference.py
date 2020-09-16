@@ -99,8 +99,8 @@ if __name__ == "__main__":
 
     model, model_path = load_network(device, model_config, dataset_config, model_config["network"])
 
-    setx = "test"
-    data, data_test = dataset.read_brats(dataset_config.get("test_csv"))
+    setx = "train"
+    data, data_test = dataset.read_brats(dataset_config.get("train_csv"))
     data.extend(data_test)
 
     sampling = dataset_config.get("sampling_method").split(".")[-1]

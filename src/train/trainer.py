@@ -8,12 +8,14 @@ from src.models.io_model import save_checkpoint, save_model
 from src.metrics.training_metrics import AverageMeter
 from src.logging_conf import logger
 
+
 class TrainerArgs:
     def __init__(self, n_epochs=50, device="cpu", output_path="", loss="dice"):
         self.n_epochs = n_epochs
         self.device = device
         self.output_path = output_path
         self.loss = loss
+
 
 class Trainer:
 
@@ -42,11 +44,12 @@ class Trainer:
             train_dice_loss, train_dice_score, train_combined_loss, train_ce_loss = self.train_epoch(epoch)
             val_dice_loss, val_dice_score, val_combined_loss, val_ce_loss = self.val_epoch(epoch)
 
-            val_loss = val_combined_loss if  self.args.loss == "combined" else val_dice_loss
+            val_loss = val_combined_loss if self.args.loss == "combined" else val_dice_loss
             if self.lr_scheduler:
                 self.lr_scheduler.step(val_loss)
 
-            self._epoch_summary(epoch, train_dice_loss, val_dice_loss, train_dice_score, val_dice_score, train_combined_loss, train_ce_loss, val_combined_loss, val_ce_loss)
+            self._epoch_summary(epoch, train_dice_loss, val_dice_loss, train_dice_score, val_dice_score,
+                                train_combined_loss, train_ce_loss, val_combined_loss, val_ce_loss)
 
             is_best = bool(val_loss < best_loss)
             best_loss = val_loss if is_best else best_loss
@@ -59,18 +62,17 @@ class Trainer:
             }, is_best, self.args.output_path)
 
         save_model({
-                'epoch': self.args.n_epochs + 1,
-                'model_state_dict': self.model.state_dict(),
-                'optimizer_state_dict': self.optimizer.state_dict(),
-                'val_loss': best_loss,
-                'val_dice_score': val_dice_score
-            }, self.args.output_path)
-
+            'epoch': self.args.n_epochs + 1,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'val_loss': best_loss,
+            'val_dice_score': val_dice_score
+        }, self.args.output_path)
 
     def train_epoch(self, epoch):
 
         self.model.train()
-        dice_loss_global, ce_loss_global, combined_loss_global = AverageMeter(),  AverageMeter(), AverageMeter()
+        dice_loss_global, ce_loss_global, combined_loss_global = AverageMeter(), AverageMeter(), AverageMeter()
         dice_score = AverageMeter()
 
         i = 0
@@ -87,7 +89,6 @@ class Trainer:
 
                 predictions, _ = trainer.model(inputs)
 
-
                 if trainer.args.loss == "dice":
                     dice_loss, mean_dice, per_channel_dice = trainer.criterion(predictions, targets)
                     subregion_loss = []
@@ -95,15 +96,15 @@ class Trainer:
                     trainer.optimizer.step()
 
                     trainer.writer.add_scalar('Training Dice Loss NCR', per_channel_dice[0].detach().item(),
-                                             epoch * trainer.number_train_data + i)
+                                              epoch * trainer.number_train_data + i)
                     trainer.writer.add_scalar('Training Dice Loss ED', per_channel_dice[1].detach().item(),
                                               epoch * trainer.number_train_data + i)
                     trainer.writer.add_scalar('Training Dice Loss ET', per_channel_dice[2].detach().item(),
                                               epoch * trainer.number_train_data + i)
 
-
                 elif trainer.args.loss == "both_dice":
-                    total_loss, dice_loss, mean_dice, dice_loss_reg, subregion_loss = trainer.criterion(predictions, targets)
+                    total_loss, dice_loss, mean_dice, dice_loss_reg, subregion_loss = trainer.criterion(predictions,
+                                                                                                        targets)
 
                     total_loss.backward()
                     trainer.optimizer.step()
@@ -123,7 +124,8 @@ class Trainer:
                     trainer.optimizer.step()
 
                 else:
-                    combined_loss, dice_loss, ce_loss, mean_dice, subregion_loss = trainer.criterion(predictions, targets)
+                    combined_loss, dice_loss, ce_loss, mean_dice, subregion_loss = trainer.criterion(predictions,
+                                                                                                     targets)
                     combined_loss.backward()
                     trainer.optimizer.step()
 
@@ -133,9 +135,10 @@ class Trainer:
                     combined_loss_global.update(combined_loss, data_batch.size(0))
                     ce_loss_global.update(ce_loss, data_batch.size(0))
 
-                    trainer.writer.add_scalar('Train combined CE-Dice Loss', combined_loss, epoch * trainer.number_train_data + i)
-                    trainer.writer.add_scalar('Train Cross Entropy Loss', ce_loss, epoch * trainer.number_train_data + i)
-
+                    trainer.writer.add_scalar('Train combined CE-Dice Loss', combined_loss,
+                                              epoch * trainer.number_train_data + i)
+                    trainer.writer.add_scalar('Train Cross Entropy Loss', ce_loss,
+                                              epoch * trainer.number_train_data + i)
 
                 dice_loss = dice_loss.detach().item()
                 mean_dice = mean_dice.detach().item()
@@ -157,10 +160,7 @@ class Trainer:
                 trainer._add_image(labels_batch, True, "Segmentation ground truth patch")
                 trainer._add_image(predictions.max(1)[1], True, "Segmentation prediction patch")
 
-
             step(self)
-
-
 
             i += 1
 
@@ -174,7 +174,6 @@ class Trainer:
         im = Image.open(plot_buf)
         image = T.ToTensor()(im)
         self.writer.add_image(title, image)
-
 
     def val_epoch(self, epoch):
         self.model.eval()
@@ -213,21 +212,22 @@ class Trainer:
 
 
                     else:
-                        combined_loss, dice_loss, ce_loss, mean_dice, subregion_loss = trainer.criterion(outputs, targets)
+                        combined_loss, dice_loss, ce_loss, mean_dice, subregion_loss = trainer.criterion(outputs,
+                                                                                                         targets)
                         combined_loss = combined_loss.detach().item()
                         ce_loss = ce_loss.detach().item()
                         combined_loss_global.update(combined_loss, data_batch.size(0))
                         ce_loss_global.update(ce_loss, data_batch.size(0))
 
-                        trainer.writer.add_scalar('Validation Combined CE-Dice Loss', combined_loss,epoch * trainer.number_val_data + i)
-                        trainer.writer.add_scalar('Validation Cross Entropy Loss', ce_loss, epoch * trainer.number_val_data + i)
-
+                        trainer.writer.add_scalar('Validation Combined CE-Dice Loss', combined_loss,
+                                                  epoch * trainer.number_val_data + i)
+                        trainer.writer.add_scalar('Validation Cross Entropy Loss', ce_loss,
+                                                  epoch * trainer.number_val_data + i)
 
                     dice_loss = dice_loss.detach().item()
                     mean_dice = mean_dice.detach().item()
                     losses.update(dice_loss, data_batch.size(0))
                     dice_score.update(mean_dice, data_batch.size(0))
-
 
                 if subregion_loss:
                     trainer.writer.add_scalar('Validation Dice Loss WT', subregion_loss[0].detach().item(),
@@ -253,8 +253,8 @@ class Trainer:
         else:
             return losses.avg(), dice_score.avg(), 0, 0
 
-
-    def _epoch_summary(self, epoch, train_loss, val_loss, train_dice_score, val_dice_score, train_combined_loss, train_ce_loss, val_combined_loss, val_ce_loss):
+    def _epoch_summary(self, epoch, train_loss, val_loss, train_dice_score, val_dice_score, train_combined_loss,
+                       train_ce_loss, val_combined_loss, val_ce_loss):
 
         if self.args.loss == "dice" or self.args.loss == "both_dice":
             logger.info(f'epoch: {epoch}\n '
@@ -268,5 +268,3 @@ class Trainer:
                         f'** Dice Loss **      : train_loss: {train_loss:.2f} | val_loss {val_loss:.2f} \n'
                         f'** Dice Score **     : train_dice_score {train_dice_score:.2f} | val_dice_score {val_dice_score:.2f}\n'
                         )
-
-

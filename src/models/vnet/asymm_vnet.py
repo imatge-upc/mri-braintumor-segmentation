@@ -154,13 +154,14 @@ class OutputTransition(nn.Module):
         out = self.conv2(out)
 
         out_scores = out
+
         # make channels the last axis
         out_scores = out_scores.permute(0, 2, 3, 4, 1).contiguous()
         # flatten
-        out_scores = out_scores.view(out.numel() //  self.classes, self.classes)
+        out_scores = out_scores.view(out.numel() // self.classes, self.classes)
         out_scores = self.softmax(out_scores, dim=1)
 
-        return out, out_scores
+        return out  #, out_scores
 
 
 class VNet(nn.Module):
@@ -208,5 +209,5 @@ class VNet(nn.Module):
 
 
 if __name__ == "__main__":
-    vnet = VNet(non_linearity="elu", in_channels=1, classes=4, init_features_maps=16, kernel_size=3, padding=1)
+    vnet = VNet(non_linearity="elu", in_channels=1, classes=4, init_features_maps=16, kernel_size=5, padding=2)
     vnet.test()

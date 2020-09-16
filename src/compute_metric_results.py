@@ -57,6 +57,7 @@ def compute_wt_tc_et(prediction, reference, flair):
 
     return metrics
 
+
 if __name__ == "__main__":
     config = BratsConfiguration(sys.argv[1])
     model_config = config.get_model_config()
@@ -79,7 +80,7 @@ if __name__ == "__main__":
             patient_data = []
             gt_path = os.path.join(patient.data_path, patient.patient, f"{patient.seg}")
             data_path = os.path.join(patient.data_path, patient.patient, f"{patient.flair}")
-            prediction_path  = os.path.join(patient.data_path, patient.patient, f"{patient.patient}_prediction.nii.gz")
+            prediction_path = os.path.join(patient.data_path, patient.patient, f"{patient.patient}_prediction.nii.gz")
             if not os.path.exists(prediction_path):
                 print(f"{prediction_path} not found")
                 continue
@@ -92,3 +93,5 @@ if __name__ == "__main__":
 
             patient_data = compute_wt_tc_et(volume_pred_all, volume_gt_all, volume)
             writer.writerow(patient_data)
+
+

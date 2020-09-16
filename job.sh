@@ -1,1 +1,1 @@
-sbatch -c 2 --gres=gpu:1,gpumem:12G --time=1-00:00:00 job.py precompute_patches.py
+sbatch -c 2 --gres=gpu:1.gpumem:12G --time=1-00:00:00 job.py train.py

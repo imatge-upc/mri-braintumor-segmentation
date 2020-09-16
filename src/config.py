@@ -4,15 +4,17 @@ import time
 from src.logging_conf import logger
 
 
-def create_directory(dir):
-    logger.debug(f"Create directory: {dir}")
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+def create_directory(directory):
+    logger.debug(f"Create directory: {directory}")
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
 
 def check_path_exists(path):
     if not os.path.exists(path):
         raise FileNotFoundError(path)
     return path
+
 
 def get_correct_path(local_path, server_path):
     if os.path.exists(local_path):
@@ -22,7 +24,6 @@ def get_correct_path(local_path, server_path):
     else:
         raise ValueError('No path is working')
     return root_path
-
 
 
 class BratsConfiguration:
@@ -49,8 +50,10 @@ class BratsConfiguration:
                 model_name = f"model_{round(time.time())}"
 
             logger.info("Create model directory and save configuration")
-            self.config["basics"]["tensorboard_logs"] = os.path.join(self.config.get("basics", "tensorboard_logs"), model_name)
-            self.config["model"]["checkpoint"] = os.path.join(self.config.get("model", "model_path"), self.config.get("model", "checkpoint"))
+            self.config["basics"]["tensorboard_logs"] = os.path.join(self.config.get("basics", "tensorboard_logs"),
+                                                                     model_name)
+            self.config["model"]["checkpoint"] = os.path.join(self.config.get("model", "model_path"),
+                                                              self.config.get("model", "checkpoint"))
 
             create_directory(self.config.get("basics", "tensorboard_logs"))
             self.config["model"]["model_path"] = os.path.join(self.config.get("model", "model_path"), model_name)
@@ -88,7 +91,8 @@ class BratsConfiguration:
                                                           self.config.get("dataset", "test_csv"))
 
         if "batch_size" not in self.config["dataset"]:
-            self.config["dataset"]["batch_size"] = str(self.config.getint("dataset", "n_patients_per_batch") * self.config.getint("dataset", "n_patches"))
+            self.config["dataset"]["batch_size"] = str(
+                self.config.getint("dataset", "n_patients_per_batch") * self.config.getint("dataset", "n_patches"))
 
         self.patch_size = tuple([int(item) for item in self.config.get("dataset", "patch_size").split("\n")])
 

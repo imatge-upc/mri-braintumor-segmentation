@@ -9,8 +9,6 @@ def number_of_features_per_level(init_channel_number, num_levels):
     return [init_channel_number * 2 ** k for k in range(num_levels)]
 
 
-
-
 class Abstract3DUNet(nn.Module):
     """
     Base class for standard and residual UNet.
@@ -50,10 +48,8 @@ class Abstract3DUNet(nn.Module):
 
         super(Abstract3DUNet, self).__init__()
 
-
         if isinstance(f_maps, int):
             f_maps = number_of_features_per_level(f_maps, num_levels=num_levels)
-
 
         # create encoder path consisting of Encoder modules. Depth of the encoder is equal to `len(f_maps)`
         encoders = []
@@ -111,7 +107,6 @@ class Abstract3DUNet(nn.Module):
         else:
             self.final_activation = nn.Softmax(dim=1)
 
-
     def forward(self, x):
         # encoder part
         encoders_features = []
@@ -132,11 +127,9 @@ class Abstract3DUNet(nn.Module):
 
         x = self.final_conv(x)
 
-
         scores = self.final_activation(x)
 
         return x, scores
-
 
 
 class UNet3D(Abstract3DUNet):
@@ -155,7 +148,6 @@ class UNet3D(Abstract3DUNet):
                                      num_groups=num_groups, num_levels=num_levels,
                                      conv_padding=conv_padding, **kwargs)
 
-
     def test(self):
         classes = 4
         in_channels = 4
@@ -166,9 +158,6 @@ class UNet3D(Abstract3DUNet):
         assert ideal_out.shape == out_pred.shape
 
         print("UNet3D test is complete")
-
-
-
 
 
 class ResidualUNet3D(Abstract3DUNet):
@@ -192,16 +181,23 @@ class ResidualUNet3D(Abstract3DUNet):
         input_tensor = torch.rand(1, in_channels, 32, 32, 32)
         ideal_out = torch.rand(1, classes, 32, 32, 32)
 
-        out_pred, out_scores = self.forward(input_tensor)
+        out_pred, _ = self.forward(input_tensor)
         assert ideal_out.shape == out_pred.shape
+
         print("ResidualUNet3D test is complete")
 
 
-
 if __name__ == "__main__":
+    import numpy as np
     net = ResidualUNet3D(in_channels=4, out_channels=4, f_maps=16)
+    model_parameters = filter(lambda p: p.requires_grad, net.parameters())
+    params = sum([np.prod(p.size()) for p in model_parameters])
+    print(params)
     net.test()
 
     unet = UNet3D(in_channels=4, out_channels=4, f_maps=16, final_sigmoid=True, layer_order='crg',
-                 num_groups=8, num_levels=4, conv_padding=1)
+                  num_groups=8, num_levels=4, conv_padding=1)
+    model_parameters = filter(lambda p: p.requires_grad, unet.parameters())
+    params = sum([np.prod(p.size()) for p in model_parameters])
+    print(params)
     unet.test()

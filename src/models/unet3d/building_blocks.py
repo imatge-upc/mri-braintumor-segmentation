@@ -12,7 +12,6 @@ def passthrough(x, **kwargs):
     return x
 
 
-
 def create_conv(in_channels, out_channels, kernel_size, order, num_groups, padding):
     """
     Create a list of modules with together constitute a single conv layer with non-linearity
@@ -85,7 +84,6 @@ def create_conv(in_channels, out_channels, kernel_size, order, num_groups, paddi
     return modules
 
 
-
 class SingleConv(nn.Sequential):
     """
     Basic convolutional module consisting of a Conv3d, non-linearity and optional batchnorm/groupnorm. The order
@@ -109,7 +107,6 @@ class SingleConv(nn.Sequential):
 
         for name, module in create_conv(in_channels, out_channels, kernel_size, order, num_groups, padding=padding):
             self.add_module(name, module)
-
 
 
 class DoubleConv(nn.Sequential):
@@ -160,7 +157,6 @@ class DoubleConv(nn.Sequential):
                                    padding=padding))
 
 
-
 class ExtResNetBlock(nn.Module):
     """
     Basic UNet block consisting of a SingleConv followed by the residual block.
@@ -183,6 +179,7 @@ class ExtResNetBlock(nn.Module):
         n_order = order
         for c in 'rel':
             n_order = n_order.replace(c, '')
+
         self.conv3 = SingleConv(out_channels, out_channels, kernel_size=kernel_size, order=n_order,
                                 num_groups=num_groups)
 
@@ -207,7 +204,6 @@ class ExtResNetBlock(nn.Module):
         out = self.non_linearity(out)
 
         return out
-
 
 
 class Encoder(nn.Module):
@@ -265,7 +261,6 @@ class Encoder(nn.Module):
         return x
 
 
-
 class Decoder(nn.Module):
     """
     A single module for decoder path consisting of the upsampling layer
@@ -301,7 +296,6 @@ class Decoder(nn.Module):
 
             self.joining = partial(self._joining, concat=False)  # sum joining
 
-
             in_channels = out_channels  # adapt the number of in_channels for the ExtResNetBlock
 
         self.dropout = nn.Dropout3d()
@@ -311,7 +305,6 @@ class Decoder(nn.Module):
                                          order=conv_layer_order,
                                          num_groups=num_groups,
                                          padding=padding)
-
 
     def forward(self, encoder_features, x):
         x = self.upsampling(encoder_features=encoder_features, x=x)
@@ -327,7 +320,6 @@ class Decoder(nn.Module):
             return torch.cat((encoder_features, x), dim=1)
         else:
             return encoder_features + x
-
 
 
 class Upsampling(nn.Module):

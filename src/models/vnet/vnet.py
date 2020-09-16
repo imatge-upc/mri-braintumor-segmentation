@@ -4,7 +4,6 @@ from torchsummary import summary
 import torch.nn.functional as F
 
 
-
 def passthrough(x, **kwargs):
     return x
 
@@ -19,13 +18,14 @@ def ELUCons(elu, nchan):
     else:
         return nn.ELU(inplace=True)
 
+
 def normalization(num_channels, typee):
     if typee == "instance":
         return torch.nn.InstanceNorm3d(num_channels)
     elif typee == "group":
-        return torch.nn.GroupNorm(2,num_channels)
+        return torch.nn.GroupNorm(2, num_channels)
     else:
-        return  torch.nn.BatchNorm3d(num_channels)
+        return torch.nn.BatchNorm3d(num_channels)
 
 
 class LUConv(nn.Module):
@@ -47,11 +47,10 @@ def _make_nConv(nchan, depth, elu):
     return nn.Sequential(*layers)
 
 
-
 class InputTransition(nn.Module):
     def __init__(self, in_channels, num_features, elu):
         super(InputTransition, self).__init__()
-        self.num_features = num_features # 16
+        self.num_features = num_features  # 16
         self.in_channels = in_channels
 
         self.conv1 = nn.Conv3d(self.in_channels, self.num_features, kernel_size=5, padding=2)
@@ -66,7 +65,6 @@ class InputTransition(nn.Module):
         out = self.bn1(out)
         x16 = x.repeat(1, repeat_rate, 1, 1, 1)
         return self.relu1(torch.add(out, x16))
-
 
 
 class DownTransition(nn.Module):
@@ -89,7 +87,6 @@ class DownTransition(nn.Module):
         out = self.ops(out)
         out = self.relu2(torch.add(out, down))
         return out
-
 
 
 class UpTransition(nn.Module):
@@ -116,7 +113,6 @@ class UpTransition(nn.Module):
         return out
 
 
-
 class OutputTransition(nn.Module):
     def __init__(self, in_channels, classes, elu):
         super(OutputTransition, self).__init__()
@@ -139,34 +135,35 @@ class OutputTransition(nn.Module):
         # make channels the last axis
         out_scores = out_scores.permute(0, 2, 3, 4, 1).contiguous()
         # flatten
-        out_scores = out_scores.view(out.numel() //  self.classes, self.classes)
+        out_scores = out_scores.view(out.numel() // self.classes, self.classes)
         out_scores = self.softmax(out_scores, dim=1)
 
         return out, out_scores
-
 
 
 class VNet(nn.Module):
     """
     Implementations based on the Vnet paper: https://arxiv.org/abs/1606.04797
     """
-    def __init__(self, elu=True, in_channels=1, classes=4, init_features_maps=16): # input channels: the four modalities
+
+    def __init__(self, elu=True, in_channels=1, classes=4,
+                 init_features_maps=16):  # input channels: the four modalities
         super(VNet, self).__init__()
         self.classes = classes
         self.in_channels = in_channels
 
         self.in_tr = InputTransition(in_channels, init_features_maps, elu=elu)
         self.down_tr32 = DownTransition(init_features_maps, 1, elu)
-        self.down_tr64 = DownTransition(init_features_maps*2, 2, elu, dropout=True)
-        self.down_tr128 = DownTransition(init_features_maps*4, 3, elu, dropout=True)
-        self.down_tr256 = DownTransition(init_features_maps*8, nConvs=2, elu=elu, dropout=True)
+        self.down_tr64 = DownTransition(init_features_maps * 2, 2, elu, dropout=True)
+        self.down_tr128 = DownTransition(init_features_maps * 4, 3, elu, dropout=True)
+        self.down_tr256 = DownTransition(init_features_maps * 8, nConvs=2, elu=elu, dropout=True)
 
-        self.up_tr256 = UpTransition(init_features_maps*16, init_features_maps*16, 2, elu, dropout=True)
-        self.up_tr128 = UpTransition(init_features_maps*16, init_features_maps*8, 2, elu, dropout=True)
+        self.up_tr256 = UpTransition(init_features_maps * 16, init_features_maps * 16, 2, elu, dropout=True)
+        self.up_tr128 = UpTransition(init_features_maps * 16, init_features_maps * 8, 2, elu, dropout=True)
         # self.up_tr128 = UpTransition(128, 128, 2, elu, dropout=True)
-        self.up_tr64 = UpTransition(init_features_maps*8, init_features_maps*4, 1, elu, dropout=True)
-        self.up_tr32 = UpTransition(init_features_maps*4, init_features_maps*2, 1, elu)
-        self.out_tr = OutputTransition(init_features_maps*2, classes, elu)
+        self.up_tr64 = UpTransition(init_features_maps * 8, init_features_maps * 4, 1, elu, dropout=True)
+        self.up_tr32 = UpTransition(init_features_maps * 4, init_features_maps * 2, 1, elu)
+        self.out_tr = OutputTransition(init_features_maps * 2, classes, elu)
 
     def forward(self, x):
         out16 = self.in_tr(x)
@@ -189,6 +186,7 @@ class VNet(nn.Module):
         assert ideal_out.shape == out_pred.shape
         summary(self.to(torch.device(device)), (self.in_channels, 32, 32, 32), device=device)
         print("Vnet test is complete")
+
 
 if __name__ == "__main__":
     vnet = VNet()

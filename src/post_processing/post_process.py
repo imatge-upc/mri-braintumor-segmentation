@@ -35,11 +35,10 @@ def keep_bigger_connected_component(segmentation_mask:  np.ndarray) ->  np.ndarr
     return np.asarray(mask > 0, np.uint8)
 
 
-
-def keep_conn_component_bigger_than_th(segmentation_mask: np.ndarray, th: int=8) -> np.ndarray:
+def keep_conn_component_bigger_than_th(segmentation_mask: np.ndarray, th: int = 8) -> np.ndarray:
     labels = label(segmentation_mask)
 
-    areas = sorted([region.area for region in regionprops(labels)], reverse=True) # big to small
+    areas = sorted([region.area for region in regionprops(labels)], reverse=True)  # big to small
     if len(areas) > 1:
         diff_big = (areas[1] / areas[0]) * 100
         area = areas[1] if diff_big > th else areas[0]

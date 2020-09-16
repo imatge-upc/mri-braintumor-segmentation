@@ -21,8 +21,8 @@ from src.dataset.augmentations import color_augmentations, spatial_augmentations
 from src.dataset.utils import dataset, visualization as visualization
 from src.models.vnet import vnet, asymm_vnet
 from src.logging_conf import logger
-
 from src.dataset.loaders.brats_dataset import BratsDataset
+
 
 def num_params(net_params):
     n_params = sum([p.data.nelement() for p in net_params])
@@ -90,7 +90,7 @@ if basic_config.getboolean("plot"):
 logger.info("Initiating Model...")
 
 config_network = model_config["network"]
-if  config_network== "vnet":
+if config_network== "vnet":
 
     network = vnet.VNet(elu=model_config.getboolean("use_elu"),
                         in_channels=n_modalities,
