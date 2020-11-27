@@ -1,9 +1,11 @@
-# Brain Tumor Segmentation
+# MRI Brain Tumor Segmentation and Uncertainty Estimation using 3D-Unet architectures on BraTS'20
 
-This project proposes the usage of V-Net and 3D-UNet based models for semantic segmentation in 3D-MRI Brain Tumor Segmentation and identify certain and uncertain predictions using variance for local information and entropy for a global measurment.
+This repository contains the code of the work presented in the paper [MRI Brain Tumor Segmentation and Uncertainty Estimation using 3D-Unet architectures]() 
+which is used to participate on the BraTS'20 challenge on Brain Tumor Segmentation, for tasks 1 and 3. 
 
-The proposed model and uncertainty measurments are used to participate on the BraTS'20 challenge on Brain Tumor Segmentation, for tasks 1 and 3.
+This work proposes the usage of V-Net and 3D-UNet based models for semantic segmentation in 3D-MRI Brain Tumor Segmentation and identifies certain and uncertain predictions at test time.
 
+The original repository can be found [here](https://github.com/LauraMoraB/BrainTumorSegmentation).
 
 ## Repository Structure
     |__ resources/
