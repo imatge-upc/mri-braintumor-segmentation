@@ -1,7 +1,8 @@
 # MRI Brain Tumor Segmentation and Uncertainty Estimation using 3D-Unet architectures on BraTS'20
 
-This repository contains the code of the work presented in the paper [MRI Brain Tumor Segmentation and Uncertainty Estimation using 3D-Unet architectures]() 
-which is used to participate on the BraTS'20 challenge on Brain Tumor Segmentation, for tasks 1 and 3. 
+This repository contains the code of the work presented in the paper
+[MRI Brain Tumor Segmentation and Uncertainty Estimation using 3D-Unet architectures](https://arxiv.org/abs/2012.15294)
+which is used to participate on the BraTS'20 challenge on Brain Tumor Segmentation, for tasks 1 and 3.
 
 This work proposes the usage of V-Net and 3D-UNet based models for semantic segmentation in 3D-MRI Brain Tumor Segmentation and identifies certain and uncertain predictions at test time.
 
@@ -29,6 +30,37 @@ The original repository can be found [here](https://github.com/LauraMoraB/BrainT
     |__ tests/
     |__ README.md
 
+## Dataset structure
+
+The dataset used in this repository is the official one provided by BraTS20 for training, validation and test.
+
+For each patient, they provide a folder with the following files (`*_seg.nii.gz` is only provided for the training set)
+```
+BraTS20_Training_001/
+    BraTS20_Training_001_flair.nii.gz
+    BraTS20_Training_001_seg.nii.gz
+    BraTS20_Training_001_t1.nii.gz
+    BraTS20_Training_001_t1ce.nii.gz
+    BraTS20_Training_001_t2.nii.gz
+```
+
+In this project, the data is expected to be separated by the three different sets and by sampling technique
+(in case the sampling may be computed beforehand). As an example:
+```
+* Train: ~/train/source_sampling/BraTS20_Training_00*/*.nii.gz
+* Validation: ~/validation/source_sampling/BraTS20_Training_00*/*.nii.gz
+* Test: ~/test/source_sampling/BraTS20_Training_00*/*.nii.gz
+```
+
+It also requires the `brats20_data.csv` which has the following information:
+
+| ID | Grade | subject_ID | Center | Patch | Size | Train |
+| -- | ----- | ---------- | ------ | ----- | ---- | ----- |
+| 1 | HGG | BraTS20_Training_001 | CBICA | BraTS20_Training_001 | 240x240x155 | train |
+| 2 | LGG | BraTS20_Training_270 | TMC | BraTS20_Training_270 | 240x240x155 | test |
+
+The *Train* column is used to select some samples for testing.
+
 ## Installation
 
 ```
@@ -39,7 +71,7 @@ pip install -r requirements.txt
 
 You can execute several processes, from the training of the model, inference, inference uncertainty, run post processing to the obtained results, compute metrics and compute an ensemble.
 
-All scripts run similarly, as all the required configuration is read from the config.ini file. 
+All scripts run similarly, as all the required configuration is read from the config.ini file.
 ```
 python <script.py> resources/config.ini
 ```
@@ -66,7 +98,7 @@ init_features_maps: 32
 network: 3dunet_residual or 3dunet or vnet_asymm or vnet
 
 # unet based
-unet_order: crg  
+unet_order: crg
 # cli  -  conv + LeakyReLU + instancenorm
 
 # vnet asymm
@@ -119,7 +151,7 @@ uncertainty_flag: false
 ```
 
 #### Uncertainty
-3 Types of uncertainty can be computed: 
+3 Types of uncertainty can be computed:
 * aleatoric `uncertainty_type: tta` and `use_dropout: false`
 * epistemic `uncertainty_type: ttd`
 * both: `uncertainty_type: tta` and `use_dropout: true`
@@ -139,7 +171,7 @@ uncertainty_type: tta
 use_dropout: false (used if uncertainty_type=tta)
 ```
 
-## Model results 
+## Model results
 
 ### Task 1: Segmentation
 
